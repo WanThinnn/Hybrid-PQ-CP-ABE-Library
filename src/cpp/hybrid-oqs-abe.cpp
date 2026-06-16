@@ -43,7 +43,7 @@ int hybrid_cpabe_setup_with_pqc(const char *path)
     unsigned char *pqc_pub = nullptr, *pqc_priv = nullptr;
     size_t pqc_pub_len = 0, pqc_priv_len = 0;
     char *masterKeyJson = nullptr, *publicKeyJson = nullptr;
-    Ac17SetupResult setupResult;
+    Ac17SetupResult setupResult = {nullptr, nullptr};
     
     try
     {
@@ -110,8 +110,8 @@ int hybrid_cpabe_setup_with_pqc(const char *path)
     catch (...) { 
         if (masterKeyJson) rabe_free_json(masterKeyJson);
         if (publicKeyJson) rabe_free_json(publicKeyJson);
-        rabe_ac17_free_master_key(setupResult.master_key);
-        rabe_ac17_free_public_key(setupResult.public_key);
+        if (setupResult.master_key) rabe_ac17_free_master_key(setupResult.master_key);
+        if (setupResult.public_key) rabe_ac17_free_public_key(setupResult.public_key);
         if (pqc_pub) free(pqc_pub);
         if (pqc_priv) free(pqc_priv);
         return HCPABE_ERR_CRYPTO_FAILED; 

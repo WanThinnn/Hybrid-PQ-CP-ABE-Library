@@ -10,11 +10,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 # Chọn tên thư viện dựa trên hệ điều hành
 system = platform.system()
 if system == "Windows":
-    lib_name = "libhybrid-cp-abe.dll"
+    lib_name = "libhybrid-pq-cp-abe.dll"
 elif system == "Darwin":
-    lib_name = "libhybrid-cp-abe.dylib" # hoặc "hybrid-cp-abe.dylib" tùy cách build
+    lib_name = "libhybrid-pq-cp-abe.dylib" 
 else:
-    lib_name = "libhybrid-cp-abe.so"    # hoặc "hybrid-cp-abe.so" tùy cách build
+    lib_name = "libhybrid-pq-cp-abe.so"
 
 lib_path = os.path.join(script_dir, lib_name)
 
@@ -62,6 +62,33 @@ abe_lib.hybrid_cpabe_decryptBuffer.argtypes = [
     POINTER(c_ubyte_p), POINTER(c_size_t) # plaintext, ptLen
 ]
 abe_lib.hybrid_cpabe_decryptBuffer.restype = ctypes.c_int
+
+# PQC hybrid functions
+abe_lib.hybrid_cpabe_setup_with_pqc.argtypes = [c_char_p]
+abe_lib.hybrid_cpabe_setup_with_pqc.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encrypt_and_sign.argtypes = [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p]
+abe_lib.hybrid_cpabe_encrypt_and_sign.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_decrypt_and_verify.argtypes = [c_char_p, c_char_p, c_char_p, c_char_p]
+abe_lib.hybrid_cpabe_decrypt_and_verify.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encryptBuffer_and_sign.argtypes = [
+    c_ubyte_p, c_size_t, # publicKey, pkLen
+    c_ubyte_p, c_size_t, # pqcPrivKey, pqcPrivLen
+    c_ubyte_p, c_size_t, # plaintext, ptLen
+    c_char_p,            # policy
+    POINTER(c_ubyte_p), POINTER(c_size_t) # ciphertext, ctLen
+]
+abe_lib.hybrid_cpabe_encryptBuffer_and_sign.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_decryptBuffer_and_verify.argtypes = [
+    c_ubyte_p, c_size_t, # privateKey, skLen
+    c_ubyte_p, c_size_t, # pqcPubKey, pqcPubLen
+    c_ubyte_p, c_size_t, # ciphertext, ctLen
+    POINTER(c_ubyte_p), POINTER(c_size_t) # plaintext, ptLen
+]
+abe_lib.hybrid_cpabe_decryptBuffer_and_verify.restype = ctypes.c_int
 
 abe_lib.freeBuffer.argtypes = [c_ubyte_p]
 abe_lib.freeBuffer.restype = None
@@ -172,6 +199,100 @@ def call_hybrid_cpabe_decryptBuffer(private_key: bytes, ciphertext: bytes) -> by
         error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
         raise RuntimeError(f"Buffer decryption failed: {error_msg} (code: {result})")
 
+# Python wrappers for PQC functions
+def call_hybrid_cpabe_setup_with_pqc(path_to_save_file):
+    result = abe_lib.hybrid_cpabe_setup_with_pqc(path_to_save_file.encode('utf-8'))
+    if result == HCPABE_SUCCESS:
+        print(f"Setup with PQC completed successfully!")
+        print(f"   Files created in: {path_to_save_file}/")
+        print(f"   - cpabe_msk.key (Master Secret Key)")
+        print(f"   - cpabe_pk.key  (Public Parameters)")
+        print(f"   - pqc_sk.key    (ML-DSA Secret Key)")
+        print(f"   - pqc_pk.key    (ML-DSA Public Key)")
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Setup failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_encrypt_and_sign(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file):
+    result = abe_lib.hybrid_cpabe_encrypt_and_sign(
+        public_key_file.encode('utf-8'),
+        pqc_private_key_file.encode('utf-8'),
+        plaintext_file.encode('utf-8'),
+        policy.encode('utf-8'),
+        ciphertext_file.encode('utf-8')
+    )
+    if result == HCPABE_SUCCESS:
+        print(f"Encryption & Sign successful!")
+        print(f"   Policy: {policy}")
+        print(f"   Output: {ciphertext_file}")
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Encryption failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_decrypt_and_verify(private_key_file, pqc_public_key_file, ciphertext_file, recovertext_file):
+    result = abe_lib.hybrid_cpabe_decrypt_and_verify(
+        private_key_file.encode('utf-8'),
+        pqc_public_key_file.encode('utf-8'),
+        ciphertext_file.encode('utf-8'),
+        recovertext_file.encode('utf-8')
+    )
+    if result == HCPABE_SUCCESS:
+        print(f"Decryption & Verify successful!")
+        print(f"   Output: {recovertext_file}")
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Decryption failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_encryptBuffer_and_sign(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str) -> bytes:
+    pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
+    pqc_sk_arr = (c_ubyte * len(pqc_priv_key)).from_buffer_copy(pqc_priv_key)
+    pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
+    
+    ct_ptr = c_ubyte_p()
+    ct_len = c_size_t(0)
+    
+    result = abe_lib.hybrid_cpabe_encryptBuffer_and_sign(
+        pk_arr, len(public_key),
+        pqc_sk_arr, len(pqc_priv_key),
+        pt_arr, len(plaintext),
+        policy.encode('utf-8'),
+        byref(ct_ptr), byref(ct_len)
+    )
+    
+    if result == HCPABE_SUCCESS:
+        ct_bytes = bytes(ct_ptr[:ct_len.value])
+        abe_lib.freeBuffer(ct_ptr)
+        return ct_bytes
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        raise RuntimeError(f"Buffer PQC encryption failed: {error_msg} (code: {result})")
+
+def call_hybrid_cpabe_decryptBuffer_and_verify(private_key: bytes, pqc_pub_key: bytes, ciphertext: bytes) -> bytes:
+    sk_arr = (c_ubyte * len(private_key)).from_buffer_copy(private_key)
+    pqc_pk_arr = (c_ubyte * len(pqc_pub_key)).from_buffer_copy(pqc_pub_key)
+    ct_arr = (c_ubyte * len(ciphertext)).from_buffer_copy(ciphertext)
+    
+    pt_ptr = c_ubyte_p()
+    pt_len = c_size_t(0)
+    
+    result = abe_lib.hybrid_cpabe_decryptBuffer_and_verify(
+        sk_arr, len(private_key),
+        pqc_pk_arr, len(pqc_pub_key),
+        ct_arr, len(ciphertext),
+        byref(pt_ptr), byref(pt_len)
+    )
+    
+    if result == HCPABE_SUCCESS:
+        pt_bytes = bytes(pt_ptr[:pt_len.value])
+        abe_lib.freeBuffer(pt_ptr)
+        return pt_bytes
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        raise RuntimeError(f"Buffer PQC decryption failed: {error_msg} (code: {result})")
+
 # Main function to handle CLI in Python
 if __name__ == "__main__":
     # Print version info
@@ -188,12 +309,15 @@ if __name__ == "__main__":
         print("  encrypt  <pk> <file> <policy> <out>     - Encrypt file")
         print("  decrypt  <sk> <file> <out>              - Decrypt file")
         print("  test-buf <pk_file> <sk_file>            - Test buffer encryption")
+        print("  --- PQC Commands ---")
+        print("  setup-pqc <path>                        - Generate keys + ML-DSA keys")
+        print("  encrypt-pqc <pk> <pqc_sk> <file> <policy> <out> - Encrypt & Sign")
+        print("  decrypt-pqc <sk> <pqc_pk> <file> <out>          - Decrypt & Verify")
         print()
         print("Examples:")
         print(f"  python {sys.argv[0]} setup ./keys")
-        print(f"  python {sys.argv[0]} genkey ./keys/cpabe_msk.key \"admin it\" ./keys/user.key")
-        print(f"  python {sys.argv[0]} encrypt ./keys/cpabe_pk.key data.txt \"(admin and it)\" data.enc")
-        print(f"  python {sys.argv[0]} decrypt ./keys/user.key data.enc data.dec")
+        print(f"  python {sys.argv[0]} setup-pqc ./keys")
+        print(f"  python {sys.argv[0]} encrypt-pqc ./keys/cpabe_pk.key ./keys/pqc_sk.key data.txt \"(admin and it)\" data.enc")
         sys.exit(1)
 
     mode = sys.argv[1]
@@ -205,6 +329,14 @@ if __name__ == "__main__":
                 sys.exit(1)
             path = sys.argv[2]
             result = call_setup(path)
+            sys.exit(0 if result == HCPABE_SUCCESS else 1)
+            
+        elif mode == "setup-pqc":
+            if len(sys.argv) != 3:
+                print(f"Usage: python {sys.argv[0]} setup-pqc <path_to_save_keys>")
+                sys.exit(1)
+            path = sys.argv[2]
+            result = call_hybrid_cpabe_setup_with_pqc(path)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "genkey":
@@ -230,6 +362,13 @@ if __name__ == "__main__":
             result = call_hybrid_cpabe_encrypt(public_key_file, plaintext_file, policy, ciphertext_file)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
+        elif mode == "encrypt-pqc":
+            if len(sys.argv) != 7:
+                print(f"Usage: python {sys.argv[0]} encrypt-pqc <pk> <pqc_sk> <file> <policy> <out>")
+                sys.exit(1)
+            result = call_hybrid_cpabe_encrypt_and_sign(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+            sys.exit(0 if result == HCPABE_SUCCESS else 1)
+            
         elif mode == "decrypt":
             if len(sys.argv) != 5:
                 print(f"Usage: python {sys.argv[0]} decrypt <private_key_file> <ciphertext_file> <recovertext_file>")
@@ -239,6 +378,13 @@ if __name__ == "__main__":
             ciphertext_file = sys.argv[3]
             recovertext_file = sys.argv[4]
             result = call_hybrid_cpabe_decrypt(private_key_file, ciphertext_file, recovertext_file)
+            sys.exit(0 if result == HCPABE_SUCCESS else 1)
+            
+        elif mode == "decrypt-pqc":
+            if len(sys.argv) != 6:
+                print(f"Usage: python {sys.argv[0]} decrypt-pqc <sk> <pqc_pk> <file> <out>")
+                sys.exit(1)
+            result = call_hybrid_cpabe_decrypt_and_verify(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "test-buf":
