@@ -146,6 +146,21 @@ extern "C"
     
     // Giải phóng buffer được cấp phát bởi thư viện
     LIB_API void freeBuffer(unsigned char *buffer);
+    // AES-GCM API functions (Tách biệt khỏi logic của CP-ABE)
+    LIB_API int aes_gcm_encrypt(
+        const unsigned char* key, size_t key_len,
+        const unsigned char* iv, size_t iv_len,
+        const unsigned char* plaintext, size_t pt_len,
+        const unsigned char* aad, size_t aad_len,
+        unsigned char** ciphertext, size_t* ct_len);
+
+    LIB_API int aes_gcm_decrypt(
+        const unsigned char* key, size_t key_len,
+        const unsigned char* iv, size_t iv_len,
+        const unsigned char* ciphertext, size_t ct_len,
+        const unsigned char* aad, size_t aad_len,
+        unsigned char** plaintext, size_t* pt_len);
+
 }
 
-#endif // HYBRID_CP_ABE_H
+#endif // HYBRID_PQ_CP_ABE_H

@@ -129,19 +129,27 @@ int hybrid_cpabe_encryptBuffer_and_sign(
     std::string pqcPrivRaw;
     CryptoPP::StringSource(pqcPrivBase64, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(pqcPrivRaw)));
 
+    uint32_t pol_len_32 = static_cast<uint32_t>(strlen(policy));
+    std::vector<uint8_t> dataToSign;
+    dataToSign.reserve(4 + pol_len_32 + ptLen);
+    uint8_t* plen_ptr = reinterpret_cast<uint8_t*>(&pol_len_32);
+    dataToSign.insert(dataToSign.end(), plen_ptr, plen_ptr + 4);
+    dataToSign.insert(dataToSign.end(), reinterpret_cast<const uint8_t*>(policy), reinterpret_cast<const uint8_t*>(policy) + pol_len_32);
+    dataToSign.insert(dataToSign.end(), plaintext, plaintext + ptLen);
+
     unsigned char *signature = nullptr;
     size_t sig_len = 0;
-    if (ml_dsa_87_sign(plaintext, ptLen, (const unsigned char*)pqcPrivRaw.data(), &signature, &sig_len) != HCPABE_SUCCESS) {
+    if (ml_dsa_87_sign(dataToSign.data(), dataToSign.size(), (const unsigned char*)pqcPrivRaw.data(), &signature, &sig_len) != HCPABE_SUCCESS) {
         return HCPABE_ERR_CRYPTO_FAILED;
     }
 
     uint32_t sig_len_32 = static_cast<uint32_t>(sig_len);
     std::vector<uint8_t> payload;
-    payload.reserve(4 + sig_len + ptLen);
+    payload.reserve(4 + sig_len + dataToSign.size());
     uint8_t* slen_ptr = reinterpret_cast<uint8_t*>(&sig_len_32);
     payload.insert(payload.end(), slen_ptr, slen_ptr + 4);
     payload.insert(payload.end(), signature, signature + sig_len);
-    payload.insert(payload.end(), plaintext, plaintext + ptLen);
+    payload.insert(payload.end(), dataToSign.begin(), dataToSign.end());
 
     std::string pkJson(reinterpret_cast<const char*>(publicKey), pkLen);
     int res = hybrid_cpabe_encryptBuffer((const unsigned char*)pkJson.data(), pkJson.size(), payload.data(), payload.size(), policy, ciphertext, ctLen);
@@ -182,14 +190,31 @@ int hybrid_cpabe_decryptBuffer_and_verify(
     }
 
     const uint8_t *signature = payload + 4;
-    const uint8_t *original_pt = payload + 4 + sig_len_32;
-    size_t original_pt_len = payloadLen - 4 - sig_len_32;
+    const uint8_t *dataToSign = payload + 4 + sig_len_32;
+    size_t dataToSignLen = payloadLen - 4 - sig_len_32;
 
-    if (ml_dsa_87_verify(original_pt, original_pt_len, signature, sig_len_32, (const unsigned char*)pqcPubRaw.data()) != HCPABE_SUCCESS) {
+    if (ml_dsa_87_verify(dataToSign, dataToSignLen, signature, sig_len_32, (const unsigned char*)pqcPubRaw.data()) != HCPABE_SUCCESS) {
         secureWipe(payload, payloadLen);
         freeBuffer(payload);
         return HCPABE_ERR_SIGNATURE_INVALID;
     }
+
+    if (dataToSignLen < 4) {
+        secureWipe(payload, payloadLen);
+        freeBuffer(payload);
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+    uint32_t pol_len_32 = 0;
+    std::memcpy(&pol_len_32, dataToSign, 4);
+
+    if (dataToSignLen < 4 + pol_len_32) {
+        secureWipe(payload, payloadLen);
+        freeBuffer(payload);
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+
+    const uint8_t *original_pt = dataToSign + 4 + pol_len_32;
+    size_t original_pt_len = dataToSignLen - 4 - pol_len_32;
 
     *ptLen = original_pt_len;
     *plaintext = (unsigned char *)malloc(*ptLen);

@@ -32,7 +32,7 @@
                 "command": "cmd",
                 "args": [
                     "/c",
-                    "cl.exe /MD /GS /O2 /Zi /EHsc /utf-8 /LD /DBUILD_DLL /Fe:\"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.dll\" \"${workspaceFolder}\\hybrid-cp-abe.cpp\" \"${workspaceFolder}\\hybrid-oqs-abe.cpp\" \"${workspaceFolder}\\ml-dsa.cpp\" /I\"${workspaceFolder}\\include\" /link /ignore:4099 /LIBPATH:\"${workspaceFolder}\\lib\\static\" librabe_ffi.lib liboqs.lib cryptlib.lib bcrypt.lib advapi32.lib ntdll.lib /MACHINE:X64 && echo Cleaning up Import Library and Export File... && del /Q \"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.lib\" \"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.exp\""
+                    "cl.exe /MD /GS /O2 /Zi /EHsc /utf-8 /LD /DBUILD_DLL /Fe:\"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.dll\" \"${workspaceFolder}\\hybrid-cp-abe.cpp\" \"${workspaceFolder}\\hybrid-oqs-abe.cpp\" \"${workspaceFolder}\\ml-dsa.cpp\" \"${workspaceFolder}\\aes-gcm.cpp\" /I\"${workspaceFolder}\\include\" /link /ignore:4099 /LIBPATH:\"${workspaceFolder}\\lib\\static\" librabe_ffi.lib liboqs.lib cryptlib.lib bcrypt.lib advapi32.lib ntdll.lib /MACHINE:X64 && echo Cleaning up Import Library and Export File... && del /Q \"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.lib\" \"${workspaceFolder}\\lib\\dynamic\\libhybrid-pq-cp-abe.exp\""
                 ],
                 "problemMatcher": ["$msCompile"]
             },
@@ -40,7 +40,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "g++ -O2 -g -Wall -fPIC -DBUILD_DLL -Iinclude hybrid-cp-abe.cpp hybrid-oqs-abe.cpp ml-dsa.cpp -shared -o lib/dynamic/libhybrid-pq-cp-abe.so lib/static/libcryptopp.a lib/static/librabe_ffi.a lib/static/liboqs.a"
+                    "g++ -O2 -g -Wall -fPIC -DBUILD_DLL -Iinclude hybrid-cp-abe.cpp hybrid-oqs-abe.cpp ml-dsa.cpp aes-gcm.cpp -shared -o lib/dynamic/libhybrid-pq-cp-abe.so lib/static/libcryptopp.a lib/static/librabe_ffi.a lib/static/liboqs.a"
                 ],
                 "problemMatcher": ["$gcc"]
             },
@@ -54,7 +54,7 @@
                 "command": "cmd",
                 "args": [
                     "/c",
-                    "echo Compiling... && cl.exe /MD /GS /O2 /Zi /EHsc /utf-8 /c \"${workspaceFolder}\\hybrid-cp-abe.cpp\" \"${workspaceFolder}\\hybrid-oqs-abe.cpp\" \"${workspaceFolder}\\ml-dsa.cpp\" /I\"${workspaceFolder}\\include\" && echo Archiving... && lib.exe /OUT:\"${workspaceFolder}\\lib\\static\\libhybrid-pq-cp-abe.lib\" \"hybrid-cp-abe.obj\" \"hybrid-oqs-abe.obj\" \"ml-dsa.obj\" /LIBPATH:\"${workspaceFolder}\\lib\\static\" librabe_ffi.lib liboqs.lib cryptlib.lib bcrypt.lib advapi32.lib ntdll.lib && echo Cleaning up... && del /Q \"hybrid-cp-abe.obj\" \"hybrid-oqs-abe.obj\" \"ml-dsa.obj\" && echo Done! Output at lib\\static\\libhybrid-pq-cp-abe.lib"
+                    "echo Compiling... && cl.exe /MD /GS /O2 /Zi /EHsc /utf-8 /c \"${workspaceFolder}\\hybrid-cp-abe.cpp\" \"${workspaceFolder}\\hybrid-oqs-abe.cpp\" \"${workspaceFolder}\\ml-dsa.cpp\" \"${workspaceFolder}\\aes-gcm.cpp\" /I\"${workspaceFolder}\\include\" && echo Archiving... && lib.exe /OUT:\"${workspaceFolder}\\lib\\static\\libhybrid-pq-cp-abe.lib\" \"hybrid-cp-abe.obj\" \"hybrid-oqs-abe.obj\" \"ml-dsa.obj\" \"aes-gcm.obj\" /LIBPATH:\"${workspaceFolder}\\lib\\static\" librabe_ffi.lib liboqs.lib cryptlib.lib && echo Cleaning up... && del /Q \"hybrid-cp-abe.obj\" \"hybrid-oqs-abe.obj\" \"ml-dsa.obj\" \"aes-gcm.obj\" && echo Done! Output at lib\\static\\libhybrid-pq-cp-abe.lib"
                 ],
                 "problemMatcher": ["$msCompile"]
             },
@@ -62,7 +62,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "g++ -O2 -g -Wall -c hybrid-cp-abe.cpp hybrid-oqs-abe.cpp ml-dsa.cpp -Iinclude -fPIC && cd lib/static && ar rcs libhybrid-pq-cp-abe.a ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o libcryptopp.a librabe_ffi.a liboqs.a && rm -f ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o"
+                    "g++ -O2 -g -Wall -c hybrid-cp-abe.cpp hybrid-oqs-abe.cpp ml-dsa.cpp aes-gcm.cpp -Iinclude -fPIC && cd lib/static && ar rcs libhybrid-pq-cp-abe.a ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o ../../aes-gcm.o libcryptopp.a librabe_ffi.a liboqs.a && rm -f ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o ../../aes-gcm.o"
                 ],
                 "problemMatcher": ["$gcc"]
             },

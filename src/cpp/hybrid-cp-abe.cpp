@@ -309,26 +309,38 @@ int hybrid_cpabe_encrypt(const char *publicKeyFile, const char *plaintextFile, c
         std::string plaintext((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         file.close();
 
-        // Mã hóa AES-GCM với IV 12 bytes (theo NIST)
-        CryptoPP::GCM<CryptoPP::AES>::Encryption aes_gcm;
-        CryptoPP::SecByteBlock key(reinterpret_cast<const CryptoPP::byte *>(aesKey.data()), aesKey.size());
-        CryptoPP::byte iv[HybridCPABE::GCM_IV_SIZE];  // 12 bytes theo NIST
+        // Chuẩn bị AAD: Version + IV + lenEncryptedKey + encryptedKeyB
+        CryptoPP::byte iv[HybridCPABE::GCM_IV_SIZE];
         prng.GenerateBlock(iv, sizeof(iv));
-        aes_gcm.SetKeyWithIV(key, key.size(), iv, sizeof(iv));
 
-        std::string ciphertext;
-        CryptoPP::AuthenticatedEncryptionFilter ef(aes_gcm, new CryptoPP::StringSink(ciphertext));
-        ef.ChannelPut(CryptoPP::DEFAULT_CHANNEL, reinterpret_cast<const CryptoPP::byte *>(plaintext.data()), plaintext.size());
-        ef.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
-
-        // Ghép nối: Version + IV + độ dài của encryptedKey + encryptedKey + ciphertext
-        std::string combined;
-        combined.push_back(static_cast<char>(HybridCPABE::FORMAT_VERSION));  // Version byte
-        combined.append(reinterpret_cast<const char *>(iv), sizeof(iv));
+        std::string aad;
+        aad.push_back(static_cast<char>(HybridCPABE::FORMAT_VERSION));
+        aad.append(reinterpret_cast<const char *>(iv), sizeof(iv));
         uint64_t lenEncryptedKey = encryptedKeyB.size();
-        combined.append(reinterpret_cast<const char *>(&lenEncryptedKey), sizeof(lenEncryptedKey));
-        combined.append(encryptedKeyB);
-        combined.append(ciphertext);
+        aad.append(reinterpret_cast<const char *>(&lenEncryptedKey), sizeof(lenEncryptedKey));
+        aad.append(encryptedKeyB);
+
+        unsigned char *aesCiphertext = nullptr;
+        size_t aesCtLen = 0;
+        int aesRes = aes_gcm_encrypt(
+            reinterpret_cast<const unsigned char*>(aesKey.data()), aesKey.size(),
+            iv, sizeof(iv),
+            reinterpret_cast<const unsigned char*>(plaintext.data()), plaintext.size(),
+            reinterpret_cast<const unsigned char*>(aad.data()), aad.size(),
+            &aesCiphertext, &aesCtLen
+        );
+
+        if (aesRes != HCPABE_SUCCESS) {
+            secureWipe(&aesKey[0], aesKey.size());
+            secureWipe(&randomKeyStr[0], randomKeyStr.size());
+            return aesRes;
+        }
+
+        // Ghép nối: AAD + ciphertext
+        std::string combined;
+        combined.append(aad);
+        combined.append(reinterpret_cast<const char*>(aesCiphertext), aesCtLen);
+        free(aesCiphertext);
 
         // Lưu trực tiếp dưới dạng binary
         try {
@@ -453,19 +465,29 @@ int hybrid_cpabe_decrypt(const char *privateKeyFile, const char *ciphertextFile,
         hash.Update(reinterpret_cast<const CryptoPP::byte *>(recoveredKeyStr.data()), recoveredKeyStr.size());
         hash.Final(reinterpret_cast<CryptoPP::byte *>(&aesKey[0]));
 
-        std::string recovered;
-        CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-        decryptor.SetKeyWithIV(reinterpret_cast<const CryptoPP::byte *>(aesKey.data()), aesKey.size(), iv, sizeof(iv));
-        CryptoPP::AuthenticatedDecryptionFilter df(decryptor, new CryptoPP::StringSink(recovered), CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS);
-        CryptoPP::StringSource ss2(ciphertext, true, new CryptoPP::Redirector(df));
-        if (!df.GetLastResult())
+        // Chuẩn bị AAD
+        std::string aad = decodedCiphertext.substr(0, offset);
+
+        unsigned char *recoveredPt = nullptr;
+        size_t recoveredPtLen = 0;
+        int decRes = aes_gcm_decrypt(
+            reinterpret_cast<const unsigned char*>(aesKey.data()), aesKey.size(),
+            iv, sizeof(iv),
+            reinterpret_cast<const unsigned char*>(ciphertext.data()), ciphertext.size(),
+            reinterpret_cast<const unsigned char*>(aad.data()), aad.size(),
+            &recoveredPt, &recoveredPtLen
+        );
+
+        if (decRes != HCPABE_SUCCESS)
         {
             secureWipe(&aesKey[0], aesKey.size());
             secureWipe(&recoveredKeyStr[0], recoveredKeyStr.size());
             rabe_cp_ac17_free_secret_key(secretKey);
             rabe_cp_ac17_free_cipher(encryptedKey);
-            return HCPABE_ERR_CRYPTO_FAILED;
+            return decRes;
         }
+        std::string recovered(reinterpret_cast<const char*>(recoveredPt), recoveredPtLen);
+        free(recoveredPt);
 
         // Lưu file đã giải mã
         try {
@@ -563,26 +585,38 @@ int hybrid_cpabe_encryptBuffer(
         hash.Update(reinterpret_cast<const CryptoPP::byte *>(randomKeyStr.data()), randomKeyStr.size());
         hash.Final(reinterpret_cast<CryptoPP::byte *>(&aesKey[0]));
 
-        // AES-GCM Encryption
-        CryptoPP::GCM<CryptoPP::AES>::Encryption aes_gcm;
-        CryptoPP::SecByteBlock key(reinterpret_cast<const CryptoPP::byte *>(aesKey.data()), aesKey.size());
+        // Chuẩn bị AAD: Version + IV + lenEncryptedKey + encryptedKeyB
         CryptoPP::byte iv[HybridCPABE::GCM_IV_SIZE];
         prng.GenerateBlock(iv, sizeof(iv));
-        aes_gcm.SetKeyWithIV(key, key.size(), iv, sizeof(iv));
 
-        std::string aesCiphertext;
-        CryptoPP::AuthenticatedEncryptionFilter ef(aes_gcm, new CryptoPP::StringSink(aesCiphertext));
-        ef.ChannelPut(CryptoPP::DEFAULT_CHANNEL, plaintext, ptLen);
-        ef.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
+        std::string aad;
+        aad.push_back(static_cast<char>(HybridCPABE::FORMAT_VERSION));
+        aad.append(reinterpret_cast<const char *>(iv), sizeof(iv));
+        uint64_t lenEncryptedKey = encryptedKeyB.size();
+        aad.append(reinterpret_cast<const char *>(&lenEncryptedKey), sizeof(lenEncryptedKey));
+        aad.append(encryptedKeyB);
+
+        unsigned char *aesCiphertext = nullptr;
+        size_t aesCtLen = 0;
+        int aesRes = aes_gcm_encrypt(
+            reinterpret_cast<const unsigned char*>(aesKey.data()), aesKey.size(),
+            iv, sizeof(iv),
+            plaintext, ptLen,
+            reinterpret_cast<const unsigned char*>(aad.data()), aad.size(),
+            &aesCiphertext, &aesCtLen
+        );
+
+        if (aesRes != HCPABE_SUCCESS) {
+            secureWipe(&aesKey[0], aesKey.size());
+            secureWipe(&randomKeyStr[0], randomKeyStr.size());
+            return aesRes;
+        }
 
         // Combine parts
         std::string combined;
-        combined.push_back(static_cast<char>(HybridCPABE::FORMAT_VERSION));
-        combined.append(reinterpret_cast<const char *>(iv), sizeof(iv));
-        uint64_t lenEncryptedKey = encryptedKeyB.size();
-        combined.append(reinterpret_cast<const char *>(&lenEncryptedKey), sizeof(lenEncryptedKey));
-        combined.append(encryptedKeyB);
-        combined.append(aesCiphertext);
+        combined.append(aad);
+        combined.append(reinterpret_cast<const char*>(aesCiphertext), aesCtLen);
+        free(aesCiphertext);
 
         // Allocate and copy back
         *ctLen = combined.size();
@@ -680,22 +714,29 @@ int hybrid_cpabe_decryptBuffer(
         hash.Update(reinterpret_cast<const CryptoPP::byte *>(recoveredKeyStr.data()), recoveredKeyStr.size());
         hash.Final(reinterpret_cast<CryptoPP::byte *>(&aesKey[0]));
 
-        // AES-GCM Decryption
-        std::string recovered;
-        CryptoPP::GCM<CryptoPP::AES>::Decryption decryptor;
-        decryptor.SetKeyWithIV(reinterpret_cast<const CryptoPP::byte *>(aesKey.data()), aesKey.size(), iv, sizeof(iv));
-        
-        CryptoPP::AuthenticatedDecryptionFilter df(decryptor, new CryptoPP::StringSink(recovered), CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS);
-        CryptoPP::StringSource ss2(aesCiphertext, true, new CryptoPP::Redirector(df));
-        
-        if (!df.GetLastResult())
+        // Chuẩn bị AAD
+        std::string aad = decodedCiphertext.substr(0, offset);
+
+        unsigned char *recoveredPt = nullptr;
+        size_t recoveredPtLen = 0;
+        int decRes = aes_gcm_decrypt(
+            reinterpret_cast<const unsigned char*>(aesKey.data()), aesKey.size(),
+            iv, sizeof(iv),
+            reinterpret_cast<const unsigned char*>(aesCiphertext.data()), aesCiphertext.size(),
+            reinterpret_cast<const unsigned char*>(aad.data()), aad.size(),
+            &recoveredPt, &recoveredPtLen
+        );
+
+        if (decRes != HCPABE_SUCCESS)
         {
             secureWipe(&aesKey[0], aesKey.size());
             secureWipe(&recoveredKeyStr[0], recoveredKeyStr.size());
             rabe_cp_ac17_free_secret_key(secretKey);
             rabe_cp_ac17_free_cipher(encryptedKeyObj);
-            return HCPABE_ERR_CRYPTO_FAILED;
+            return decRes;
         }
+        std::string recovered(reinterpret_cast<const char*>(recoveredPt), recoveredPtLen);
+        free(recoveredPt);
 
         // Output plaintext
         *ptLen = recovered.size();
