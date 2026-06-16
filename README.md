@@ -1,7 +1,10 @@
-# Hybrid PQ-CP-ABE Library
+# Hybrid PQ-CP-ABE Library (PQC Branch)
 Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C++ in Windows/Linux
 
-## Prerequisites
+> [!WARNING]
+> **PQC Branch Notice**: This branch includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks. 
+> 
+> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch back to the **[`main` branch]**!
 
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807)
@@ -11,7 +14,11 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 ## Why Use This Library? (Performance & Benchmarks)
 
 This library implements a highly optimized **KEM/DEM Hybrid Encryption architecture** combining the advanced access control of CP-ABE (using `rabe` & Rust) with the blazing-fast symmetric encryption of AES-GCM (using `CryptoPP` & C++). 
-It now also optionally integrates **Post-Quantum Signatures (ML-DSA-87)** via `liboqs` to protect against quantum adversaries! 
+
+### Quantum-Resistant "Sign-then-Encrypt" Architecture
+This branch heavily upgrades the security model by integrating **Post-Quantum Signatures (ML-DSA-87)** via `liboqs` to protect against quantum adversaries! 
+- **CCA Security & AAD Binding:** The AES-GCM symmetric encryption securely binds the Ciphertext Policy and PQC Public Key as Authenticated Additional Data (AAD) to prevent malleability.
+- **Anti-Surreptitious Forwarding:** The ML-DSA-87 signature algorithm signs the `[Policy] + [Plaintext]` securely, preventing malicious users from re-encrypting the payload for unintended recipients.
 
 When benchmarked against the standard Python-based `charm-crypto` library using the AC17 scheme, this library demonstrates massive performance advantages, especially during decryption:
 
@@ -60,8 +67,8 @@ The usage of the executable is as follows:
 Usage: main [command] [--pqc] [options]
 Usage: main setup <path_to_save_file>
 Usage: main genkey <master_key_file> <attributes> <private_key_file>
-Usage: main encrypt <public_key_file> [msk_key for pqc] <plaintext_file> <policy> <ciphertext_file>
-Usage: main decrypt <private_key_file> [pub_key for pqc] <ciphertext_file> <recovertext_file>
+Usage: main encrypt <public_key_file> [pqc_private_key] <plaintext_file> <policy> <ciphertext_file>
+Usage: main decrypt <private_key_file> [pqc_public_key] <ciphertext_file> <recovertext_file>
 ```
 
 Example commands (Standard Mode):
@@ -76,8 +83,8 @@ Example commands (Post-Quantum Mode):
 ```sh
 main setup --pqc test_case
 main genkey "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
-main encrypt --pqc "test_case/cpabe_pk.key" "test_case/cpabe_msk.key" "test_case/plaintext.txt" "\"A\"" "test_case/ciphertext.txt"
-main decrypt --pqc "test_case/cpabe_sk.key" "test_case/cpabe_pk.key" "test_case/ciphertext.txt" "test_case/recovertext.txt"
+main encrypt --pqc "test_case/cpabe_pk.key" "test_case/pqc_sk.key" "test_case/plaintext.txt" "\"A\"" "test_case/ciphertext.txt"
+main decrypt --pqc "test_case/cpabe_sk.key" "test_case/pqc_pk.key" "test_case/ciphertext.txt" "test_case/recovertext.txt"
 ```
 ### Integrating the Library
 After building the library, you can integrate it into any program on Windows/Linux. Here are the steps to include the library in your project.
