@@ -74,7 +74,6 @@ jobs:
           
           # Copy header files
           cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
-          cp -r src/cpp/include/rabe "${PACKAGE_NAME}/include/"
           
           # Copy ONLY libhybrid-pq-cp-abe libraries for Linux
           cp src/cpp/lib/dynamic/libhybrid-pq-cp-abe.so "${PACKAGE_NAME}/lib/" 2>/dev/null || true
