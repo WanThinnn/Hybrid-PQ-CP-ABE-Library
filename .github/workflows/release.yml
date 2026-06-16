@@ -126,6 +126,10 @@ jobs:
           body: |
             # Hybrid PQ-CP-ABE Library for Windows/Linux - Version ${{ steps.config.outputs.version }}
 
+            > **⚠️ IMPORTANT NOTICE:**
+            > - From **Version 4.0**, this library natively supports and includes **Post-Quantum Cryptography (PQC)**.
+            > - If your project **DOES NOT need PQC** (to save space, avoid `liboqs` dependencies, or minimize performance overhead), please download and use **Version 3.1** from the [Releases page](../../releases/tag/v3.1.0).
+
             ## Overview
             - This release introduces an updated implementation of the CP-ABE AC17 (Ciphertext Policy Attribute-Based Encryption) scheme, now integrated with the AES-GCM-256 symmetric encryption algorithm AND **ML-DSA-87 Post-Quantum Signatures**. 
             - The main objective of this update is to combine the flexible access control of CP-ABE with the high-performance encryption of AES-GCM-256, and protect data integrity/authentication against quantum adversaries using `liboqs`.
