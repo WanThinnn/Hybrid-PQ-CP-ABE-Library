@@ -14,7 +14,7 @@
 #include <cryptopp/base64.h>
 #include <cryptopp/filters.h>
 
-#include "hybrid-pq-cp-abe.h"
+#include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
 
 void printUsage(const char* programName)
 {
@@ -24,17 +24,17 @@ void printUsage(const char* programName)
     std::cout << "Commands:" << std::endl;
     std::cout << "  setup   <path_or_prefix>                             - Generate Master Key and Public Key" << std::endl;
     std::cout << "  genkey  <master_key> <attrs> <out_file>              - Generate private key from attributes" << std::endl;
-    std::cout << "  encrypt <pub_key> [msk_key for pqc] <file> <policy> <out> - Encrypt (and Sign) file" << std::endl;
-    std::cout << "  decrypt <priv_key> [pub_key for pqc] <file> <out>         - Decrypt (and Verify) file" << std::endl;
-    std::cout << "  encrypt_buffer <pub_key> [msk_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
-    std::cout << "  decrypt_buffer <priv_key> [pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
+    std::cout << "  encrypt <pub_key> [pqc_priv_key] <file> <policy> <out> - Encrypt (and Sign) file" << std::endl;
+    std::cout << "  decrypt <priv_key> [pqc_pub_key] <file> <out>         - Decrypt (and Verify) file" << std::endl;
+    std::cout << "  encrypt_buffer <pub_key> [pqc_priv_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
+    std::cout << "  decrypt_buffer <priv_key> [pqc_pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
     std::cout << std::endl;
     std::cout << "Examples:" << std::endl;
     std::cout << "  " << programName << " setup ./keys/mykey" << std::endl;
     std::cout << "  " << programName << " setup --pqc ./keys/mykey" << std::endl;
     std::cout << "  " << programName << " genkey ./keys/cpabe_msk.key \"admin it\" ./keys/user.key" << std::endl;
     std::cout << "  " << programName << " encrypt ./keys/cpabe_pk.key data.txt \"\\\"admin\\\" and \\\"it\\\"\" data.enc" << std::endl;
-    std::cout << "  " << programName << " encrypt --pqc ./keys/cpabe_pk.key ./keys/cpabe_msk.key data.txt \"\\\"admin\\\"\" data.enc" << std::endl;
+    std::cout << "  " << programName << " encrypt --pqc ./keys/cpabe_pk.key ./keys/pqc_sk.key data.txt \"\\\"admin\\\"\" data.enc" << std::endl;
 }
 
 #include <fstream>
@@ -65,6 +65,16 @@ int main(int argc, char *argv[])
         return 1;
     }
     
+    // Check if any argument is accidentally a reserved command (except args[1])
+    std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "encrypt_buffer", "decrypt_buffer"};
+    for (size_t i = 2; i < args.size(); ++i) {
+        if (std::find(reserved_commands.begin(), reserved_commands.end(), args[i]) != reserved_commands.end()) {
+            std::cerr << "Error: You used a reserved command name '" << args[i] << "' as an argument." << std::endl;
+            std::cerr << "Execution stopped to prevent unintended file generation. Please check your command syntax." << std::endl;
+            return 1;
+        }
+    }
+    
     std::string mode = args[1];
     
     // Handle help command
@@ -87,7 +97,7 @@ int main(int argc, char *argv[])
     {
         if (mode == "setup")
         {
-            if (args.size() < 3)
+            if (args.size() != 3)
             {
                 std::cerr << "Usage: " << args[0] << " setup [--pqc] <path_or_prefix>" << std::endl;
                 return 1;
@@ -100,7 +110,7 @@ int main(int argc, char *argv[])
         }
         else if (mode == "genkey")
         {
-            if (args.size() < 5)
+            if (args.size() != 5)
             {
                 std::cerr << "Usage: " << args[0] << " genkey <master_key_file> <attributes> <private_key_file>" << std::endl;
                 return 1;
@@ -110,13 +120,13 @@ int main(int argc, char *argv[])
         else if (mode == "encrypt")
         {
             if (use_pqc) {
-                if (args.size() < 7) {
-                    std::cerr << "Usage: " << args[0] << " encrypt --pqc <public_key_file> <master_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
+                if (args.size() != 7) {
+                    std::cerr << "Usage: " << args[0] << " encrypt --pqc <public_key_file> <pqc_private_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 result = hybrid_cpabe_encrypt_and_sign(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str());
             } else {
-                if (args.size() < 6) {
+                if (args.size() != 6) {
                     std::cerr << "Usage: " << args[0] << " encrypt <public_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
@@ -126,13 +136,13 @@ int main(int argc, char *argv[])
         else if (mode == "decrypt")
         {
             if (use_pqc) {
-                if (args.size() < 6) {
-                    std::cerr << "Usage: " << args[0] << " decrypt --pqc <private_key_file> <public_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
+                if (args.size() != 6) {
+                    std::cerr << "Usage: " << args[0] << " decrypt --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
                     return 1;
                 }
                 result = hybrid_cpabe_decrypt_and_verify(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str());
             } else {
-                if (args.size() < 5) {
+                if (args.size() != 5) {
                     std::cerr << "Usage: " << args[0] << " decrypt <private_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
                     return 1;
                 }
@@ -142,8 +152,8 @@ int main(int argc, char *argv[])
         else if (mode == "encrypt_buffer")
         {
             if (use_pqc) {
-                if (args.size() < 7) {
-                    std::cerr << "Usage: " << args[0] << " encrypt_buffer --pqc <public_key_file> <master_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
+                if (args.size() != 7) {
+                    std::cerr << "Usage: " << args[0] << " encrypt_buffer --pqc <public_key_file> <pqc_private_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 // Read PK
@@ -154,7 +164,7 @@ int main(int argc, char *argv[])
                 std::string decodedPkStr;
                 CryptoPP::StringSource(pkStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPkStr)));
                 
-                // Read MSK
+                // Read PQC SK
                 std::ifstream mskFile(args[3], std::ios::binary);
                 if (!mskFile) return 1;
                 std::string mskStr((std::istreambuf_iterator<char>(mskFile)), std::istreambuf_iterator<char>());
@@ -178,7 +188,7 @@ int main(int argc, char *argv[])
                     freeBuffer(ct);
                 }
             } else {
-                if (args.size() < 6) {
+                if (args.size() != 6) {
                     std::cerr << "Usage: " << args[0] << " encrypt_buffer <public_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
@@ -209,8 +219,8 @@ int main(int argc, char *argv[])
         else if (mode == "decrypt_buffer")
         {
             if (use_pqc) {
-                if (args.size() < 5) {
-                    std::cerr << "Usage: " << args[0] << " decrypt_buffer --pqc <private_key_file> <public_key_file> <ciphertext_file>" << std::endl;
+                if (args.size() != 5) {
+                    std::cerr << "Usage: " << args[0] << " decrypt_buffer --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 // Read SK
@@ -221,7 +231,7 @@ int main(int argc, char *argv[])
                 std::string decodedSkStr;
                 CryptoPP::StringSource(skStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSkStr)));
                 
-                // Read PK
+                // Read PQC PK
                 std::ifstream pkFile(args[3], std::ios::binary);
                 if (!pkFile) return 1;
                 std::string pkStr((std::istreambuf_iterator<char>(pkFile)), std::istreambuf_iterator<char>());
@@ -249,7 +259,7 @@ int main(int argc, char *argv[])
                     freeBuffer(pt);
                 }
             } else {
-                if (args.size() < 4) {
+                if (args.size() != 4) {
                     std::cerr << "Usage: " << args[0] << " decrypt_buffer <private_key_file> <ciphertext_file>" << std::endl;
                     return 1;
                 }
