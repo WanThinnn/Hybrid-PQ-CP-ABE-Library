@@ -71,7 +71,7 @@ jobs:
           mkdir -p "${PACKAGE_NAME}/lib"
           
           # Copy header files
-          cp src/cpp/include/hybrid-pq-cp-abe.h "${PACKAGE_NAME}/include/"
+          cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
           cp -r src/cpp/include/rabe "${PACKAGE_NAME}/include/"
           
           # Copy ONLY libhybrid-pq-cp-abe libraries for Linux
@@ -98,7 +98,7 @@ jobs:
           mkdir -p "${PACKAGE_NAME}/lib"
           
           # Copy header files
-          cp src/cpp/include/hybrid-pq-cp-abe.h "${PACKAGE_NAME}/include/"
+          cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
           cp -r src/cpp/include/rabe "${PACKAGE_NAME}/include/"
           
           # Copy ONLY libhybrid-pq-cp-abe libraries for Windows
