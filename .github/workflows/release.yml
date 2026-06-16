@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Get version and platform flags
         id: config
@@ -99,7 +101,6 @@ jobs:
           
           # Copy header files
           cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
-          cp -r src/cpp/include/rabe "${PACKAGE_NAME}/include/"
           
           # Copy ONLY libhybrid-pq-cp-abe libraries for Windows
           cp src/cpp/lib/dynamic/libhybrid-pq-cp-abe.dll "${PACKAGE_NAME}/lib/" 2>/dev/null || true
@@ -126,7 +127,7 @@ jobs:
           body: |
             # Hybrid PQ-CP-ABE Library for Windows/Linux - Version ${{ steps.config.outputs.version }}
 
-            > **⚠️ IMPORTANT NOTICE:**
+            > **IMPORTANT NOTICE:**
             > - From **Version 4.0**, this library natively supports and includes **Post-Quantum Cryptography (PQC)**.
             > - If your project **DOES NOT need PQC** (to save space, avoid `liboqs` dependencies, or minimize performance overhead), please download and use **Version 3.1** from the [Releases page](../../releases/tag/v3.1.0).
 
