@@ -51,6 +51,7 @@ The repository is now configured with a unified, smart `tasks.json` for Visual S
 1. Clone the repository:
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-CP-ABE-Library.git
+    git switch hybrid-pq-cp-abe
     ```
 2. Navigate to the project directory:
     ```sh
