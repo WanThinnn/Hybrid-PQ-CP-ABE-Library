@@ -121,7 +121,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           VERSION="${{ steps.config.outputs.version }}"
-          NOTES_FILE="release/v${VERSION}.md"
+          NOTES_FILE="release_notes/v${VERSION}.md"
           
           if [ -f "$NOTES_FILE" ]; then
             echo "Found release notes at $NOTES_FILE"
