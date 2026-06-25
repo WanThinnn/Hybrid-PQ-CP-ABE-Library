@@ -2,11 +2,11 @@
  * @file tkn20.cpp
  * @brief TKN20 CP-ABE scheme implementation using Go CIRCL DLL
  * 
- * Cung cấp các thao tác CP-ABE cho scheme TKN20:
+ * Provides CP-ABE operations for the TKN20 scheme:
  * Setup, KeyGen, Encrypt, Decrypt, Load keys
  * 
- * Policy và attributes được người dùng nhập theo format AC17,
- * file này tự động convert sang format TKN20 (key:value).
+ * Policy and attributes are input by the user in AC17 format,
+ * this file automatically converts them to TKN20 format (key:value).
  */
 
 #include "hybrid_pq_cp_abe/cpabe-scheme.h"

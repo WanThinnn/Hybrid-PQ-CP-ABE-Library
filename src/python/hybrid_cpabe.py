@@ -4,10 +4,10 @@ import sys
 import os
 import platform
 
-# Đường dẫn đến thư viện (same directory as this script)
+# Path to the library (same directory as this script)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Chọn tên thư viện dựa trên hệ điều hành
+# Select the library name based on the operating system
 system = platform.system()
 if system == "Windows":
     lib_name = "libhybrid-pq-cp-abe.dll"
@@ -23,10 +23,10 @@ if not os.path.exists(lib_path):
     print(f"   Make sure {lib_name} is in the same directory as this script.")
     sys.exit(1)
 
-# Tải thư viện .dylib/.so
+# Load the shared library (.dll/.so)
 abe_lib = ctypes.CDLL(lib_path)
 
-# Thiết lập nguyên mẫu các hàm
+# Setup function prototypes
 abe_lib.setup.argtypes = [c_char_p]
 abe_lib.setup.restype = ctypes.c_int
 
@@ -139,7 +139,7 @@ HCPABE_ERR_INVALID_KEY = -2
 HCPABE_ERR_POLICY_MISMATCH = -3
 HCPABE_ERR_CRYPTO_FAILED = -4
 
-# Các hàm Python gọi hàm từ thư viện C++
+# Python functions wrapping C++ library functions
 def call_setup(path_to_save_file):
     result = abe_lib.setup(path_to_save_file.encode('utf-8'))
     if result == HCPABE_SUCCESS:

@@ -1,9 +1,9 @@
 /**
  * @file main.cpp
- * @brief CLI wrapper cho thư viện Hybrid CP-ABE (Unified with PQC & Scheme Selection)
+ * @brief CLI wrapper for the Hybrid CP-ABE library (Unified with PQC & Scheme Selection)
  * 
- * File này cung cấp giao diện dòng lệnh để sử dụng các chức năng
- * của thư viện Hybrid CP-ABE. Hỗ trợ thêm cờ --pqc và --scheme.
+ * This file provides a command-line interface to use the functions
+ * of the Hybrid CP-ABE library. It supports the --pqc and --scheme flags.
  */
 
 #include <iostream>

@@ -5,7 +5,7 @@ package main
 #include <stdint.h>
 #include <stdbool.h>
 
-// Định nghĩa struct để trả về kết quả mảng động
+// Define a struct to return dynamic array results
 typedef struct {
     uint8_t* data;
     size_t len;
@@ -27,7 +27,7 @@ func normalizePolicy(policy string) string {
 	return re.ReplaceAllStringFunc(policy, strings.ToLower)
 }
 
-// Hàm tiện ích: chuyển đổi byte array của Go sang C
+// Utility function to convert Go byte array to C
 func toCByteArray(data []byte) C.CByteArray {
 	if len(data) == 0 {
 		return C.CByteArray{data: nil, len: 0}
@@ -38,16 +38,17 @@ func toCByteArray(data []byte) C.CByteArray {
 	}
 }
 
+// Free byte array (avoid memory leak when used on C++)
+//
 //export TKN20_FreeByteArray
-// Hàm giải phóng bộ nhớ (tránh memory leak khi dùng trên C++)
 func TKN20_FreeByteArray(arr C.CByteArray) {
 	if arr.data != nil {
 		C.free(unsafe.Pointer(arr.data))
 	}
 }
 
-//export TKN20_Setup
-// Setup khởi tạo hệ thống, trả về Public Key (dùng mã hóa) và Master Secret Key (dùng sinh khóa giải mã)
+// export TKN20_Setup
+// Setup initializes the system, returning the Public Key (for encryption) and Master Secret Key (for decryption key generation)
 func TKN20_Setup(pubKeyOut *C.CByteArray, mskOut *C.CByteArray) C.int {
 	pk, msk, err := tkn20.Setup(nil)
 	if err != nil {
@@ -62,8 +63,8 @@ func TKN20_Setup(pubKeyOut *C.CByteArray, mskOut *C.CByteArray) C.int {
 	return 0
 }
 
-//export TKN20_KeyGen
-// Sinh khóa giải mã (Attribute Key) dựa trên tập các thuộc tính truyền vào dưới dạng string (VD: "A:1,B:2,ROLE:admin")
+// export TKN20_KeyGen
+// Generate decryption key (Attribute Key) based on the attribute set passed as a string (e.g., "A:1,B:2,ROLE:admin")
 func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKeyOut *C.CByteArray) C.int {
 	mskData := C.GoBytes(unsafe.Pointer(mskBytes), C.int(mskLen))
 	var msk tkn20.SystemSecretKey
@@ -71,7 +72,7 @@ func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKe
 		return -1
 	}
 
-	// Parse chuỗi thuộc tính
+	// Parse attribute string
 	attrStrGo := C.GoString(attrsStr)
 	attrMap := make(map[string]string)
 	if attrStrGo != "" {
@@ -85,7 +86,7 @@ func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKe
 			}
 		}
 	}
-	
+
 	var attrs tkn20.Attributes
 	attrs.FromMap(attrMap)
 
@@ -99,8 +100,8 @@ func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKe
 	return 0
 }
 
-//export TKN20_Encrypt
-// Mã hóa thông điệp dựa trên chính sách (Policy). VD policyStr: "A:1 AND B:2"
+// export TKN20_Encrypt
+// Encrypt message based on the policy (Policy). Example policyStr: "A:1 AND B:2"
 func TKN20_Encrypt(pkBytes *C.uint8_t, pkLen C.size_t, policyStr *C.char, msgBytes *C.uint8_t, msgLen C.size_t, ctOut *C.CByteArray) C.int {
 	pkData := C.GoBytes(unsafe.Pointer(pkBytes), C.int(pkLen))
 	var pk tkn20.PublicKey
@@ -123,8 +124,8 @@ func TKN20_Encrypt(pkBytes *C.uint8_t, pkLen C.size_t, policyStr *C.char, msgByt
 	return 0
 }
 
-//export TKN20_Decrypt
-// Giải mã bản rõ sử dụng Khóa thuộc tính (Attribute Key)
+// export TKN20_Decrypt
+// Decrypt ciphertext using Attribute Key (Attribute Key)
 func TKN20_Decrypt(akBytes *C.uint8_t, akLen C.size_t, ctBytes *C.uint8_t, ctLen C.size_t, msgOut *C.CByteArray) C.int {
 	akData := C.GoBytes(unsafe.Pointer(akBytes), C.int(akLen))
 	var ak tkn20.AttributeKey

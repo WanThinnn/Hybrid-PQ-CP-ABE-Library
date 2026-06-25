@@ -2,7 +2,7 @@
  * @file ac17.cpp
  * @brief AC17 CP-ABE scheme implementation using rabe FFI (Rust)
  * 
- * Cung cấp các thao tác CP-ABE cho scheme AC17:
+ * Provides CP-ABE operations for the AC17 scheme:
  * Setup, KeyGen, Encrypt, Decrypt, Load keys
  */
 
