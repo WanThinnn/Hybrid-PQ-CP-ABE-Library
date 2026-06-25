@@ -31,7 +31,7 @@ namespace HybridCPABE {
     constexpr size_t AES_KEY_SIZE = 32;         // 256-bit AES key
     constexpr uint8_t FORMAT_VERSION = 0x01;    // Ciphertext format version
     constexpr uint8_t FORMAT_VERSION_2 = 0x02;  // V2 format with scheme indicator
-    const char* const LIB_VERSION = "4.0.0";
+    const char* const LIB_VERSION = "5.0.0";
     const char* const DEFAULT_KEY_FORMAT = "Base64";
 }
 
