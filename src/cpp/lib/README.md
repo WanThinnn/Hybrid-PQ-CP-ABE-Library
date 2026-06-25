@@ -2,7 +2,7 @@
 
 This project relies on four core cryptographic libraries to function correctly. This guide provides step-by-step instructions on how to build and integrate each dependency natively on Windows (MSVC) and Linux (GCC).
 
----
+
 
 ## 1. liboqs (Open Quantum Safe)
 
@@ -34,7 +34,7 @@ cmake --build .
 ```
 The static library `liboqs.a` will be generated in `build_linux_static/lib/`.
 
----
+
 
 ## 2. libcpabe_tkn20 (TKN20 CP-ABE)
 
@@ -66,7 +66,7 @@ This will generate the static/shared libraries and the C header file (`libcpabe_
 - Move `libcpabe_tkn20.dll` (or `.so`) to the `lib/dynamic/` directory.
 - The generated header `libcpabe_tkn20.h` is already in `include/tkn20` and will be automatically detected.
 
----
+
 
 ## 3. rabe-ffi (AC17 CP-ABE)
 
@@ -88,7 +88,6 @@ cargo build --release
 ```
 3. After building, copy the generated library (e.g., `target/release/librabe_ffi.a` or `.so`/`.lib`) to the `lib/static/` directory of your project, and copy the `rabe.h` header to your `include` directory.
 
----
 
 ## 4. Crypto++
 
