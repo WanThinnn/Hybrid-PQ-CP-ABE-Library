@@ -33,11 +33,16 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
   <img src="benchmark/image/encrypt_decrypt_focus_chart.png" alt="Encrypt/Decrypt Focus Chart" width="800"/>
 </p>
 
-> **Note:** The minor trade-off for this extreme decryption speed is a slightly slower encryption phase for very complex policies (due to the Rust `pest` parser generating the abstract syntax tree), but the massive decryption gains (nearly 10x faster) make it exceptionally well-suited for scalable real-world systems.
+> [!INFO]
+> The minor trade-off for this extreme decryption speed is a slightly slower encryption phase for very complex policies (due to the Rust `pest` parser generating the abstract syntax tree), but the massive decryption gains (nearly 10x faster) make it exceptionally well-suited for scalable real-world systems.
 
+> [!WARNING]
 > **Disclaimer (Scope of Library):** This library is highly specialized and is optimized for the **AC17** and **TKN20** CP-ABE schemes. It is built specifically to achieve maximum performance and seamless C++ integration. If your project requires a broader variety of cryptographic schemes (such as KP-ABE, IBE, etc.), we highly recommend using [Charm-Crypto](https://github.com/JHUISI/charm), which offers a vast and flexible collection of cryptographic primitives.
 
 ## Building (Ultimate Multi-OS Task)
+
+> [!INFO]
+> **Note on Dependencies:** All necessary dependencies (`CryptoPP`, `liboqs`, `rabe-ffi`, `circl`) have already been pre-compiled and included in the `src/cpp/lib/` folder for your convenience. You can build the main library immediately without installing anything else. However, if you wish to re-build these dependencies from source (e.g., for a different architecture), please read the instructions in [`src/cpp/lib/README.md`](file:///src/cpp/lib/README.md).
 
 The repository is now configured with a unified, smart `tasks.json` for Visual Studio Code that automatically detects your OS and uses the appropriate compiler.
 
