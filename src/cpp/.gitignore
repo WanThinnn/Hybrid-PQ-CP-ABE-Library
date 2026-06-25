@@ -9,8 +9,8 @@
 [xX]86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
-build/
-out/
+build*/
+out*/
 
 # Visual Studio cache / temp
 .vs/

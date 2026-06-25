@@ -17,7 +17,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "g++ -O2 -g -Wall -Iinclude main.cpp crypto/ml-dsa.cpp -o main -Llib/static -lhybrid-pq-cp-abe -lrabe_ffi -lcpabe_tkn20 -lcryptopp -loqs -lpthread"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -Iinclude main.cpp -o build_linux/main -Llib/static -Lbuild_linux -lhybrid-pq-cp-abe -lrabe_ffi -lcpabe_tkn20 -lcryptopp -loqs -lpthread"
                 ],
                 "problemMatcher": ["$gcc"]
             },
@@ -40,7 +40,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "g++ -O2 -g -Wall -fPIC -DBUILD_DLL -Iinclude schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -shared -o lib/dynamic/libhybrid-pq-cp-abe.so lib/static/libcryptopp.a lib/static/librabe_ffi.a lib/static/libcpabe_tkn20.a lib/static/liboqs.a"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -fPIC -DBUILD_DLL -Iinclude schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -shared -o build_linux/libhybrid-pq-cp-abe.so lib/static/libcryptopp.a lib/static/librabe_ffi.a lib/static/libcpabe_tkn20.a lib/static/liboqs.a"
                 ],
                 "problemMatcher": ["$gcc"]
             },
@@ -62,7 +62,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && cd lib/static && ar rcs libhybrid-pq-cp-abe.a ../../ac17.o ../../tkn20.o ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o ../../aes-gcm.o && rm -f ../../ac17.o ../../tkn20.o ../../hybrid-cp-abe.o ../../hybrid-oqs-abe.o ../../ml-dsa.o ../../aes-gcm.o"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && ar rcs build_linux/libhybrid-pq-cp-abe.a ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o"
                 ],
                 "problemMatcher": ["$gcc"]
             },
