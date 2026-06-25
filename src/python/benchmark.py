@@ -31,7 +31,7 @@ from hybrid_cpabe import (
 )
 
 # Constants
-ITERATIONS = 50
+ITERATIONS = 500
 RESULTS_DIR = "results"
 TEMP_DIR = "temp_bench"
 POLICY = "(((((ATTR1 AND ATTR2) AND ATTR3) AND (ATTR4 OR ATTR5)) AND ((ATTR6 AND ATTR7) OR (ATTR8 AND ATTR9))) AND (ATTR10 OR ATTR11))"
