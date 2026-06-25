@@ -1,0 +1,7 @@
+LIBRARY libcpabe_tkn20
+EXPORTS
+    TKN20_Setup
+    TKN20_KeyGen
+    TKN20_Encrypt
+    TKN20_Decrypt
+    TKN20_FreeByteArray

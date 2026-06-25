@@ -5,9 +5,11 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <vector>
 #include <sys/stat.h>
 
-// Gom nhóm các header của Crypto++ thường dùng
+// Group of commonly used Crypto++ headers
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/base64.h>
 #include <cryptopp/hex.h>
@@ -99,6 +101,27 @@ inline bool LoadFile(const std::string &filename, std::string &data, const std::
         return false;
     }
     return true;
+}
+
+// Convert string to lowercase
+inline std::string toLowerCase(const std::string &str) {
+    std::string lowerStr = str;
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return lowerStr;
+}
+
+// Save binary data as Base64
+inline bool SaveBinaryAsBase64(const std::string &filename, const unsigned char *data, size_t len) {
+    try {
+        CryptoPP::StringSource ss(data, len, true,
+            new CryptoPP::Base64Encoder(new CryptoPP::FileSink(filename.c_str()), false));
+        return true;
+    } catch (const std::exception &e) {
+        std::cerr << "SaveBinaryAsBase64 error: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 #endif // COMMON_UTILS_H
