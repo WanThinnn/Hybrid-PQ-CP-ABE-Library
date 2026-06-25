@@ -114,6 +114,24 @@ jobs:
           unzip -l "${PACKAGE_NAME}.zip"
 
       # ========================================================================
+      # Prepare Release Notes
+      # ========================================================================
+      - name: Prepare Release Notes
+        id: notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${{ steps.config.outputs.version }}"
+          NOTES_FILE="release/v${VERSION}.md"
+          
+          if [ -f "$NOTES_FILE" ]; then
+            echo "Found release notes at $NOTES_FILE"
+            echo "path=$NOTES_FILE" >> $GITHUB_OUTPUT
+          else
+            echo "Release notes file $NOTES_FILE not found. Falling back to auto-generated notes."
+            echo "path=" >> $GITHUB_OUTPUT
+          fi
+
+      # ========================================================================
       # Create GitHub Release
       # ========================================================================
       - name: Create GitHub Release
@@ -124,39 +142,7 @@ jobs:
             ${{ env.LIB_NAME }}_linux_x86_64_v${{ steps.config.outputs.version }}.zip
             ${{ env.LIB_NAME }}_win_x86_64_v${{ steps.config.outputs.version }}.zip
           fail_on_unmatched_files: false
-          body: |
-            # Hybrid PQ-CP-ABE Library for Windows/Linux - Version ${{ steps.config.outputs.version }}
-
-            > **IMPORTANT NOTICE:**
-            > - From **Version 4.0**, this library natively supports and includes **Post-Quantum Cryptography (PQC)**.
-            > - If your project **DOES NOT need PQC** (to save space, avoid `liboqs` dependencies, or minimize performance overhead), please download and use **Version 3.1** from the [Releases page](../../releases/tag/v3.1.0).
-
-            ## Overview
-            - This release introduces an updated implementation of the CP-ABE AC17 (Ciphertext Policy Attribute-Based Encryption) scheme, now integrated with the AES-GCM-256 symmetric encryption algorithm AND **ML-DSA-87 Post-Quantum Signatures**. 
-            - The main objective of this update is to combine the flexible access control of CP-ABE with the high-performance encryption of AES-GCM-256, and protect data integrity/authentication against quantum adversaries using `liboqs`.
-
-            ## Key Features
-            
-            ### Post-Quantum Hybrid Encryption:
-            - Seamlessly append `--pqc` to the CLI to encrypt data with AES-GCM, manage access with CP-ABE, and sign the ciphertext using quantum-safe ML-DSA-87 signatures.
-            - Prevents tampering and ensures sender authenticity even against future quantum computers.
-
-            ### Optimized Performance:
-            - The AES-GCM-256 encryption ensures fast and secure encryption of large data files.
-            - The AC17 scheme allows for more flexible encryption policies and fine-grained control over who can access the encrypted content.
-
-            ### Ultimate Multi-OS Build:
-            - A unified `tasks.json` automatically detects the OS and builds seamlessly on Windows (MSVC) or Linux (g++).
-
-            ## Changes in This Release
-            - Added **Post-Quantum Signatures** (ML-DSA-87 via `liboqs`).
-            - Unified executable `main` supporting both standard mode and `--pqc` mode.
-            - Renamed library to `libhybrid-pq-cp-abe` to reflect the new architecture.
-            - Removed legacy CLI arguments and improved parsing.
-
-            ## Download
-            - **Linux**: `${{ env.LIB_NAME }}_linux_x86_64_v${{ steps.config.outputs.version }}.zip`
-            - **Windows**: `${{ env.LIB_NAME }}_win_x86_64_v${{ steps.config.outputs.version }}.zip`
+          body_path: ${{ steps.notes.outputs.path }}
           draft: false
           prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
           generate_release_notes: true
