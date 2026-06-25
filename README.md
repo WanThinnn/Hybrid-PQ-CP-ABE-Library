@@ -4,7 +4,7 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 > [!WARNING]
 > **PQC Branch Notice**: This branch includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks. 
 > 
-> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch back to the **[`main` branch]**!
+> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch back to the  **[`main`](https://github.com/WanThinnn/Hybrid-CP-ABE-Library/tree/main)**!
 
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi))
