@@ -7,8 +7,8 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 > **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch back to the **[`main` branch]**!
 
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
-- [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807)
-- [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi)
+- [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi))
+- [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2020/733) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
 - [liboqs](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
 
 ## Why Use This Library? (Performance & Benchmarks)
@@ -35,7 +35,7 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
 
 > **Note:** The minor trade-off for this extreme decryption speed is a slightly slower encryption phase for very complex policies (due to the Rust `pest` parser generating the abstract syntax tree), but the massive decryption gains (nearly 10x faster) make it exceptionally well-suited for scalable real-world systems.
 
-> **Disclaimer (Scope of Library):** This library is highly specialized and **only supports the AC17 CP-ABE scheme**. It is built specifically to achieve maximum performance and seamless C++ integration for this single algorithm. If your project requires a broader variety of cryptographic schemes (such as KP-ABE, IBE, signatures, etc.), we highly recommend using [Charm-Crypto](https://github.com/JHUISI/charm), which offers a vast and flexible collection of cryptographic primitives.
+> **Disclaimer (Scope of Library):** This library is highly specialized and is optimized for the **AC17** and **TKN20** CP-ABE schemes. It is built specifically to achieve maximum performance and seamless C++ integration. If your project requires a broader variety of cryptographic schemes (such as KP-ABE, IBE, etc.), we highly recommend using [Charm-Crypto](https://github.com/JHUISI/charm), which offers a vast and flexible collection of cryptographic primitives.
 
 ## Building (Ultimate Multi-OS Task)
 
@@ -64,26 +64,26 @@ The repository is now configured with a unified, smart `tasks.json` for Visual S
 
 The usage of the executable is as follows:
 ```sh
-Usage: main [command] [--pqc] [options]
-Usage: main setup <path_to_save_file>
-Usage: main genkey <master_key_file> <attributes> <private_key_file>
-Usage: main encrypt <public_key_file> [pqc_private_key] <plaintext_file> <policy> <ciphertext_file>
+Usage: main [command] [--scheme <name>] [--pqc] [options]
+Usage: main setup [--scheme <name>] <path_to_save_file>
+Usage: main genkey [--scheme <name>] <master_key_file> <attributes> <private_key_file>
+Usage: main encrypt [--scheme <name>] <public_key_file> [pqc_private_key] <plaintext_file> <policy> <ciphertext_file>
 Usage: main decrypt <private_key_file> [pqc_public_key] <ciphertext_file> <recovertext_file>
 ```
 
 Example commands (Standard Mode):
 ```sh
-main setup test_case
-main genkey "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
-main encrypt "test_case/cpabe_pk.key" "test_case/plaintext.txt" "((A and C) or E)" "test_case/ciphertext.txt"
+main setup --scheme tkn20 test_case
+main genkey --scheme tkn20 "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
+main encrypt --scheme tkn20 "test_case/cpabe_pk.key" "test_case/plaintext.txt" "((A and C) or E)" "test_case/ciphertext.txt"
 main decrypt "test_case/cpabe_sk.key" "test_case/ciphertext.txt" "test_case/recovertext.txt"
 ```
 
 Example commands (Post-Quantum Mode):
 ```sh
-main setup --pqc test_case
-main genkey "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
-main encrypt --pqc "test_case/cpabe_pk.key" "test_case/pqc_sk.key" "test_case/plaintext.txt" "\"A\"" "test_case/ciphertext.txt"
+main setup --scheme tkn20 --pqc test_case
+main genkey --scheme tkn20 "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
+main encrypt --scheme tkn20 --pqc "test_case/cpabe_pk.key" "test_case/pqc_sk.key" "test_case/plaintext.txt" "\"A\"" "test_case/ciphertext.txt"
 main decrypt --pqc "test_case/cpabe_sk.key" "test_case/pqc_pk.key" "test_case/ciphertext.txt" "test_case/recovertext.txt"
 ```
 ### Integrating the Library
@@ -91,7 +91,7 @@ After building the library, you can integrate it into any program on Windows/Lin
 Please go to <b>python-sources</b> folder to see more.
 
 ## Acknowledgements
-Special thanks to [Aya0wind](https://github.com/Aya0wind) for the [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi) project, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, and the [CryptoPP](https://github.com/weidai11/cryptopp) Library for helping me build this library.
+Special thanks to [Aya0wind](https://github.com/Aya0wind) for the [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi) project, [Cloudflare](https://github.com/cloudflare/circl) for the Go-based CIRCL TKN20 implementation, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, and the [CryptoPP](https://github.com/weidai11/cryptopp) Library for helping me build this library.
 ## License
 
 This project is open-source and available for anyone to use, modify, and distribute. We encourage you to clone, fork, and contribute to this project to help improve and expand its capabilities.

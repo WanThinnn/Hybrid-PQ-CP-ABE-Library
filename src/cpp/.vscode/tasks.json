@@ -17,7 +17,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "mkdir -p build_linux && g++ -O2 -g -Wall -Iinclude main.cpp -o build_linux/main -Llib/static -Lbuild_linux -lhybrid-pq-cp-abe -lrabe_ffi -lcpabe_tkn20 -lcryptopp -loqs -lpthread"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -Iinclude main.cpp -o build_linux/main -Lbuild_linux -lhybrid-pq-cp-abe -lpthread -ldl -lm"
                 ],
                 "problemMatcher": ["$gcc"]
             },
@@ -62,7 +62,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "mkdir -p build_linux && g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && ar rcs build_linux/libhybrid-pq-cp-abe.a ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && ar rcs build_linux/libhybrid-pq-cp-abe.a ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && printf \"create build_linux/libhybrid-pq-cp-abe_fat.a\\naddlib build_linux/libhybrid-pq-cp-abe.a\\naddlib lib/static/libcpabe_tkn20.a\\naddlib lib/static/librabe_ffi.a\\naddlib lib/static/liboqs.a\\naddlib lib/static/libcryptopp.a\\nsave\\nend\\n\" | ar -M && mv build_linux/libhybrid-pq-cp-abe_fat.a build_linux/libhybrid-pq-cp-abe.a"
                 ],
                 "problemMatcher": ["$gcc"]
             },

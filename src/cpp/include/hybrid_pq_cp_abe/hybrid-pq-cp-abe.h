@@ -62,15 +62,29 @@ extern "C"
     // Setup with scheme selection
     LIB_API int setup_with_scheme(const char *path, CPABEScheme scheme);
     
+    // Setup + PQC (backward compatibility)
+    LIB_API int hybrid_cpabe_setup_with_pqc(const char *path);
+    
     // Setup + PQC with scheme selection
     LIB_API int hybrid_cpabe_setup_with_pqc_scheme(const char *path, CPABEScheme scheme);
     
+    // Generate Private Key (backward compatibility)
+    LIB_API int generateSecretKey(const char *masterKeyFile, 
+                                   const char *attributes, 
+                                   const char *privateKeyFile);
+                                   
     // Generate Private Key with scheme selection
     LIB_API int generateSecretKey_with_scheme(const char *masterKeyFile, 
                                                const char *attributes, 
                                                const char *privateKeyFile,
                                                CPABEScheme scheme);
     
+    // Encrypt file (backward compatibility)
+    LIB_API int hybrid_cpabe_encrypt(const char *publicKeyFile, 
+                                      const char *plaintextFile, 
+                                      const char *policy, 
+                                      const char *ciphertextFile);
+                                      
     // Encrypt file with scheme selection
     LIB_API int hybrid_cpabe_encrypt_with_scheme(const char *publicKeyFile, 
                             const char *plaintextFile, 
@@ -133,6 +147,14 @@ extern "C"
         const char *policy,
         unsigned char **ciphertext, size_t *ctLen,
         CPABEScheme scheme);
+        
+    // Encrypt buffer + sign (backward compatibility)
+    LIB_API int hybrid_cpabe_encryptBuffer_and_sign(
+        const unsigned char *publicKey, size_t pkLen,
+        const unsigned char *pqcPrivKey, size_t pqcPrivLen,
+        const unsigned char *plaintext, size_t ptLen,
+        const char *policy,
+        unsigned char **ciphertext, size_t *ctLen);
     
     // Decrypt from buffer
     LIB_API int hybrid_cpabe_decryptBuffer(

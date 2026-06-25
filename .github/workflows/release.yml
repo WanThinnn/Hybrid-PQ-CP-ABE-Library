@@ -75,7 +75,7 @@ jobs:
           # Copy header files
           cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
           
-          # Copy ONLY libhybrid-pq-cp-abe libraries for Linux
+          # Copy libhybrid-pq-cp-abe and its static dependencies for Linux
           cp src/cpp/lib/dynamic/libhybrid-pq-cp-abe.so "${PACKAGE_NAME}/lib/" 2>/dev/null || true
           cp src/cpp/lib/static/libhybrid-pq-cp-abe.a "${PACKAGE_NAME}/lib/" 2>/dev/null || true
           
@@ -101,9 +101,10 @@ jobs:
           # Copy header files
           cp -r src/cpp/include/hybrid_pq_cp_abe "${PACKAGE_NAME}/include/"
           
-          # Copy ONLY libhybrid-pq-cp-abe libraries for Windows
+          # Copy libhybrid-pq-cp-abe and its DLL dependencies for Windows
           cp src/cpp/lib/dynamic/libhybrid-pq-cp-abe.dll "${PACKAGE_NAME}/lib/" 2>/dev/null || true
           cp src/cpp/lib/static/libhybrid-pq-cp-abe.lib "${PACKAGE_NAME}/lib/" 2>/dev/null || true
+          cp src/cpp/lib/dynamic/libcpabe_tkn20.dll "${PACKAGE_NAME}/lib/" 2>/dev/null || true
           
           # Create zip
           zip -r "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"

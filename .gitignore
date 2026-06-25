@@ -353,3 +353,5 @@ MigrationBackup/
 src/cpp/test/
 
 src/cpp/build_for_old_linux.py
+
+test*/

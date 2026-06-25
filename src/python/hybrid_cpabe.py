@@ -16,7 +16,7 @@ elif system == "Darwin":
 else:
     lib_name = "libhybrid-pq-cp-abe.so"
 
-lib_path = os.path.join(script_dir, lib_name)
+lib_path = os.path.join(script_dir, "lib",lib_name)
 
 if not os.path.exists(lib_path):
     print(f"Error: Library not found at {lib_path}")
@@ -92,6 +92,45 @@ abe_lib.hybrid_cpabe_decryptBuffer_and_verify.restype = ctypes.c_int
 
 abe_lib.freeBuffer.argtypes = [c_ubyte_p]
 abe_lib.freeBuffer.restype = None
+
+# Scheme enum
+CPABE_SCHEME_AC17 = 0
+CPABE_SCHEME_TKN20 = 1
+
+# --- WITH SCHEME BINDINGS ---
+abe_lib.setup_with_scheme.argtypes = [c_char_p, ctypes.c_int]
+abe_lib.setup_with_scheme.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_setup_with_pqc_scheme.argtypes = [c_char_p, ctypes.c_int]
+abe_lib.hybrid_cpabe_setup_with_pqc_scheme.restype = ctypes.c_int
+
+abe_lib.generateSecretKey_with_scheme.argtypes = [c_char_p, c_char_p, c_char_p, ctypes.c_int]
+abe_lib.generateSecretKey_with_scheme.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encrypt_with_scheme.argtypes = [c_char_p, c_char_p, c_char_p, c_char_p, ctypes.c_int]
+abe_lib.hybrid_cpabe_encrypt_with_scheme.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encryptBuffer_with_scheme.argtypes = [
+    c_ubyte_p, c_size_t, # publicKey, pkLen
+    c_ubyte_p, c_size_t, # plaintext, ptLen
+    c_char_p,            # policy
+    POINTER(c_ubyte_p), POINTER(c_size_t), # ciphertext, ctLen
+    ctypes.c_int         # scheme
+]
+abe_lib.hybrid_cpabe_encryptBuffer_with_scheme.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme.argtypes = [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p, ctypes.c_int]
+abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme.restype = ctypes.c_int
+
+abe_lib.hybrid_cpabe_encryptBuffer_and_sign_with_scheme.argtypes = [
+    c_ubyte_p, c_size_t, # publicKey, pkLen
+    c_ubyte_p, c_size_t, # pqcPrivKey, pqcPrivLen
+    c_ubyte_p, c_size_t, # plaintext, ptLen
+    c_char_p,            # policy
+    POINTER(c_ubyte_p), POINTER(c_size_t), # ciphertext, ctLen
+    ctypes.c_int         # scheme
+]
+abe_lib.hybrid_cpabe_encryptBuffer_and_sign_with_scheme.restype = ctypes.c_int
 
 # Error codes
 HCPABE_SUCCESS = 0
@@ -292,6 +331,85 @@ def call_hybrid_cpabe_decryptBuffer_and_verify(private_key: bytes, pqc_pub_key: 
     else:
         error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
         raise RuntimeError(f"Buffer PQC decryption failed: {error_msg} (code: {result})")
+
+# --- WRAPPERS WITH SCHEME ---
+def call_setup_with_scheme(path_to_save_file, scheme=CPABE_SCHEME_AC17):
+    result = abe_lib.setup_with_scheme(path_to_save_file.encode('utf-8'), scheme)
+    if result != HCPABE_SUCCESS:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Setup failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_setup_with_pqc_scheme(path_to_save_file, scheme=CPABE_SCHEME_AC17):
+    result = abe_lib.hybrid_cpabe_setup_with_pqc_scheme(path_to_save_file.encode('utf-8'), scheme)
+    if result != HCPABE_SUCCESS:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"PQC Setup failed: {error_msg} (code: {result})")
+    return result
+
+def call_generate_secret_key_with_scheme(master_key_file, attributes, private_key_file, scheme=CPABE_SCHEME_AC17):
+    result = abe_lib.generateSecretKey_with_scheme(master_key_file.encode('utf-8'),
+                                        attributes.encode('utf-8'),
+                                        private_key_file.encode('utf-8'), scheme)
+    if result != HCPABE_SUCCESS:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Key generation failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_encrypt_with_scheme(public_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_AC17):
+    result = abe_lib.hybrid_cpabe_encrypt_with_scheme(public_key_file.encode('utf-8'),
+                                   plaintext_file.encode('utf-8'),
+                                   policy.encode('utf-8'),
+                                   ciphertext_file.encode('utf-8'), scheme)
+    if result != HCPABE_SUCCESS:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Encryption failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_encryptBuffer_with_scheme(public_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_AC17) -> bytes:
+    pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
+    pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
+    ct_ptr = c_ubyte_p()
+    ct_len = c_size_t(0)
+    result = abe_lib.hybrid_cpabe_encryptBuffer_with_scheme(
+        pk_arr, len(public_key), pt_arr, len(plaintext),
+        policy.encode('utf-8'), byref(ct_ptr), byref(ct_len), scheme
+    )
+    if result == HCPABE_SUCCESS:
+        ct_bytes = bytes(ct_ptr[:ct_len.value])
+        abe_lib.freeBuffer(ct_ptr)
+        return ct_bytes
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        raise RuntimeError(f"Buffer encryption failed: {error_msg} (code: {result})")
+
+def call_hybrid_cpabe_encrypt_and_sign_with_scheme(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_AC17):
+    result = abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme(
+        public_key_file.encode('utf-8'), pqc_private_key_file.encode('utf-8'),
+        plaintext_file.encode('utf-8'), policy.encode('utf-8'), ciphertext_file.encode('utf-8'), scheme)
+    if result != HCPABE_SUCCESS:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        print(f"Encryption failed: {error_msg} (code: {result})")
+    return result
+
+def call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_AC17) -> bytes:
+    pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
+    pqc_sk_arr = (c_ubyte * len(pqc_priv_key)).from_buffer_copy(pqc_priv_key)
+    pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
+    ct_ptr = c_ubyte_p()
+    ct_len = c_size_t(0)
+    result = abe_lib.hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
+        pk_arr, len(public_key), pqc_sk_arr, len(pqc_priv_key),
+        pt_arr, len(plaintext), policy.encode('utf-8'),
+        byref(ct_ptr), byref(ct_len), scheme
+    )
+    if result == HCPABE_SUCCESS:
+        ct_bytes = bytes(ct_ptr[:ct_len.value])
+        abe_lib.freeBuffer(ct_ptr)
+        return ct_bytes
+    else:
+        error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
+        raise RuntimeError(f"Buffer PQC encryption failed: {error_msg} (code: {result})")
 
 # Main function to handle CLI in Python
 if __name__ == "__main__":
