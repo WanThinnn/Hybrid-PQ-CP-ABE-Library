@@ -61,6 +61,7 @@ We provide a unified `Makefile` that automatically detects your operating system
   ```cmd
   make clean
   make all
+  make test
   ```
   *(Note: If you use MSYS2 or MinGW `make`, it works seamlessly as well!)*
 
@@ -68,6 +69,7 @@ We provide a unified `Makefile` that automatically detects your operating system
   ```bash
   make clean
   make all
+  make test
   ```
 
 **Available Make Commands:**
@@ -75,6 +77,7 @@ We provide a unified `Makefile` that automatically detects your operating system
 - `make static`: Builds only the static library (`.lib` or `.a`).
 - `make shared`: Builds only the shared library (`.dll` or `.so`).
 - `make executable`: Builds only the CLI executable.
+- `make test`: Runs the test suite. See `src/cpp/test/run_test.sh` or `src/cpp/test/run_test.bat` for more information.
 - `make clean`: Removes all build artifacts and temporary files.
 
 ### Option 2: Using Visual Studio Code
