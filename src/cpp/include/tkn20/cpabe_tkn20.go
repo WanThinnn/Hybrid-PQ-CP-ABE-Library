@@ -47,7 +47,7 @@ func TKN20_FreeByteArray(arr C.CByteArray) {
 	}
 }
 
-// export TKN20_Setup
+//export TKN20_Setup
 // Setup initializes the system, returning the Public Key (for encryption) and Master Secret Key (for decryption key generation)
 func TKN20_Setup(pubKeyOut *C.CByteArray, mskOut *C.CByteArray) C.int {
 	pk, msk, err := tkn20.Setup(nil)
@@ -63,7 +63,7 @@ func TKN20_Setup(pubKeyOut *C.CByteArray, mskOut *C.CByteArray) C.int {
 	return 0
 }
 
-// export TKN20_KeyGen
+//export TKN20_KeyGen
 // Generate decryption key (Attribute Key) based on the attribute set passed as a string (e.g., "A:1,B:2,ROLE:admin")
 func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKeyOut *C.CByteArray) C.int {
 	mskData := C.GoBytes(unsafe.Pointer(mskBytes), C.int(mskLen))
@@ -100,7 +100,7 @@ func TKN20_KeyGen(mskBytes *C.uint8_t, mskLen C.size_t, attrsStr *C.char, attrKe
 	return 0
 }
 
-// export TKN20_Encrypt
+//export TKN20_Encrypt
 // Encrypt message based on the policy (Policy). Example policyStr: "A:1 AND B:2"
 func TKN20_Encrypt(pkBytes *C.uint8_t, pkLen C.size_t, policyStr *C.char, msgBytes *C.uint8_t, msgLen C.size_t, ctOut *C.CByteArray) C.int {
 	pkData := C.GoBytes(unsafe.Pointer(pkBytes), C.int(pkLen))
@@ -124,7 +124,7 @@ func TKN20_Encrypt(pkBytes *C.uint8_t, pkLen C.size_t, policyStr *C.char, msgByt
 	return 0
 }
 
-// export TKN20_Decrypt
+//export TKN20_Decrypt
 // Decrypt ciphertext using Attribute Key (Attribute Key)
 func TKN20_Decrypt(akBytes *C.uint8_t, akLen C.size_t, ctBytes *C.uint8_t, ctLen C.size_t, msgOut *C.CByteArray) C.int {
 	akData := C.GoBytes(unsafe.Pointer(akBytes), C.int(akLen))

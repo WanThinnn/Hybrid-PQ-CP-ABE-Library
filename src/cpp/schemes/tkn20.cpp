@@ -87,8 +87,29 @@ static std::string convertPolicyToTKN20(const std::string &input)
         }
     }
 
+    // Post-process: CIRCL TKN20 parser requires "not" to be followed by
+    // a parenthesized group, e.g. "not (hr:hr)". If "not" is followed by
+    // a bare attribute (not "("), wrap it in parentheses automatically.
+    std::vector<std::string> processed;
+    for (size_t i = 0; i < tokens.size(); ++i)
+    {
+        processed.push_back(tokens[i]);
+        if (tokens[i] == "not" && i + 1 < tokens.size() && tokens[i + 1] != "(")
+        {
+            // Find the extent of the expression after "not":
+            // It could be a single attribute token, or multiple tokens
+            // connected by "and"/"or" until we hit a ")" or end.
+            // For the simple case "not attr", wrap just the next token.
+            // For compound cases, user should already use explicit parentheses.
+            processed.push_back("(");
+            processed.push_back(tokens[i + 1]);
+            processed.push_back(")");
+            ++i; // skip the next token as we already added it
+        }
+    }
+
     std::string result;
-    for (const auto &t : tokens)
+    for (const auto &t : processed)
     {
         if (!result.empty()) result += " ";
         result += t;
