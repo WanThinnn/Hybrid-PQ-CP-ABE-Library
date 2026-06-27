@@ -17,7 +17,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "mkdir -p build_linux && g++ -O2 -g -Wall -Iinclude main.cpp -o build_linux/main -Lbuild_linux -lhybrid-pq-cp-abe -lpthread -ldl -lm"
+                    "mkdir -p build_linux && g++ -O2 -g -Wall -Iinclude main.cpp -o build_linux/main build_linux/libhybrid-pq-cp-abe.a -lpthread -ldl -lm"
                 ],
                 "problemMatcher": ["$gcc"]
             },
@@ -62,7 +62,7 @@
                 "command": "bash",
                 "args": [
                     "-c",
-                    "mkdir -p build_linux && g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && ar rcs build_linux/libhybrid-pq-cp-abe.a ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && echo \"create build_linux/libhybrid-pq-cp-abe_fat.a\" > mri.mac && echo \"addlib build_linux/libhybrid-pq-cp-abe.a\" >> mri.mac && echo \"addlib lib/static/libcpabe_tkn20.a\" >> mri.mac && echo \"addlib lib/static/librabe_ffi.a\" >> mri.mac && echo \"addlib lib/static/liboqs.a\" >> mri.mac && echo \"addlib lib/static/libcryptopp.a\" >> mri.mac && echo \"save\" >> mri.mac && echo \"end\" >> mri.mac && ar -M < mri.mac && rm -f mri.mac && mv build_linux/libhybrid-pq-cp-abe_fat.a build_linux/libhybrid-pq-cp-abe.a"
+                    "mkdir -p build_linux && rm -f build_linux/libhybrid-pq-cp-abe.a && g++ -O2 -g -Wall -c schemes/ac17.cpp schemes/tkn20.cpp core/hybrid-cp-abe.cpp core/hybrid-oqs-abe.cpp crypto/ml-dsa.cpp crypto/aes-gcm.cpp -Iinclude -fPIC && ar rcs build_linux/libhybrid-pq-cp-abe.a ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o && echo \"create build_linux/libhybrid-pq-cp-abe_fat.a\" > mri.mac && echo \"addlib build_linux/libhybrid-pq-cp-abe.a\" >> mri.mac && echo \"addlib lib/static/libcpabe_tkn20.a\" >> mri.mac && echo \"addlib lib/static/librabe_ffi.a\" >> mri.mac && echo \"addlib lib/static/liboqs.a\" >> mri.mac && echo \"addlib lib/static/libcryptopp.a\" >> mri.mac && echo \"save\" >> mri.mac && echo \"end\" >> mri.mac && ar -M < mri.mac && rm -f mri.mac && mv build_linux/libhybrid-pq-cp-abe_fat.a build_linux/libhybrid-pq-cp-abe.a"
                 ],
                 "problemMatcher": ["$gcc"]
             },
