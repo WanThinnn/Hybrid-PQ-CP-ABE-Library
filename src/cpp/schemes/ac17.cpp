@@ -150,18 +150,15 @@ int ac17_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **ms
             return HCPABE_ERR_CRYPTO_FAILED;
         }
 
-        std::string pkBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(publicKeyJson), std::strlen(publicKeyJson));
-        std::string mskBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(masterKeyJson), std::strlen(masterKeyJson));
-
-        *pkLen = pkBase64.size();
+        *pkLen = std::strlen(publicKeyJson);
         *pkBuffer = (unsigned char *)malloc(*pkLen);
         if (!*pkBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*pkBuffer, pkBase64.data(), *pkLen);
+        std::memcpy(*pkBuffer, publicKeyJson, *pkLen);
 
-        *mskLen = mskBase64.size();
+        *mskLen = std::strlen(masterKeyJson);
         *mskBuffer = (unsigned char *)malloc(*mskLen);
         if (!*mskBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*mskBuffer, mskBase64.data(), *mskLen);
+        std::memcpy(*mskBuffer, masterKeyJson, *mskLen);
 
         rabe_free_json(masterKeyJson);
         rabe_free_json(publicKeyJson);
@@ -184,8 +181,7 @@ int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char 
 {
     try
     {
-        std::string mskStr(reinterpret_cast<const char*>(mskBuffer), mskLen);
-        std::string mskDecoded = decodeBase64(mskStr);
+        std::string mskDecoded(reinterpret_cast<const char*>(mskBuffer), mskLen);
 
         const void *masterKey = rabe_ac17_master_key_from_json(mskDecoded.c_str());
         if (!masterKey) return HCPABE_ERR_INVALID_KEY;
@@ -206,12 +202,10 @@ int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char 
         rabe_cp_ac17_free_secret_key(secretKey);
         if (!secretKeyJson) return HCPABE_ERR_CRYPTO_FAILED;
 
-        std::string skBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(secretKeyJson), std::strlen(secretKeyJson));
-        
-        *skLen = skBase64.size();
+        *skLen = std::strlen(secretKeyJson);
         *skBuffer = (unsigned char *)malloc(*skLen);
         if (!*skBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*skBuffer, skBase64.data(), *skLen);
+        std::memcpy(*skBuffer, secretKeyJson, *skLen);
 
         secureWipe(secretKeyJson, std::strlen(secretKeyJson));
         rabe_free_json(secretKeyJson);

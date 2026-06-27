@@ -93,7 +93,8 @@ MinSizeRel/
 ########################################
 
 # *.generated.h
-test
+!test
+
 
 
 

@@ -310,10 +310,12 @@ int main(int argc, char *argv[])
             
             result = hybrid_cpabe_setupBuffer_with_scheme(&pk, &pkLen, &msk, &mskLen, scheme);
             if (result == HCPABE_SUCCESS) {
-                std::string pkOut((char*)pk, pkLen);
-                std::string mskOut((char*)msk, mskLen);
-                std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkOut << std::endl;
-                std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskOut << std::endl;
+                std::string pkBase64;
+                CryptoPP::StringSource(pk, pkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
+                std::string mskBase64;
+                CryptoPP::StringSource(msk, mskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
+                std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
+                std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
                 freeBuffer(pk);
                 freeBuffer(msk);
             }
@@ -338,8 +340,9 @@ int main(int argc, char *argv[])
             
             result = hybrid_cpabe_genkeyBuffer_with_scheme((const unsigned char*)decodedMskStr.data(), decodedMskStr.size(), args[3].c_str(), &sk, &skLen, scheme);
             if (result == HCPABE_SUCCESS) {
-                std::string skOut((char*)sk, skLen);
-                std::cout << "--- SECRET KEY (Base64) ---" << std::endl << skOut << std::endl;
+                std::string skBase64;
+                CryptoPP::StringSource(sk, skLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(skBase64), false));
+                std::cout << "--- SECRET KEY (Base64) ---" << std::endl << skBase64 << std::endl;
                 freeBuffer(sk);
             }
         }

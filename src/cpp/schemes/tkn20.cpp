@@ -198,18 +198,15 @@ int tkn20_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **m
             return HCPABE_ERR_CRYPTO_FAILED;
         }
 
-        std::string pkBase64 = encodeBase64(pubKey.data, pubKey.len);
-        std::string mskBase64 = encodeBase64(msk.data, msk.len);
-
-        *pkLen = pkBase64.size();
+        *pkLen = pubKey.len;
         *pkBuffer = (unsigned char *)malloc(*pkLen);
         if (!*pkBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*pkBuffer, pkBase64.data(), *pkLen);
+        std::memcpy(*pkBuffer, pubKey.data, *pkLen);
 
-        *mskLen = mskBase64.size();
+        *mskLen = msk.len;
         *mskBuffer = (unsigned char *)malloc(*mskLen);
         if (!*mskBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*mskBuffer, mskBase64.data(), *mskLen);
+        std::memcpy(*mskBuffer, msk.data, *mskLen);
 
         TKN20_FreeByteArray(pubKey);
         TKN20_FreeByteArray(msk);
@@ -274,26 +271,21 @@ int tkn20_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char
 {
     try
     {
-        std::string mskStr(reinterpret_cast<const char*>(mskBuffer), mskLen);
-        std::string mskDecoded = decodeBase64(mskStr);
-
         std::string tkn20Attrs = convertAttrsToTKN20(attrs);
 
         CByteArray attrKeyOut;
         int res = TKN20_KeyGen(
-            reinterpret_cast<uint8_t *>(const_cast<char *>(mskDecoded.data())),
-            mskDecoded.size(),
+            reinterpret_cast<uint8_t *>(const_cast<unsigned char *>(mskBuffer)),
+            mskLen,
             const_cast<char *>(tkn20Attrs.c_str()),
             &attrKeyOut);
 
         if (res != 0) return HCPABE_ERR_CRYPTO_FAILED;
 
-        std::string skBase64 = encodeBase64(attrKeyOut.data, attrKeyOut.len);
-        
-        *skLen = skBase64.size();
+        *skLen = attrKeyOut.len;
         *skBuffer = (unsigned char *)malloc(*skLen);
         if (!*skBuffer) return HCPABE_ERR_MEMORY;
-        std::memcpy(*skBuffer, skBase64.data(), *skLen);
+        std::memcpy(*skBuffer, attrKeyOut.data, *skLen);
 
         TKN20_FreeByteArray(attrKeyOut);
         return HCPABE_SUCCESS;

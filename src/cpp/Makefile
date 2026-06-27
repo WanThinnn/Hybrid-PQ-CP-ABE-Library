@@ -58,10 +58,7 @@ else
     CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -fPIC
     DLL_FLAGS = -DBUILD_DLL -shared
     
-    # GCC object files
-    VPATH = $(SCHEMES_DIR) $(CORE_DIR) $(CRYPTO_DIR)
-    OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.cpp=.o)))
-    MAIN_OBJ = $(BUILD_DIR)/main.o
+	# No intermediate objects needed, we compile inline to keep output clean
     
     # Targets
     STATIC_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.a
@@ -73,7 +70,7 @@ else
     LDFLAGS = -lpthread -ldl -lm
 endif
 
-.PHONY: all clean executable shared static help
+.PHONY: all clean executable shared static help test
 
 all: static shared executable
 	@echo "================================================================"
@@ -91,6 +88,7 @@ help:
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the main executable"
+	@echo "  make test            Run an automated test using the executable"
 	@echo "  make clean           Remove all build artifacts and temporary files"
 	@echo "  make help            Show this help message"
 	@echo ""
@@ -120,35 +118,47 @@ shared: $(SHARED_LIB)
 $(SHARED_LIB): static
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Compiling Shared Library...
-	$(CXX) $(CXXFLAGS) $(DLL_FLAGS) /Fe:$(SHARED_LIB) $(SRCS) $(LDFLAGS) $(SHARED_LIBS)
+	$(CXX) $(CXXFLAGS) $(DLL_FLAGS) /Fe:$(SHARED_LIB) $(SRCS) $(LDFLAGS) $(SHARED_LIBS) /IMPLIB:$(BUILD_DIR)\libhybrid-pq-cp-abe_dll.lib
 	copy /Y lib\dynamic\libcpabe_tkn20.dll $(BUILD_DIR)
 	@del /Q *.obj *.pdb >nul 2>&1
-	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb >nul 2>&1
+	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb $(BUILD_DIR)\*_dll.lib >nul 2>&1
 	@echo Done! Output at $(SHARED_LIB)
 
 executable: $(EXEC)
 
-$(EXEC): static
+$(EXEC): $(MAIN_SRC) $(STATIC_LIB)
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Compiling Executable...
 	$(CXX) $(CXXFLAGS) /Fe:$(EXEC) $(MAIN_SRC) $(LDFLAGS) $(STATIC_LIB) $(SHARED_LIBS)
 	copy /Y lib\dynamic\libcpabe_tkn20.dll $(BUILD_DIR)
 	@del /Q *.obj *.pdb >nul 2>&1
-	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb >nul 2>&1
+	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb $(BUILD_DIR)\*_dll.lib >nul 2>&1
 	@echo Done! Output at $(EXEC)
 
 clean:
 	@if exist $(BUILD_DIR) rmdir /S /Q $(BUILD_DIR)
+	@if exist test_case rmdir /S /Q test_case
 	@del /Q *.obj *.pdb >nul 2>&1
 
+test: $(EXEC)
+	@echo ================================================================
+	@echo  Running Tests (Standard Mode)...
+	@echo ================================================================
+	@if not exist test_case mkdir test_case
+	@echo This is a secret message for testing Hybrid CP-ABE!> test_case\plaintext.txt
+	@test\run_test.bat
+	@echo Test completed! Check test_case\recovertext.txt
 else
 
 static: $(STATIC_LIB)
 
-$(STATIC_LIB): $(OBJS)
+$(STATIC_LIB): $(SRCS)
 	@mkdir -p $(BUILD_DIR)
 	@rm -f $(STATIC_LIB)
-	ar rcs $(STATIC_LIB) $(OBJS)
+	@echo Compiling...
+	$(CXX) $(CXXFLAGS) -c $(SRCS)
+	@echo Archiving...
+	ar rcs $(STATIC_LIB) ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o
 	@echo "create $(BUILD_DIR)/libhybrid-pq-cp-abe_fat.a" > mri.mac
 	@echo "addlib $(STATIC_LIB)" >> mri.mac
 	@echo "addlib $(LIB_STATIC_DIR)/libcpabe_tkn20.a" >> mri.mac
@@ -160,28 +170,35 @@ $(STATIC_LIB): $(OBJS)
 	ar -M < mri.mac
 	@rm -f mri.mac
 	@mv $(BUILD_DIR)/libhybrid-pq-cp-abe_fat.a $(STATIC_LIB)
-	@rm -f $(OBJS)
+	@echo Cleaning up object files...
+	@rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o
 	@echo Done! Output at $(STATIC_LIB)
 
 shared: $(SHARED_LIB)
 
-$(SHARED_LIB): static
+$(SHARED_LIB): $(SRCS) $(STATIC_LIBS_GCC)
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(DLL_FLAGS) $(SRCS) -o $(SHARED_LIB) $(STATIC_LIBS_GCC)
 	@echo Done! Output at $(SHARED_LIB)
 
 executable: $(EXEC)
 
-$(EXEC): static
+$(EXEC): $(MAIN_SRC) $(STATIC_LIB)
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) -O2 -g -Wall -I$(INC_DIR) $(MAIN_SRC) -o $(EXEC) $(STATIC_LIB) $(LDFLAGS)
 	@echo Done! Output at $(EXEC)
 
-$(BUILD_DIR)/%.o: %.cpp
-	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf test_case
+
+test: $(EXEC)
+	@echo "================================================================"
+	@echo " Running Tests (Standard Mode)..."
+	@echo "================================================================"
+	@mkdir -p test_case
+	@chmod +x ./test/run_test.sh
+	@./test/run_test.sh
+	@echo "Test completed! Check test_case/recovertext.txt"
 
 endif
