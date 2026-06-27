@@ -142,8 +142,7 @@ clean:
 
 test: $(EXEC)
 	@echo ================================================================
-	@echo  Running Tests (Standard Mode)...
-	@echo ================================================================
+	@echo  Running Tests...
 	@if not exist test_case mkdir test_case
 	@echo This is a secret message for testing Hybrid CP-ABE!> test_case\plaintext.txt
 	@test\run_test.bat
@@ -194,8 +193,7 @@ clean:
 
 test: $(EXEC)
 	@echo "================================================================"
-	@echo " Running Tests (Standard Mode)..."
-	@echo "================================================================"
+	@echo " Running Tests..."
 	@mkdir -p test_case
 	@chmod +x ./test/run_test.sh
 	@./test/run_test.sh

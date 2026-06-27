@@ -12,7 +12,8 @@ echo "================================================================"
 echo " Hybrid CP-ABE Full Test Suite (Linux/macOS)"
 echo "================================================================"
 
-mkdir -p "$TC/tkn20" "$TC/pqc" "$TC/pqc_tkn20" "$TC/buf"
+# Create dedicated directories for each scheme
+mkdir -p "$TC/ac17" "$TC/ac17_pqc" "$TC/tkn20" "$TC/tkn20_pqc" "$TC/buf_ac17" "$TC/buf_ac17_pqc" "$TC/buf_tkn20" "$TC/buf_tkn20_pqc"
 echo "This is a secret message for testing Hybrid CP-ABE!" > "$TC/plaintext.txt"
 
 # ----------------------------------------------------------------
@@ -53,153 +54,116 @@ run "help"      $EXEC help
 
 # ================================================================
 # 2. SETUP (all variants)
-#   ac17       -> test_case/cpabe_msk.key + cpabe_pk.key
-#   tkn20      -> test_case/tkn20/cpabe_msk.key + cpabe_pk.key
-#   ac17+pqc   -> test_case/pqc/cpabe_msk.key + cpabe_pk.key + pqc_sk.key + pqc_pk.key
-#   tkn20+pqc  -> test_case/pqc_tkn20/cpabe_msk.key + cpabe_pk.key + pqc_sk.key + pqc_pk.key
 # ================================================================
 echo; echo "--- [2] Setup ---"
-run "setup ac17"        $EXEC setup --scheme ac17  "$TC"
+run "setup ac17"        $EXEC setup --scheme ac17  "$TC/ac17"
+run "setup ac17+pqc"    $EXEC setup --scheme ac17  --pqc "$TC/ac17_pqc"
 run "setup tkn20"       $EXEC setup --scheme tkn20 "$TC/tkn20"
-run "setup ac17+pqc"    $EXEC setup --scheme ac17  --pqc "$TC/pqc"
-run "setup tkn20+pqc"   $EXEC setup --scheme tkn20 --pqc "$TC/pqc_tkn20"
+run "setup tkn20+pqc"   $EXEC setup --scheme tkn20 --pqc "$TC/tkn20_pqc"
 
 # ================================================================
 # 3. GENKEY (file-based, all schemes)
 # ================================================================
 echo; echo "--- [3] GenKey ---"
-run "genkey ac17"   $EXEC genkey --scheme ac17  "$TC/cpabe_msk.key"            "A B C"    "$TC/sk_ac17.key"
-run "genkey tkn20"  $EXEC genkey --scheme tkn20 "$TC/tkn20/cpabe_msk.key"      "admin it" "$TC/tkn20/sk_tkn20.key"
-# Keys for PQC decrypt (must be generated against the same MSK used for PQC encrypt)
-$EXEC genkey --scheme ac17  "$TC/pqc/cpabe_msk.key"        "A B C"    "$TC/pqc/sk_ac17.key"        >/dev/null 2>&1
-$EXEC genkey --scheme tkn20 "$TC/pqc_tkn20/cpabe_msk.key"  "admin it" "$TC/pqc_tkn20/sk_tkn20.key" >/dev/null 2>&1
+run "genkey ac17"       $EXEC genkey --scheme ac17  "$TC/ac17/cpabe_msk.key"        "A B C"    "$TC/ac17/sk.key"
+$EXEC genkey --scheme ac17  "$TC/ac17_pqc/cpabe_msk.key"    "A B C"    "$TC/ac17_pqc/sk.key" >/dev/null 2>&1
+run "genkey tkn20"      $EXEC genkey --scheme tkn20 "$TC/tkn20/cpabe_msk.key"       "admin it" "$TC/tkn20/sk.key"
+$EXEC genkey --scheme tkn20 "$TC/tkn20_pqc/cpabe_msk.key"   "admin it" "$TC/tkn20_pqc/sk.key" >/dev/null 2>&1
 
 # ================================================================
 # 4. ENCRYPT / DECRYPT  ac17
 # ================================================================
 echo; echo "--- [4] Encrypt/Decrypt ac17 ---"
-run "encrypt ac17" $EXEC encrypt --scheme ac17 \
-    "$TC/cpabe_pk.key" "$TC/plaintext.txt" "((A and C) or E)" "$TC/ct_ac17.bin"
-run "decrypt ac17" $EXEC decrypt \
-    "$TC/sk_ac17.key" "$TC/ct_ac17.bin" "$TC/recovered_ac17.txt"
-diff_check "content match ac17" "$TC/plaintext.txt" "$TC/recovered_ac17.txt"
+run "encrypt ac17" $EXEC encrypt --scheme ac17 "$TC/ac17/cpabe_pk.key" "$TC/plaintext.txt" "((A and C) or E)" "$TC/ac17/ct.bin"
+run "decrypt ac17" $EXEC decrypt "$TC/ac17/sk.key" "$TC/ac17/ct.bin" "$TC/ac17/recovered.txt"
+diff_check "content match ac17" "$TC/plaintext.txt" "$TC/ac17/recovered.txt"
 
 # ================================================================
 # 5. ENCRYPT / DECRYPT  tkn20
 # ================================================================
 echo; echo "--- [5] Encrypt/Decrypt tkn20 ---"
-run "encrypt tkn20" $EXEC encrypt --scheme tkn20 \
-    "$TC/tkn20/cpabe_pk.key" "$TC/plaintext.txt" "admin and it" "$TC/ct_tkn20.bin"
-run "decrypt tkn20" $EXEC decrypt \
-    "$TC/tkn20/sk_tkn20.key" "$TC/ct_tkn20.bin" "$TC/recovered_tkn20.txt"
-diff_check "content match tkn20" "$TC/plaintext.txt" "$TC/recovered_tkn20.txt"
+run "encrypt tkn20" $EXEC encrypt --scheme tkn20 "$TC/tkn20/cpabe_pk.key" "$TC/plaintext.txt" "admin and it" "$TC/tkn20/ct.bin"
+run "decrypt tkn20" $EXEC decrypt "$TC/tkn20/sk.key" "$TC/tkn20/ct.bin" "$TC/tkn20/recovered.txt"
+diff_check "content match tkn20" "$TC/plaintext.txt" "$TC/tkn20/recovered.txt"
 
 # ================================================================
 # 6. ENCRYPT / DECRYPT  ac17 + PQC
 # ================================================================
 echo; echo "--- [6] Encrypt/Decrypt ac17+PQC ---"
-run "encrypt ac17+pqc" $EXEC encrypt --scheme ac17 --pqc \
-    "$TC/pqc/cpabe_pk.key" "$TC/pqc/pqc_sk.key" \
-    "$TC/plaintext.txt" "((A and C) or E)" "$TC/ct_pqc_ac17.bin"
-run "decrypt ac17+pqc" $EXEC decrypt --pqc \
-    "$TC/pqc/sk_ac17.key" "$TC/pqc/pqc_pk.key" \
-    "$TC/ct_pqc_ac17.bin" "$TC/recovered_pqc_ac17.txt"
-diff_check "content match ac17+pqc" "$TC/plaintext.txt" "$TC/recovered_pqc_ac17.txt"
+run "encrypt ac17+pqc" $EXEC encrypt --scheme ac17 --pqc "$TC/ac17_pqc/cpabe_pk.key" "$TC/ac17_pqc/pqc_sk.key" "$TC/plaintext.txt" "((A and C) or E)" "$TC/ac17_pqc/ct.bin"
+run "decrypt ac17+pqc" $EXEC decrypt --pqc "$TC/ac17_pqc/sk.key" "$TC/ac17_pqc/pqc_pk.key" "$TC/ac17_pqc/ct.bin" "$TC/ac17_pqc/recovered.txt"
+diff_check "content match ac17+pqc" "$TC/plaintext.txt" "$TC/ac17_pqc/recovered.txt"
 
 # ================================================================
 # 7. ENCRYPT / DECRYPT  tkn20 + PQC
 # ================================================================
 echo; echo "--- [7] Encrypt/Decrypt tkn20+PQC ---"
-run "encrypt tkn20+pqc" $EXEC encrypt --scheme tkn20 --pqc \
-    "$TC/pqc_tkn20/cpabe_pk.key" "$TC/pqc_tkn20/pqc_sk.key" \
-    "$TC/plaintext.txt" "admin and it" "$TC/ct_pqc_tkn20.bin"
-run "decrypt tkn20+pqc" $EXEC decrypt --pqc \
-    "$TC/pqc_tkn20/sk_tkn20.key" "$TC/pqc_tkn20/pqc_pk.key" \
-    "$TC/ct_pqc_tkn20.bin" "$TC/recovered_pqc_tkn20.txt"
-diff_check "content match tkn20+pqc" "$TC/plaintext.txt" "$TC/recovered_pqc_tkn20.txt"
+run "encrypt tkn20+pqc" $EXEC encrypt --scheme tkn20 --pqc "$TC/tkn20_pqc/cpabe_pk.key" "$TC/tkn20_pqc/pqc_sk.key" "$TC/plaintext.txt" "admin and it" "$TC/tkn20_pqc/ct.bin"
+run "decrypt tkn20+pqc" $EXEC decrypt --pqc "$TC/tkn20_pqc/sk.key" "$TC/tkn20_pqc/pqc_pk.key" "$TC/tkn20_pqc/ct.bin" "$TC/tkn20_pqc/recovered.txt"
+diff_check "content match tkn20+pqc" "$TC/plaintext.txt" "$TC/tkn20_pqc/recovered.txt"
 
 # ================================================================
 # 8. SETUP_BUFFER / GENKEY_BUFFER
-#
-# Flow in main.cpp genkey_buffer:
-#   reads file → Base64Decoder → decodedMsk → genkeyBuffer(decodedMsk)
-#
-# Flow in ac17_genkeyBuffer(mskBuffer):
-#   decodeBase64(mskBuffer) → JSON string → rabe_ac17_master_key_from_json()
-#
-# So the file must contain: Base64( Base64(JSON) )
-# i.e. double-encoded.
-#
-# setup_buffer prints: Base64(JSON)  (single encoded)
-# main.cpp reads file → decodes once → passes Base64(JSON) to genkeyBuffer
-# genkeyBuffer decodes again → gets JSON → OK
-#
-# Therefore file = the raw Base64(JSON) line from setup_buffer output.
-# We just need to capture it correctly (no extra encoding).
-#
-# The issue was awk running setup_buffer AGAIN (different keys).
-# Fix: run once, tee to file, parse that file.
 # ================================================================
 echo; echo "--- [8] Setup_Buffer / GenKey_Buffer ---"
 
 # ---- ac17 ----
-$EXEC setup_buffer --scheme ac17 2>/dev/null > "$TC/buf/setup_ac17.txt"
-run "setup_buffer ac17" test -s "$TC/buf/setup_ac17.txt"
+$EXEC setup_buffer --scheme ac17 2>/dev/null > "$TC/buf_ac17/setup.txt"
+run "setup_buffer ac17" test -s "$TC/buf_ac17/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_ac17/setup.txt" | grep -v "PUBLIC KEY" | grep -v '^--$' > "$TC/buf_ac17/pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_ac17/setup.txt" | grep -v "MASTER SECRET KEY" | grep -v '^--$' > "$TC/buf_ac17/msk.key"
+run "buf_msk_ac17 extracted" test -s "$TC/buf_ac17/msk.key"
+run "genkey_buffer ac17"  $EXEC genkey_buffer --scheme ac17 "$TC/buf_ac17/msk.key" "A B C"
 
-# Extract lines: grep -A1 gets the header + next line; second grep removes header
-grep -A1 "PUBLIC KEY"        "$TC/buf/setup_ac17.txt" | grep -v "PUBLIC KEY"        | grep -v "^--$" > "$TC/buf/pk_ac17.key"
-grep -A1 "MASTER SECRET KEY" "$TC/buf/setup_ac17.txt" | grep -v "MASTER SECRET KEY" | grep -v "^--$" > "$TC/buf/msk_ac17.key"
-
-# Verify files are non-empty
-run "buf_msk_ac17 extracted" test -s "$TC/buf/msk_ac17.key"
-
-run "genkey_buffer ac17"  $EXEC genkey_buffer --scheme ac17  "$TC/buf/msk_ac17.key" "A B C"
+# ---- ac17+pqc ----
+$EXEC setup_buffer --scheme ac17 --pqc 2>/dev/null > "$TC/buf_ac17_pqc/setup.txt"
+run "setup_buffer ac17+pqc" test -s "$TC/buf_ac17_pqc/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_ac17_pqc/setup.txt" | head -n 2 | tail -n 1 > "$TC/buf_ac17_pqc/cpabe_pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_ac17_pqc/setup.txt" | tail -n 1 > "$TC/buf_ac17_pqc/cpabe_msk.key"
+grep -A1 "PQC PUBLIC KEY" "$TC/buf_ac17_pqc/setup.txt" | tail -n 1 > "$TC/buf_ac17_pqc/pqc_pk.key"
+grep -A1 "PQC SECRET KEY" "$TC/buf_ac17_pqc/setup.txt" | tail -n 1 > "$TC/buf_ac17_pqc/pqc_sk.key"
+$EXEC genkey_buffer --scheme ac17 "$TC/buf_ac17_pqc/cpabe_msk.key" "A B C" 2>/dev/null > "$TC/buf_ac17_pqc/sk_raw.txt"
+grep -A1 "SECRET KEY" "$TC/buf_ac17_pqc/sk_raw.txt" | tail -n 1 > "$TC/buf_ac17_pqc/sk.key"
 
 # ---- tkn20 ----
-$EXEC setup_buffer --scheme tkn20 2>/dev/null > "$TC/buf/setup_tkn20.txt"
-run "setup_buffer tkn20" test -s "$TC/buf/setup_tkn20.txt"
+$EXEC setup_buffer --scheme tkn20 2>/dev/null > "$TC/buf_tkn20/setup.txt"
+run "setup_buffer tkn20" test -s "$TC/buf_tkn20/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_tkn20/setup.txt" | grep -v "PUBLIC KEY" | grep -v '^--$' > "$TC/buf_tkn20/pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_tkn20/setup.txt" | grep -v "MASTER SECRET KEY" | grep -v '^--$' > "$TC/buf_tkn20/msk.key"
+run "buf_msk_tkn20 extracted" test -s "$TC/buf_tkn20/msk.key"
+run "genkey_buffer tkn20" $EXEC genkey_buffer --scheme tkn20 "$TC/buf_tkn20/msk.key" "admin it"
 
-grep -A1 "PUBLIC KEY"        "$TC/buf/setup_tkn20.txt" | grep -v "PUBLIC KEY"        | grep -v "^--$" > "$TC/buf/pk_tkn20.key"
-grep -A1 "MASTER SECRET KEY" "$TC/buf/setup_tkn20.txt" | grep -v "MASTER SECRET KEY" | grep -v "^--$" > "$TC/buf/msk_tkn20.key"
-
-run "buf_msk_tkn20 extracted" test -s "$TC/buf/msk_tkn20.key"
-
-run "genkey_buffer tkn20" $EXEC genkey_buffer --scheme tkn20 "$TC/buf/msk_tkn20.key" "admin it"
+# ---- tkn20+pqc ----
+$EXEC setup_buffer --scheme tkn20 --pqc 2>/dev/null > "$TC/buf_tkn20_pqc/setup.txt"
+run "setup_buffer tkn20+pqc" test -s "$TC/buf_tkn20_pqc/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_tkn20_pqc/setup.txt" | head -n 2 | tail -n 1 > "$TC/buf_tkn20_pqc/cpabe_pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_tkn20_pqc/setup.txt" | tail -n 1 > "$TC/buf_tkn20_pqc/cpabe_msk.key"
+grep -A1 "PQC PUBLIC KEY" "$TC/buf_tkn20_pqc/setup.txt" | tail -n 1 > "$TC/buf_tkn20_pqc/pqc_pk.key"
+grep -A1 "PQC SECRET KEY" "$TC/buf_tkn20_pqc/setup.txt" | tail -n 1 > "$TC/buf_tkn20_pqc/pqc_sk.key"
+$EXEC genkey_buffer --scheme tkn20 "$TC/buf_tkn20_pqc/cpabe_msk.key" "admin it" 2>/dev/null > "$TC/buf_tkn20_pqc/sk_raw.txt"
+grep -A1 "SECRET KEY" "$TC/buf_tkn20_pqc/sk_raw.txt" | tail -n 1 > "$TC/buf_tkn20_pqc/sk.key"
 
 # ================================================================
 # 9. ENCRYPT_BUFFER / DECRYPT_BUFFER  (file-based keys, all schemes)
 # ================================================================
 echo; echo "--- [9] EncryptBuffer/DecryptBuffer ac17 ---"
-run "encrypt_buffer ac17" $EXEC encrypt_buffer --scheme ac17 \
-    "$TC/cpabe_pk.key" "Hello from buffer ac17!" "((A and C) or E)" "$TC/ct_buf_ac17.bin"
-run_visible "decrypt_buffer ac17" $EXEC decrypt_buffer \
-    "$TC/sk_ac17.key" "$TC/ct_buf_ac17.bin"
+run "encrypt_buffer ac17" $EXEC encrypt_buffer --scheme ac17 "$TC/ac17/cpabe_pk.key" "Hello from buffer ac17!" "((A and C) or E)" "$TC/buf_ac17/ct.bin"
+run_visible "decrypt_buffer ac17" $EXEC decrypt_buffer "$TC/ac17/sk.key" "$TC/buf_ac17/ct.bin"
 
 echo; echo "--- [9] EncryptBuffer/DecryptBuffer tkn20 ---"
-run "encrypt_buffer tkn20" $EXEC encrypt_buffer --scheme tkn20 \
-    "$TC/tkn20/cpabe_pk.key" "Hello from buffer tkn20!" "admin and it" "$TC/ct_buf_tkn20.bin"
-run_visible "decrypt_buffer tkn20" $EXEC decrypt_buffer \
-    "$TC/tkn20/sk_tkn20.key" "$TC/ct_buf_tkn20.bin"
+run "encrypt_buffer tkn20" $EXEC encrypt_buffer --scheme tkn20 "$TC/tkn20/cpabe_pk.key" "Hello from buffer tkn20!" "admin and it" "$TC/buf_tkn20/ct.bin"
+run_visible "decrypt_buffer tkn20" $EXEC decrypt_buffer "$TC/tkn20/sk.key" "$TC/buf_tkn20/ct.bin"
 
 # ================================================================
-# 10. ENCRYPT_BUFFER+SIGN / DECRYPT_BUFFER+VERIFY  (buffer pk from setup_buffer)
+# 10. ENCRYPT_BUFFER+SIGN / DECRYPT_BUFFER+VERIFY
 # ================================================================
 echo; echo "--- [10] EncryptBuffer+Sign / DecryptBuffer+Verify ac17 ---"
-# For buffer PQC we need to use buf pk + a pqc key; reuse file-based pqc keys for simplicity
-run "encrypt_buffer ac17+pqc (buf pk)" $EXEC encrypt_buffer --scheme ac17 --pqc \
-    "$TC/buf/pk_ac17.key" "$TC/pqc/pqc_sk.key" \
-    "Hello signed buffer!" "((A and C) or E)" "$TC/ct_buf_pqc_ac17.bin"
-# Decrypt needs an SK generated from buf_msk, but buf_msk → different keypair than pqc/cpabe_msk.
-# So use regular file-based flow for decrypt_buffer+verify instead.
-run "decrypt_buffer ac17+pqc" $EXEC decrypt_buffer --pqc \
-    "$TC/sk_ac17.key" "$TC/pqc/pqc_pk.key" "$TC/ct_buf_pqc_ac17.bin"
+run "encrypt_buffer ac17+pqc" $EXEC encrypt_buffer --scheme ac17 --pqc "$TC/buf_ac17_pqc/cpabe_pk.key" "$TC/buf_ac17_pqc/pqc_sk.key" "Hello signed buffer!" "((A and C) or E)" "$TC/buf_ac17_pqc/ct_pqc.bin"
+run "decrypt_buffer ac17+pqc" $EXEC decrypt_buffer --pqc "$TC/buf_ac17_pqc/sk.key" "$TC/buf_ac17_pqc/pqc_pk.key" "$TC/buf_ac17_pqc/ct_pqc.bin"
 
 echo; echo "--- [10] EncryptBuffer+Sign / DecryptBuffer+Verify tkn20 ---"
-run "encrypt_buffer tkn20+pqc (buf pk)" $EXEC encrypt_buffer --scheme tkn20 --pqc \
-    "$TC/buf/pk_tkn20.key" "$TC/pqc_tkn20/pqc_sk.key" \
-    "Hello signed buffer tkn20!" "admin and it" "$TC/ct_buf_pqc_tkn20.bin"
-run "decrypt_buffer tkn20+pqc" $EXEC decrypt_buffer --pqc \
-    "$TC/tkn20/sk_tkn20.key" "$TC/pqc_tkn20/pqc_pk.key" "$TC/ct_buf_pqc_tkn20.bin"
+run "encrypt_buffer tkn20+pqc" $EXEC encrypt_buffer --scheme tkn20 --pqc "$TC/buf_tkn20_pqc/cpabe_pk.key" "$TC/buf_tkn20_pqc/pqc_sk.key" "Hello signed buffer tkn20!" "admin and it" "$TC/buf_tkn20_pqc/ct_pqc.bin"
+run "decrypt_buffer tkn20+pqc" $EXEC decrypt_buffer --pqc "$TC/buf_tkn20_pqc/sk.key" "$TC/buf_tkn20_pqc/pqc_pk.key" "$TC/buf_tkn20_pqc/ct_pqc.bin"
 
 # ================================================================
 # SUMMARY

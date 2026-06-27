@@ -1,8 +1,7 @@
 /**
  * @file main.cpp
  * @brief CLI wrapper for the Hybrid CP-ABE library (Unified with PQC & Scheme Selection)
- * 
- * This file provides a command-line interface to use the functions
+ * * This file provides a command-line interface to use the functions
  * of the Hybrid CP-ABE library. It supports the --pqc and --scheme flags.
  */
 
@@ -32,7 +31,7 @@ void printUsage(const char* programName)
     std::cout << "  genkey  <master_key> <attrs> <out_file>              - Generate private key from attributes" << std::endl;
     std::cout << "  encrypt <pub_key> [pqc_priv_key] <file> <policy> <out> - Encrypt (and Sign) file" << std::endl;
     std::cout << "  decrypt <priv_key> [pqc_pub_key] <file> <out>         - Decrypt (and Verify) file" << std::endl;
-    std::cout << "  setup_buffer [--scheme <name>]                        - Setup and print MSK and PK to stdout" << std::endl;
+    std::cout << "  setup_buffer [--scheme <name>] [--pqc]                - Setup and print MSK and PK (plus PQC keys if --pqc) to stdout" << std::endl;
     std::cout << "  genkey_buffer <master_key_file> <attrs>               - GenKey and print SK to stdout" << std::endl;
     std::cout << "  encrypt_buffer <pub_key> [pqc_priv_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
     std::cout << "  decrypt_buffer <priv_key> [pqc_pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
@@ -303,21 +302,51 @@ int main(int argc, char *argv[])
         }
         else if (mode == "setup_buffer")
         {
-            unsigned char* pk = nullptr;
-            size_t pkLen = 0;
-            unsigned char* msk = nullptr;
-            size_t mskLen = 0;
-            
-            result = hybrid_cpabe_setupBuffer_with_scheme(&pk, &pkLen, &msk, &mskLen, scheme);
-            if (result == HCPABE_SUCCESS) {
-                std::string pkBase64;
-                CryptoPP::StringSource(pk, pkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
-                std::string mskBase64;
-                CryptoPP::StringSource(msk, mskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
-                std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
-                std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
-                freeBuffer(pk);
-                freeBuffer(msk);
+            if (use_pqc) {
+                unsigned char* abePk = nullptr;
+                size_t abePkLen = 0;
+                unsigned char* abeMsk = nullptr;
+                size_t abeMskLen = 0;
+                unsigned char* pqcPk = nullptr;
+                size_t pqcPkLen = 0;
+                unsigned char* pqcMsk = nullptr;
+                size_t pqcMskLen = 0;
+                
+                result = hybrid_cpabe_setupBuffer_with_pqc_scheme(&abePk, &abePkLen, &abeMsk, &abeMskLen, &pqcPk, &pqcPkLen, &pqcMsk, &pqcMskLen, scheme);
+                if (result == HCPABE_SUCCESS) {
+                    std::string pkBase64, mskBase64, pqcPkBase64, pqcMskBase64;
+                    CryptoPP::StringSource(abePk, abePkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
+                    CryptoPP::StringSource(abeMsk, abeMskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
+                    CryptoPP::StringSource(pqcPk, pqcPkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcPkBase64), false));
+                    CryptoPP::StringSource(pqcMsk, pqcMskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcMskBase64), false));
+                    
+                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
+                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
+                    std::cout << "--- PQC PUBLIC KEY (Base64) ---" << std::endl << pqcPkBase64 << std::endl;
+                    std::cout << "--- PQC SECRET KEY (Base64) ---" << std::endl << pqcMskBase64 << std::endl;
+                    
+                    freeBuffer(abePk);
+                    freeBuffer(abeMsk);
+                    freeBuffer(pqcPk);
+                    freeBuffer(pqcMsk);
+                }
+            } else {
+                unsigned char* pk = nullptr;
+                size_t pkLen = 0;
+                unsigned char* msk = nullptr;
+                size_t mskLen = 0;
+                
+                result = hybrid_cpabe_setupBuffer_with_scheme(&pk, &pkLen, &msk, &mskLen, scheme);
+                if (result == HCPABE_SUCCESS) {
+                    std::string pkBase64;
+                    CryptoPP::StringSource(pk, pkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
+                    std::string mskBase64;
+                    CryptoPP::StringSource(msk, mskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
+                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
+                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
+                    freeBuffer(pk);
+                    freeBuffer(msk);
+                }
             }
         }
         else if (mode == "genkey_buffer")
@@ -366,3 +395,4 @@ int main(int argc, char *argv[])
     
     return (result == HCPABE_SUCCESS) ? 0 : 1;
 }
+
