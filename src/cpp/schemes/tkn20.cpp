@@ -188,6 +188,39 @@ int tkn20_setup(const char *path)
     }
 }
 
+int tkn20_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
+{
+    try
+    {
+        CByteArray pubKey, msk;
+        if (TKN20_Setup(&pubKey, &msk) != 0)
+        {
+            return HCPABE_ERR_CRYPTO_FAILED;
+        }
+
+        std::string pkBase64 = encodeBase64(pubKey.data, pubKey.len);
+        std::string mskBase64 = encodeBase64(msk.data, msk.len);
+
+        *pkLen = pkBase64.size();
+        *pkBuffer = (unsigned char *)malloc(*pkLen);
+        if (!*pkBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*pkBuffer, pkBase64.data(), *pkLen);
+
+        *mskLen = mskBase64.size();
+        *mskBuffer = (unsigned char *)malloc(*mskLen);
+        if (!*mskBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*mskBuffer, mskBase64.data(), *mskLen);
+
+        TKN20_FreeByteArray(pubKey);
+        TKN20_FreeByteArray(msk);
+
+        return HCPABE_SUCCESS;
+    }
+    catch (...)
+    {
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+}
 // ============================================================================
 // TKN20 KeyGen
 // ============================================================================
@@ -236,6 +269,40 @@ int tkn20_genkey(const char *mskFile, const char *attrs, const char *skFile)
     }
 }
 
+
+int tkn20_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer, size_t *skLen)
+{
+    try
+    {
+        std::string mskStr(reinterpret_cast<const char*>(mskBuffer), mskLen);
+        std::string mskDecoded = decodeBase64(mskStr);
+
+        std::string tkn20Attrs = convertAttrsToTKN20(attrs);
+
+        CByteArray attrKeyOut;
+        int res = TKN20_KeyGen(
+            reinterpret_cast<uint8_t *>(const_cast<char *>(mskDecoded.data())),
+            mskDecoded.size(),
+            const_cast<char *>(tkn20Attrs.c_str()),
+            &attrKeyOut);
+
+        if (res != 0) return HCPABE_ERR_CRYPTO_FAILED;
+
+        std::string skBase64 = encodeBase64(attrKeyOut.data, attrKeyOut.len);
+        
+        *skLen = skBase64.size();
+        *skBuffer = (unsigned char *)malloc(*skLen);
+        if (!*skBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*skBuffer, skBase64.data(), *skLen);
+
+        TKN20_FreeByteArray(attrKeyOut);
+        return HCPABE_SUCCESS;
+    }
+    catch (...)
+    {
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+}
 // ============================================================================
 // TKN20 Encapsulate Key
 // ============================================================================
@@ -366,3 +433,4 @@ int tkn20_load_sk(const char *file, unsigned char **skData, size_t *skLen)
         return HCPABE_ERR_FILE_NOT_FOUND;
     }
 }
+

@@ -138,10 +138,91 @@ int ac17_setup(const char *path)
     }
 }
 
+int ac17_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
+{
+    try
+    {
+        Ac17SetupResult setupResult = rabe_ac17_init();
+        char *masterKeyJson = rabe_ac17_master_key_to_json(setupResult.master_key);
+        char *publicKeyJson = rabe_ac17_public_key_to_json(setupResult.public_key);
+        if (!masterKeyJson || !publicKeyJson)
+        {
+            return HCPABE_ERR_CRYPTO_FAILED;
+        }
+
+        std::string pkBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(publicKeyJson), std::strlen(publicKeyJson));
+        std::string mskBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(masterKeyJson), std::strlen(masterKeyJson));
+
+        *pkLen = pkBase64.size();
+        *pkBuffer = (unsigned char *)malloc(*pkLen);
+        if (!*pkBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*pkBuffer, pkBase64.data(), *pkLen);
+
+        *mskLen = mskBase64.size();
+        *mskBuffer = (unsigned char *)malloc(*mskLen);
+        if (!*mskBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*mskBuffer, mskBase64.data(), *mskLen);
+
+        rabe_free_json(masterKeyJson);
+        rabe_free_json(publicKeyJson);
+        rabe_ac17_free_master_key(setupResult.master_key);
+        rabe_ac17_free_public_key(setupResult.public_key);
+        
+        return HCPABE_SUCCESS;
+    }
+    catch (...)
+    {
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+}
+
 // ============================================================================
 // AC17 KeyGen
 // ============================================================================
 
+int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer, size_t *skLen)
+{
+    try
+    {
+        std::string mskStr(reinterpret_cast<const char*>(mskBuffer), mskLen);
+        std::string mskDecoded = decodeBase64(mskStr);
+
+        const void *masterKey = rabe_ac17_master_key_from_json(mskDecoded.c_str());
+        if (!masterKey) return HCPABE_ERR_INVALID_KEY;
+
+        std::string lowerAttributes = toLowerCase(attrs);
+        std::vector<std::string> attrVec = splitAttributes(lowerAttributes);
+        std::vector<const char *> attrList;
+        for (const auto &attr : attrVec)
+        {
+            attrList.push_back(attr.c_str());
+        }
+
+        const void *secretKey = rabe_cp_ac17_generate_secret_key(masterKey, attrList.data(), attrList.size());
+        rabe_ac17_free_master_key(masterKey);
+        if (!secretKey) return HCPABE_ERR_CRYPTO_FAILED;
+
+        char *secretKeyJson = rabe_cp_ac17_secret_key_to_json(secretKey);
+        rabe_cp_ac17_free_secret_key(secretKey);
+        if (!secretKeyJson) return HCPABE_ERR_CRYPTO_FAILED;
+
+        std::string skBase64 = encodeBase64(reinterpret_cast<const unsigned char*>(secretKeyJson), std::strlen(secretKeyJson));
+        
+        *skLen = skBase64.size();
+        *skBuffer = (unsigned char *)malloc(*skLen);
+        if (!*skBuffer) return HCPABE_ERR_MEMORY;
+        std::memcpy(*skBuffer, skBase64.data(), *skLen);
+
+        secureWipe(secretKeyJson, std::strlen(secretKeyJson));
+        rabe_free_json(secretKeyJson);
+        
+        return HCPABE_SUCCESS;
+    }
+    catch (...)
+    {
+        return HCPABE_ERR_CRYPTO_FAILED;
+    }
+}
 int ac17_genkey(const char *mskFile, const char *attrs, const char *skFile)
 {
     std::string strFileFormat = HybridCPABE::DEFAULT_KEY_FORMAT;
@@ -353,3 +434,4 @@ int ac17_load_sk(const char *file, unsigned char **skData, size_t *skLen)
         return HCPABE_ERR_FILE_NOT_FOUND;
     }
 }
+

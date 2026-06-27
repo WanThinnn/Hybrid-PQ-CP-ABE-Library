@@ -52,6 +52,10 @@ void freeBuffer(unsigned char *buffer)
 // Scheme-aware CP-ABE Dispatch
 // ============================================================================
 
+// ============================================================================
+// Buffer-based Setup & KeyGen Implementation
+// ============================================================================
+
 int setup_with_scheme(const char *path, CPABEScheme scheme)
 {
     switch (scheme) {
@@ -67,6 +71,21 @@ int setup(const char *path)
     return setup_with_scheme(path, CPABE_SCHEME_AC17);
 }
 
+
+int hybrid_cpabe_setupBuffer_with_scheme(
+    unsigned char **pkBuffer, size_t *pkLen,
+    unsigned char **mskBuffer, size_t *mskLen,
+    CPABEScheme scheme)
+{
+    if (!pkBuffer || !pkLen || !mskBuffer || !mskLen) return HCPABE_ERR_INVALID_PARAM;
+    if (scheme == CPABE_SCHEME_AC17) {
+        return ac17_setupBuffer(pkBuffer, pkLen, mskBuffer, mskLen);
+    } else if (scheme == CPABE_SCHEME_TKN20) {
+        return tkn20_setupBuffer(pkBuffer, pkLen, mskBuffer, mskLen);
+    }
+    return HCPABE_ERR_INVALID_PARAM;
+}
+
 int generateSecretKey_with_scheme(const char *masterKeyFile, const char *attributes, const char *privateKeyFile, CPABEScheme scheme)
 {
     switch (scheme) {
@@ -79,6 +98,21 @@ int generateSecretKey_with_scheme(const char *masterKeyFile, const char *attribu
 int generateSecretKey(const char *masterKeyFile, const char *attributes, const char *privateKeyFile)
 {
     return generateSecretKey_with_scheme(masterKeyFile, attributes, privateKeyFile, CPABE_SCHEME_AC17);
+}
+
+int hybrid_cpabe_genkeyBuffer_with_scheme(
+    const unsigned char *mskBuffer, size_t mskLen,
+    const char *attributes,
+    unsigned char **skBuffer, size_t *skLen,
+    CPABEScheme scheme)
+{
+    if (!mskBuffer || mskLen == 0 || !attributes || !skBuffer || !skLen) return HCPABE_ERR_INVALID_PARAM;
+    if (scheme == CPABE_SCHEME_AC17) {
+        return ac17_genkeyBuffer(mskBuffer, mskLen, attributes, skBuffer, skLen);
+    } else if (scheme == CPABE_SCHEME_TKN20) {
+        return tkn20_genkeyBuffer(mskBuffer, mskLen, attributes, skBuffer, skLen);
+    }
+    return HCPABE_ERR_INVALID_PARAM;
 }
 
 // ============================================================================
@@ -467,3 +501,4 @@ int hybrid_cpabe_decrypt(const char *privateKeyFile, const char *ciphertextFile,
         return HCPABE_ERR_CRYPTO_FAILED;
     }
 }
+

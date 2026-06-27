@@ -104,6 +104,51 @@ int hybrid_cpabe_setup_with_pqc(const char *path)
     return hybrid_cpabe_setup_with_pqc_scheme(path, CPABE_SCHEME_AC17);
 }
 
+int hybrid_cpabe_setupBuffer_with_pqc_scheme(
+    unsigned char **abePkBuffer, size_t *abePkLen,
+    unsigned char **abeMskBuffer, size_t *abeMskLen,
+    unsigned char **pqcPkBuffer, size_t *pqcPkLen,
+    unsigned char **pqcMskBuffer, size_t *pqcMskLen,
+    CPABEScheme scheme)
+{
+    int abeRes = hybrid_cpabe_setupBuffer_with_scheme(abePkBuffer, abePkLen, abeMskBuffer, abeMskLen, scheme);
+    if (abeRes != HCPABE_SUCCESS) return abeRes;
+
+    unsigned char *pqc_pub = nullptr, *pqc_priv = nullptr;
+    size_t pqc_pub_len = 0, pqc_priv_len = 0;
+    
+    try
+    {
+        if (ml_dsa_87_generate_keypair(&pqc_pub, &pqc_pub_len, &pqc_priv, &pqc_priv_len) != HCPABE_SUCCESS) {
+            throw std::runtime_error("Failed to generate PQC keypair.");
+        }
+
+        std::string pqcPubBase64, pqcSecBase64;
+        CryptoPP::StringSource(pqc_pub, pqc_pub_len, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcPubBase64), false));
+        CryptoPP::StringSource(pqc_priv, pqc_priv_len, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcSecBase64), false));
+
+        *pqcPkLen = pqcPubBase64.size();
+        *pqcPkBuffer = (unsigned char *)malloc(*pqcPkLen);
+        if (!*pqcPkBuffer) throw std::bad_alloc();
+        std::memcpy(*pqcPkBuffer, pqcPubBase64.data(), *pqcPkLen);
+
+        *pqcMskLen = pqcSecBase64.size();
+        *pqcMskBuffer = (unsigned char *)malloc(*pqcMskLen);
+        if (!*pqcMskBuffer) throw std::bad_alloc();
+        std::memcpy(*pqcMskBuffer, pqcSecBase64.data(), *pqcMskLen);
+
+        if (pqc_pub) free(pqc_pub);
+        if (pqc_priv) free(pqc_priv);
+
+        return HCPABE_SUCCESS;
+    }
+    catch (...) { 
+        if (pqc_pub) free(pqc_pub);
+        if (pqc_priv) free(pqc_priv);
+        return HCPABE_ERR_CRYPTO_FAILED; 
+    }
+}
+
 int hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
     const unsigned char *publicKey, size_t pkLen,
     const unsigned char *pqcPrivKey, size_t pqcPrivLen,

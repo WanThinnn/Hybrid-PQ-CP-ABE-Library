@@ -32,6 +32,8 @@ void printUsage(const char* programName)
     std::cout << "  genkey  <master_key> <attrs> <out_file>              - Generate private key from attributes" << std::endl;
     std::cout << "  encrypt <pub_key> [pqc_priv_key] <file> <policy> <out> - Encrypt (and Sign) file" << std::endl;
     std::cout << "  decrypt <priv_key> [pqc_pub_key] <file> <out>         - Decrypt (and Verify) file" << std::endl;
+    std::cout << "  setup_buffer [--scheme <name>]                        - Setup and print MSK and PK to stdout" << std::endl;
+    std::cout << "  genkey_buffer <master_key_file> <attrs>               - GenKey and print SK to stdout" << std::endl;
     std::cout << "  encrypt_buffer <pub_key> [pqc_priv_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
     std::cout << "  decrypt_buffer <priv_key> [pqc_pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
     std::cout << std::endl;
@@ -85,7 +87,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     
-    std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "encrypt_buffer", "decrypt_buffer"};
+    std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "setup_buffer", "genkey_buffer", "encrypt_buffer", "decrypt_buffer"};
     for (size_t i = 2; i < args.size(); ++i) {
         if (std::find(reserved_commands.begin(), reserved_commands.end(), args[i]) != reserved_commands.end()) {
             std::cerr << "Error: You used a reserved command name '" << args[i] << "' as an argument." << std::endl;
@@ -297,6 +299,48 @@ int main(int argc, char *argv[])
                     std::cout << "Decrypted Buffer: " << ptOut << std::endl;
                     freeBuffer(pt);
                 }
+            }
+        }
+        else if (mode == "setup_buffer")
+        {
+            unsigned char* pk = nullptr;
+            size_t pkLen = 0;
+            unsigned char* msk = nullptr;
+            size_t mskLen = 0;
+            
+            result = hybrid_cpabe_setupBuffer_with_scheme(&pk, &pkLen, &msk, &mskLen, scheme);
+            if (result == HCPABE_SUCCESS) {
+                std::string pkOut((char*)pk, pkLen);
+                std::string mskOut((char*)msk, mskLen);
+                std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkOut << std::endl;
+                std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskOut << std::endl;
+                freeBuffer(pk);
+                freeBuffer(msk);
+            }
+        }
+        else if (mode == "genkey_buffer")
+        {
+            if (args.size() != 4)
+            {
+                std::cerr << "Usage: " << args[0] << " genkey_buffer [--scheme <name>] <master_key_file> <attributes>" << std::endl;
+                return 1;
+            }
+            std::ifstream mskFile(args[2], std::ios::binary);
+            if (!mskFile) { std::cerr << "Cannot open MSK file." << std::endl; return 1; }
+            std::string mskStr((std::istreambuf_iterator<char>(mskFile)), std::istreambuf_iterator<char>());
+            mskFile.close();
+            
+            std::string decodedMskStr;
+            CryptoPP::StringSource(mskStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedMskStr)));
+            
+            unsigned char* sk = nullptr;
+            size_t skLen = 0;
+            
+            result = hybrid_cpabe_genkeyBuffer_with_scheme((const unsigned char*)decodedMskStr.data(), decodedMskStr.size(), args[3].c_str(), &sk, &skLen, scheme);
+            if (result == HCPABE_SUCCESS) {
+                std::string skOut((char*)sk, skLen);
+                std::cout << "--- SECRET KEY (Base64) ---" << std::endl << skOut << std::endl;
+                freeBuffer(sk);
             }
         }
         else

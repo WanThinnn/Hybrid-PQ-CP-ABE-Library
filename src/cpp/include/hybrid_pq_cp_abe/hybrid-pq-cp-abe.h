@@ -1,10 +1,15 @@
 #ifndef HYBRID_PQ_CP_ABE_H
 #define HYBRID_PQ_CP_ABE_H
 
+#ifdef __cplusplus
 #include <string>
 #include <vector>
 #include <cstddef>
 #include <cstdint>
+#else
+#include <stddef.h>
+#include <stdint.h>
+#endif
 #include "cpabe-scheme.h"
 
 #ifdef _WIN32
@@ -26,6 +31,7 @@
 // ============================================================================
 // Constants
 // ============================================================================
+#ifdef __cplusplus
 namespace HybridCPABE {
     constexpr size_t GCM_IV_SIZE = 12;          // 96-bit theo NIST SP 800-38D
     constexpr size_t AES_KEY_SIZE = 32;         // 256-bit AES key
@@ -34,6 +40,7 @@ namespace HybridCPABE {
     const char* const LIB_VERSION = "5.0.1";
     const char* const DEFAULT_KEY_FORMAT = "Base64";
 }
+#endif
 
 // ============================================================================
 // Error Codes
@@ -54,8 +61,10 @@ typedef enum {
 // ============================================================================
 // C API - File-based Operations
 // ============================================================================
+#ifdef __cplusplus
 extern "C"
 {
+#endif
     // Initialize system - create Master Key and Public Key
     LIB_API int setup(const char *path);
     
@@ -114,6 +123,27 @@ extern "C"
     // Buffer-based Operations (New API)
     // ========================================================================
     
+    // Setup CP-ABE scheme from buffer
+    LIB_API int hybrid_cpabe_setupBuffer_with_scheme(
+        unsigned char **pkBuffer, size_t *pkLen,
+        unsigned char **mskBuffer, size_t *mskLen,
+        CPABEScheme scheme);
+        
+    // Setup CP-ABE + PQC scheme from buffer
+    LIB_API int hybrid_cpabe_setupBuffer_with_pqc_scheme(
+        unsigned char **abePkBuffer, size_t *abePkLen,
+        unsigned char **abeMskBuffer, size_t *abeMskLen,
+        unsigned char **pqcPkBuffer, size_t *pqcPkLen,
+        unsigned char **pqcMskBuffer, size_t *pqcMskLen,
+        CPABEScheme scheme);
+
+    // Generate CP-ABE key from buffer
+    LIB_API int hybrid_cpabe_genkeyBuffer_with_scheme(
+        const unsigned char *mskBuffer, size_t mskLen,
+        const char *attributes,
+        unsigned char **skBuffer, size_t *skLen,
+        CPABEScheme scheme);
+
     // Encrypt from buffer
     LIB_API int hybrid_cpabe_encryptBuffer(
         const unsigned char *publicKey, size_t pkLen,
@@ -207,6 +237,8 @@ extern "C"
         const unsigned char* aad, size_t aad_len,
         unsigned char** plaintext, size_t* pt_len);
 
+#ifdef __cplusplus
 }
+#endif
 
 #endif // HYBRID_PQ_CP_ABE_H

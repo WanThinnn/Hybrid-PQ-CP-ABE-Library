@@ -1,8 +1,13 @@
 #ifndef CPABE_SCHEME_H
 #define CPABE_SCHEME_H
 
+#ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>
+#else
+#include <stddef.h>
+#include <stdint.h>
+#endif
 
 // ============================================================================
 // CP-ABE Scheme Selection
@@ -18,7 +23,9 @@ typedef enum {
 // ============================================================================
 
 int ac17_setup(const char *path);
+int ac17_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen);
 int ac17_genkey(const char *mskFile, const char *attrs, const char *skFile);
+int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer, size_t *skLen);
 
 int ac17_encapsulate_key(
     const unsigned char *pkData, size_t pkLen,
@@ -39,7 +46,9 @@ int ac17_load_sk(const char *file, unsigned char **skData, size_t *skLen);
 // ============================================================================
 
 int tkn20_setup(const char *path);
+int tkn20_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen);
 int tkn20_genkey(const char *mskFile, const char *attrs, const char *skFile);
+int tkn20_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer, size_t *skLen);
 
 int tkn20_encapsulate_key(
     const unsigned char *pkData, size_t pkLen,

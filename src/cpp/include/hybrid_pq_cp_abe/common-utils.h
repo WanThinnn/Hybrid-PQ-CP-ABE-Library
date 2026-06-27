@@ -112,6 +112,20 @@ inline std::string toLowerCase(const std::string &str) {
     return lowerStr;
 }
 
+inline std::string encodeBase64(const unsigned char *data, size_t len) {
+    std::string encoded;
+    CryptoPP::StringSource ss(data, len, true,
+        new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
+    return encoded;
+}
+
+inline std::string decodeBase64(const std::string &encoded) {
+    std::string decoded;
+    CryptoPP::StringSource ss(encoded, true,
+        new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
+    return decoded;
+}
+
 // Save binary data as Base64
 inline bool SaveBinaryAsBase64(const std::string &filename, const unsigned char *data, size_t len) {
     try {
