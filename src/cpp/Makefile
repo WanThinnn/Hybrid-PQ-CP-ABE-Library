@@ -76,6 +76,10 @@ endif
 .PHONY: all clean executable shared static help
 
 all: static shared executable
+	@echo "================================================================"
+	@echo " All targets built successfully!"
+	@echo " Output files are located in $(BUILD_DIR)/"
+	@echo "================================================================"
 
 help:
 	@echo "================================================================"
