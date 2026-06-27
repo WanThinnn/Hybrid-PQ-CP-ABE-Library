@@ -40,31 +40,50 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
 > [!WARNING]
 > **Disclaimer (Scope of Library):** This library is highly specialized and is optimized for the **AC17** and **TKN20** CP-ABE schemes. It is built specifically to achieve maximum performance and seamless C++ integration. If your project requires a broader variety of cryptographic schemes (such as KP-ABE, IBE, etc.), we highly recommend using [Charm-Crypto](https://github.com/JHUISI/charm), which offers a vast and flexible collection of cryptographic primitives.
 
-## Building (Ultimate Multi-OS Task)
+## Building (Multi-OS)
 
 > [!NOTE]
 > 
 > **Note on Dependencies:** All necessary dependencies (`CryptoPP`, `liboqs`, `rabe-ffi`, `circl`) have already been pre-compiled and included in the `src/cpp/lib/` folder for your convenience. You can build the main library immediately without installing anything else. However, if you wish to re-build these dependencies from source (e.g., for a different architecture), please read the instructions in [`src/cpp/lib/README.md`](file:///src/cpp/lib/README.md).
 
-The repository is now configured with a unified, smart `tasks.json` for Visual Studio Code that automatically detects your OS and uses the appropriate compiler.
-
-1. Clone the repository:
+1. Clone the repository and navigate to the C++ source directory:
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-CP-ABE-Library.git
     cd Hybrid-CP-ABE-Library
     git switch hybrid-pq-cp-abe
+    cd src/cpp
     ```
-2. Navigate to the project directory:
-    ```sh
-    cd Hybrid-CP-ABE-Library/src/cpp
-    code . #for open projects Visual Studio Code
-    ```
-3. Build the project via Visual Studio Code:
-    - **On Windows**: Open VS Code from the **x64 Native Tools Command Prompt for VS 2022**.
-    - **On Linux / WSL**: Open VS Code natively.
-    - Press `Ctrl+Shift+B` to run the configured build task.
-    - **Windows** will automatically build using MSVC (`cl.exe`).
-    - **Linux** will automatically build using `g++`.
+
+### Option 1: Using Make (Recommended)
+We provide a unified `Makefile` that automatically detects your operating system and compiler.
+
+- **On Windows**: Open the **x64 Native Tools Command Prompt for VS 2022** (or equivalent) and run:
+  ```cmd
+  make clean
+  make all
+  ```
+  *(Note: If you use MSYS2 or MinGW `make`, it works seamlessly as well!)*
+
+- **On Linux / WSL**: Open your terminal and run:
+  ```bash
+  make clean
+  make all
+  ```
+
+**Available Make Commands:**
+- `make all`: Builds the static library, shared library, and executable.
+- `make static`: Builds only the static library (`.lib` or `.a`).
+- `make shared`: Builds only the shared library (`.dll` or `.so`).
+- `make executable`: Builds only the CLI executable.
+- `make clean`: Removes all build artifacts and temporary files.
+
+### Option 2: Using Visual Studio Code
+The repository is also configured with a smart `tasks.json` for VS Code.
+
+- **On Windows**: Open VS Code from the **x64 Native Tools Command Prompt for VS 2022**.
+- **On Linux / WSL**: Open VS Code natively.
+- Press `Ctrl+Shift+B` to run the configured build task.
+- **Windows** will build using MSVC (`cl.exe`), and **Linux** will build using `g++`.
 ## Usage
 
 ### Using the Executable
