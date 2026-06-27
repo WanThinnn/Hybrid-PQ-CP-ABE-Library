@@ -112,4 +112,4 @@ cd vcpkg
 ./vcpkg integrate install
 ./vcpkg install cryptopp:x64-windows  # Use x64-linux for Linux
 ```
-After installation, locate the generated `cryptlib.lib` (Windows) or `libcryptopp.a` (Linux) in the `vcpkg/packages` directory and copy it to your project.
+After installation, locate the generated `libcryptopp.lib` (Windows) or `libcryptopp.a` (Linux) in the `vcpkg/packages` directory and copy it to your project.

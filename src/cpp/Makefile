@@ -48,8 +48,8 @@ ifeq ($(COMPILER),msvc)
     EXEC = $(BUILD_DIR)/main.exe
     
     # Libraries
-    STATIC_LIBS = $(LIB_STATIC_DIR)/cryptlib.lib $(LIB_STATIC_DIR)/liboqs.lib $(LIB_STATIC_DIR)/librabe_ffi.lib
-    SHARED_LIBS = liboqs.lib cryptlib.lib librabe_ffi.lib libcpabe_tkn20.lib bcrypt.lib advapi32.lib ntdll.lib
+    STATIC_LIBS = $(LIB_STATIC_DIR)/libcryptopp.lib $(LIB_STATIC_DIR)/liboqs.lib $(LIB_STATIC_DIR)/librabe_ffi.lib
+    SHARED_LIBS = liboqs.lib libcryptopp.lib librabe_ffi.lib libcpabe_tkn20.lib bcrypt.lib advapi32.lib ntdll.lib
     
     LDFLAGS = /link /ignore:4099 /LIBPATH:$(LIB_STATIC_DIR) /MACHINE:X64
 else
