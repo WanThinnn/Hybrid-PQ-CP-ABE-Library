@@ -21,6 +21,7 @@ SCHEMES_DIR = schemes
 CORE_DIR = core
 CRYPTO_DIR = crypto
 LIB_STATIC_DIR = lib/static
+LIB_DYNAMIC_DIR = lib/dynamic
 
 # Source files
 SRCS = $(SCHEMES_DIR)/ac17.cpp \
@@ -51,7 +52,7 @@ ifeq ($(COMPILER),msvc)
     STATIC_LIBS = $(LIB_STATIC_DIR)/libcryptopp.lib $(LIB_STATIC_DIR)/liboqs.lib $(LIB_STATIC_DIR)/librabe_ffi.lib
     SHARED_LIBS = liboqs.lib libcryptopp.lib librabe_ffi.lib libcpabe_tkn20.lib bcrypt.lib advapi32.lib ntdll.lib
     
-    LDFLAGS = /link /ignore:4099 /LIBPATH:$(LIB_STATIC_DIR) /MACHINE:X64
+    LDFLAGS = /link /ignore:4099 /LIBPATH:$(subst /,\,$(LIB_STATIC_DIR)) /MACHINE:X64
 else
     BUILD_DIR = build_linux
     CXX = g++
@@ -76,6 +77,7 @@ all: static shared executable
 	@echo "================================================================"
 	@echo " All targets built successfully!"
 	@echo " Output files are located in $(BUILD_DIR)/"
+	@echo " Built libraries were also copied to $(LIB_STATIC_DIR)/ and $(LIB_DYNAMIC_DIR)/"
 	@echo "================================================================"
 
 help:
@@ -104,14 +106,16 @@ static: $(STATIC_LIB)
 $(STATIC_LIB):
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Generating TKN20 import lib...
-	lib.exe /NOLOGO /DEF:$(LIB_STATIC_DIR)/libcpabe_tkn20.def /OUT:$(LIB_STATIC_DIR)/libcpabe_tkn20.lib /MACHINE:X64
+	lib.exe /NOLOGO /DEF:$(subst /,\,$(LIB_STATIC_DIR))\libcpabe_tkn20.def /OUT:$(subst /,\,$(LIB_STATIC_DIR))\libcpabe_tkn20.lib /MACHINE:X64
 	@echo Compiling...
 	$(CXX) $(CXXFLAGS) /c $(SRCS)
 	@echo Archiving...
 	lib.exe /OUT:$(STATIC_LIB) $(OBJS) $(STATIC_LIBS)
 	@echo Cleaning up object files...
 	del /Q *.obj
-	@echo Done! Output at $(STATIC_LIB)
+	@if not exist $(subst /,\,$(LIB_STATIC_DIR)) mkdir $(subst /,\,$(LIB_STATIC_DIR))
+	copy /Y $(subst /,\,$(STATIC_LIB)) $(subst /,\,$(LIB_STATIC_DIR))\
+	@echo Done! Output at $(STATIC_LIB) and copied to $(LIB_STATIC_DIR)
 
 shared: $(SHARED_LIB)
 
@@ -119,10 +123,12 @@ $(SHARED_LIB): static
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Compiling Shared Library...
 	$(CXX) $(CXXFLAGS) $(DLL_FLAGS) /Fe:$(SHARED_LIB) $(SRCS) $(LDFLAGS) $(SHARED_LIBS) /IMPLIB:$(BUILD_DIR)\libhybrid-pq-cp-abe_dll.lib
-	copy /Y lib\dynamic\libcpabe_tkn20.dll $(BUILD_DIR)
+	copy /Y $(subst /,\,$(LIB_DYNAMIC_DIR))\libcpabe_tkn20.dll $(BUILD_DIR)
+	@if not exist $(subst /,\,$(LIB_DYNAMIC_DIR)) mkdir $(subst /,\,$(LIB_DYNAMIC_DIR))
+	copy /Y $(subst /,\,$(SHARED_LIB)) $(subst /,\,$(LIB_DYNAMIC_DIR))\
 	@del /Q *.obj *.pdb >nul 2>&1
 	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb $(BUILD_DIR)\*_dll.lib >nul 2>&1
-	@echo Done! Output at $(SHARED_LIB)
+	@echo Done! Output at $(SHARED_LIB) and copied to $(LIB_DYNAMIC_DIR)
 
 executable: $(EXEC)
 
@@ -130,7 +136,7 @@ $(EXEC): $(MAIN_SRC) $(STATIC_LIB)
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Compiling Executable...
 	$(CXX) $(CXXFLAGS) /Fe:$(EXEC) $(MAIN_SRC) $(LDFLAGS) $(STATIC_LIB) $(SHARED_LIBS)
-	copy /Y lib\dynamic\libcpabe_tkn20.dll $(BUILD_DIR)
+	copy /Y $(subst /,\,$(LIB_DYNAMIC_DIR))\libcpabe_tkn20.dll $(BUILD_DIR)
 	@del /Q *.obj *.pdb >nul 2>&1
 	@del /Q $(BUILD_DIR)\*.exp $(BUILD_DIR)\*.ilk $(BUILD_DIR)\*.pdb $(BUILD_DIR)\*_dll.lib >nul 2>&1
 	@echo Done! Output at $(EXEC)
@@ -171,14 +177,18 @@ $(STATIC_LIB): $(SRCS)
 	@mv $(BUILD_DIR)/libhybrid-pq-cp-abe_fat.a $(STATIC_LIB)
 	@echo Cleaning up object files...
 	@rm -f ac17.o tkn20.o hybrid-cp-abe.o hybrid-oqs-abe.o ml-dsa.o aes-gcm.o
-	@echo Done! Output at $(STATIC_LIB)
+	@mkdir -p $(LIB_STATIC_DIR)
+	cp $(STATIC_LIB) $(LIB_STATIC_DIR)/
+	@echo Done! Output at $(STATIC_LIB) and copied to $(LIB_STATIC_DIR)
 
 shared: $(SHARED_LIB)
 
 $(SHARED_LIB): $(SRCS) $(STATIC_LIBS_GCC)
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(DLL_FLAGS) $(SRCS) -o $(SHARED_LIB) $(STATIC_LIBS_GCC)
-	@echo Done! Output at $(SHARED_LIB)
+	@mkdir -p $(LIB_DYNAMIC_DIR)
+	cp $(SHARED_LIB) $(LIB_DYNAMIC_DIR)/
+	@echo Done! Output at $(SHARED_LIB) and copied to $(LIB_DYNAMIC_DIR)
 
 executable: $(EXEC)
 
