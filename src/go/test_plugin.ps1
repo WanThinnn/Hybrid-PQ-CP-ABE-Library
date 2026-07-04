@@ -10,7 +10,7 @@ Write-Host "Starting Vault dev server in Docker (Windows)..."
 docker rm -f vault-dev 2>$null
 
 # Run vault in dev mode. The plugin is already compiled and baked into the image.
-docker run -d --name vault-dev --cap-add=IPC_LOCK vault-ubuntu
+docker run -d --name vault-dev -p 8201:8200 --cap-add=IPC_LOCK vault-ubuntu
 
 Write-Host "Waiting for Vault to start..."
 Start-Sleep -Seconds 5
