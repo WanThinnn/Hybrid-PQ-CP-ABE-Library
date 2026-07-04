@@ -14,7 +14,7 @@ echo "Starting Vault dev server in Docker..."
 docker rm -f vault-dev 2>/dev/null || true
 
 # Run vault in dev mode. The plugin is already compiled and baked into the image.
-docker run -d --name vault-dev -p 8200:8200 --cap-add=IPC_LOCK vault-ubuntu
+docker run -d --name vault-dev --cap-add=IPC_LOCK vault-ubuntu
 
 echo "Waiting for Vault to start..."
 sleep 5

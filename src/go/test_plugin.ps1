@@ -10,7 +10,7 @@ Write-Host "Starting Vault dev server in Docker (Windows)..."
 docker rm -f vault-dev 2>$null
 
 # Run vault in dev mode. The plugin is already compiled and baked into the image.
-docker run -d --name vault-dev -p 8200:8200 --cap-add=IPC_LOCK vault-ubuntu
+docker run -d --name vault-dev --cap-add=IPC_LOCK vault-ubuntu
 
 Write-Host "Waiting for Vault to start..."
 Start-Sleep -Seconds 5
@@ -20,7 +20,7 @@ docker exec vault-dev ldd /vault/plugins/vault-plugin-abe
 
 Write-Host "Registering plugin..."
 docker exec vault-dev sh -c "sha256sum /vault/plugins/vault-plugin-abe | awk '{print `$1}' > /tmp/sha.txt"
-docker exec -e VAULT_ADDR='http://127.0.0.1:8200' -e VAULT_TOKEN='root' vault-dev sh -c "vault plugin register -sha256=``$(cat /tmp/sha.txt) secret vault-plugin-abe"
+docker exec -e VAULT_ADDR='http://127.0.0.1:8200' -e VAULT_TOKEN='root' vault-dev sh -c 'vault plugin register -sha256=$(cat /tmp/sha.txt) secret vault-plugin-abe'
 
 Write-Host "Enabling plugin at abe/ ..."
 docker exec -e VAULT_ADDR='http://127.0.0.1:8200' -e VAULT_TOKEN='root' vault-dev vault secrets enable -path=abe vault-plugin-abe
