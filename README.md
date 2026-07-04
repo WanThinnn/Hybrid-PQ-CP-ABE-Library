@@ -126,7 +126,7 @@ Please go to <b>python-sources</b> folder to see more.
 This library natively provides a **HashiCorp Vault Custom Secrets Engine** written in Go (using Cgo to wrap the C++ core). It enables you to run a true "Cryptography-as-a-Service" architecture where the Master Secret Key (MSK) never leaves the Vault enclave.
 - Exposes RESTful APIs: `/v1/abe/setup`, `/v1/abe/genkey`, `/v1/abe/encrypt`, `/v1/abe/decrypt`.
 - Multi-stage Docker environments for seamless building and testing.
-Please see the [**src/go/README.md**](src/go/README.md) for instructions on how to build, test, and deploy the plugin.
+Please see the [**src/go/README.md**](src/go/README.md) and [**src/vault/README.md**](src/vault/README.md) for instructions on how to build, test, and deploy the plugin.
 
 ## Acknowledgements
 Special thanks to [Aya0wind](https://github.com/Aya0wind) for the [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi) project, [Cloudflare](https://github.com/cloudflare/circl) for the Go-based CIRCL TKN20 implementation, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, and the [CryptoPP](https://github.com/weidai11/cryptopp) Library for helping me build this library.
