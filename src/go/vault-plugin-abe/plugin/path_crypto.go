@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"unsafe"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -127,11 +128,21 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 	var ctLen C.size_t
 	var res C.int
 
-	if pqcSkBase64 != "" {
-		pqcSkBytes, err := base64.StdEncoding.DecodeString(pqcSkBase64)
+	var pqcSkBytes []byte
+	if pqcSkBase64 == "" {
+		storageEntry, err := req.Storage.Get(ctx, "msk/pqc")
+		if err == nil && storageEntry != nil {
+			pqcSkBytes = storageEntry.Value
+		}
+	} else {
+		var err error
+		pqcSkBytes, err = base64.StdEncoding.DecodeString(pqcSkBase64)
 		if err != nil {
 			return logical.ErrorResponse("pqc_private_key must be base64 encoded"), nil
 		}
+	}
+
+	if len(pqcSkBytes) > 0 {
 		cPqcSk := (*C.uchar)(C.CBytes(pqcSkBytes))
 		defer C.free(unsafe.Pointer(cPqcSk))
 
@@ -152,7 +163,12 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 	}
 
 	if res != C.HCPABE_SUCCESS {
-		return nil, errors.New("encryption failed")
+		pkPreview := "invalid_or_short"
+		if len(pkBytes) > 10 {
+			pkPreview = string(pkBytes[:10])
+		}
+		b.Logger().Error("encryption failed in C++ backend", "res", int(res), "len_pt", len(ptBytes), "len_pqc_sk", len(pqcSkBytes), "len_pk", len(pkBytes), "pk_preview", pkPreview, "policy", policy)
+		return logical.ErrorResponse(fmt.Sprintf("encryption failed with error code: %d", int(res))), nil
 	}
 
 	defer FreeCBytes(ctBuffer)
