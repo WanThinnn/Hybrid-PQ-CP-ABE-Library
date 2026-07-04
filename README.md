@@ -10,6 +10,7 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi))
 - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2020/733) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
 - [liboqs](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
+- [HashiCorp Vault Secrets Engine](src/go/README.md) (Native Go plugin for Enterprise Cryptography-as-a-Service)
 
 ## Why Use This Library? (Performance & Benchmarks)
 
@@ -120,6 +121,12 @@ main decrypt --pqc "test_case/cpabe_sk.key" "test_case/pqc_pk.key" "test_case/ci
 ### Integrating the Library
 After building the library, you can integrate it into any program on Windows/Linux. Here are the steps to include the library in your project.
 Please go to <b>python-sources</b> folder to see more.
+
+### HashiCorp Vault Plugin
+This library natively provides a **HashiCorp Vault Custom Secrets Engine** written in Go (using Cgo to wrap the C++ core). It enables you to run a true "Cryptography-as-a-Service" architecture where the Master Secret Key (MSK) never leaves the Vault enclave.
+- Exposes RESTful APIs: `/v1/abe/setup`, `/v1/abe/genkey`, `/v1/abe/encrypt`, `/v1/abe/decrypt`.
+- Multi-stage Docker environments for seamless building and testing.
+Please see the [**src/go/README.md**](src/go/README.md) for instructions on how to build, test, and deploy the plugin.
 
 ## Acknowledgements
 Special thanks to [Aya0wind](https://github.com/Aya0wind) for the [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi) project, [Cloudflare](https://github.com/cloudflare/circl) for the Go-based CIRCL TKN20 implementation, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, and the [CryptoPP](https://github.com/weidai11/cryptopp) Library for helping me build this library.

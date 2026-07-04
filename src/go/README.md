@@ -4,6 +4,9 @@ This directory contains the Go implementation of a custom HashiCorp Vault plugin
 
 The core cryptographic algorithms are implemented in C++ (located in `../cpp/`) and are compiled natively into this Go plugin via CGO. 
 
+## Cryptography-as-a-Service (Zero-Trust)
+By running this plugin inside Vault, you achieve a true **Zero-Trust Architecture**. The CP-ABE Master Secret Key (MSK) is generated and stored deep within the Vault secure storage backend (`msk/abe`). The MSK **never** leaves the Vault enclave. All encryption and key generation operations are offloaded to Vault via RESTful APIs, meaning the client application never holds the root key in its memory or on disk.
+
 ## Requirements
 
 The most reliable way to build and test this plugin is by using **Docker**, because compiling the plugin requires C++17, CMake, and development libraries (like `libssl-dev`) that can be cumbersome to set up on Windows.
