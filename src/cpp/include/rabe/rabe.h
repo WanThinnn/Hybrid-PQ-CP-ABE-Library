@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-extern "C" {
+
 typedef struct CBoxedBuffer {
   const unsigned char *buffer;
   unsigned int len;
@@ -454,4 +454,3 @@ void rabe_kp_lsw_free_public_key(const void *ptr);
 void rabe_kp_lsw_free_secret_key(const void *ptr);
 
 void rabe_kp_lsw_free_ciphertext(const void *ptr);
-}
