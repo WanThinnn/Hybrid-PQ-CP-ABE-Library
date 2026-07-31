@@ -2,6 +2,8 @@
 
 # Ensure we are in the Go plugin directory
 cd "$(dirname "$0")"
+echo "Syncing latest C++ libraries if needed..."
+./sync_libs.sh
 
 echo "Building everything inside Multi-stage Docker..."
 docker build -t vault-ubuntu -f Dockerfile ../..

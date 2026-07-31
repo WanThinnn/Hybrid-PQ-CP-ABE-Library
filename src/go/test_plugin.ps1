@@ -1,3 +1,6 @@
+Write-Host "Syncing latest C++ libraries if needed..."
+.\sync_libs.ps1
+
 Write-Host "Building everything inside Multi-stage Docker..."
 docker build -t vault-ubuntu -f D:\Documents\UIT\ABE\Hybrid-CP-ABE-Library\src\go\Dockerfile D:\Documents\UIT\ABE\Hybrid-CP-ABE-Library
 
