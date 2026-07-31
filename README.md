@@ -1,10 +1,10 @@
-# Hybrid PQ-CP-ABE Library (PQC Branch)
+# Hybrid PQ-CP-ABE Library
 Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C++ in Windows/Linux
 
-> [!WARNING]
-> **PQC Branch Notice**: This branch includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks. 
+> [!NOTE]
+> This library natively includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks. 
 > 
-> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch back to the  **[`main`](https://github.com/WanThinnn/Hybrid-CP-ABE-Library/tree/main)**!
+> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch to the **[`legacy`](https://github.com/WanThinnn/Hybrid-CP-ABE-Library/tree/legacy)** branch!
 
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi))
@@ -51,7 +51,6 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-CP-ABE-Library.git
     cd Hybrid-CP-ABE-Library
-    git switch hybrid-pq-cp-abe
     cd src/cpp
     ```
 
