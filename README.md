@@ -3,11 +3,10 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 
 > [!NOTE]
 > This library natively includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks. 
-> 
-> **If you DO NOT need Post-Quantum security** (to save binary size, avoid the `liboqs` dependency, or minimize performance overhead), please switch to the **[`legacy`](https://github.com/WanThinnn/Hybrid-CP-ABE-Library/tree/legacy)** branch!
+
 
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
-- [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi))
+- [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe.git))
 - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2020/733) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
 - [liboqs](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
 - [HashiCorp Vault Secrets Engine](src/go/README.md) (Native Go plugin for Enterprise Cryptography-as-a-Service)
