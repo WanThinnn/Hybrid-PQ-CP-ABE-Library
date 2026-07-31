@@ -11,6 +11,14 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 - [liboqs](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
 - [HashiCorp Vault Secrets Engine](src/go/README.md) (Native Go plugin for Enterprise Cryptography-as-a-Service)
 
+> [!IMPORTANT]
+> **On the scope of "Post-Quantum" in this library:**
+> The post-quantum (PQC) component only applies to the **digital signature layer** (ML-DSA-87, via `liboqs`), used to prevent Surreptitious Forwarding attacks in the "Sign-then-Encrypt" architecture.
+>
+> The **CP-ABE core (AC17/TKN20) remains classical**, based on pairing/discrete-log problems over elliptic curves — it is **not quantum-resistant**. In other words, this library is a **hybrid**: the attribute-based encryption (ABE) layer is still "classical," while only the signing/authentication layer is "post-quantum."
+>
+> Rationale: fully "native" post-quantum CP-ABE (e.g. lattice-based) is still an active area of **academic research**, with no published implementation that has reached a level of maturity or performance suitable for real-world use — most existing work remains at the **Proof-of-Concept (PoC)** stage or purely theoretical in papers, with no stable, runnable open-source code available. This library therefore takes a pragmatic approach: keep the well-established, high-performance classical CP-ABE core, and add a PQC signature layer on top to strengthen security in a way that's deployable today.
+
 ## Why Use This Library? (Performance & Benchmarks)
 
 This library implements a highly optimized **KEM/DEM Hybrid Encryption architecture** combining the advanced access control of CP-ABE (using `rabe` & Rust) with the blazing-fast symmetric encryption of AES-GCM (using `CryptoPP` & C++). 
