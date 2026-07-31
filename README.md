@@ -48,8 +48,8 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
 
 1. Clone the repository and navigate to the C++ source directory:
     ```sh
-    git clone https://github.com/WanThinnn/Hybrid-CP-ABE-Library.git
-    cd Hybrid-CP-ABE-Library
+    git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git
+    cd Hybrid-PQ-CP-ABE-Library
     cd src/cpp
     ```
 
