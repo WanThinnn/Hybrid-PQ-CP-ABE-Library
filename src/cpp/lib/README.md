@@ -82,8 +82,8 @@ rustup default nightly
 ```
 2. Clone and build the project:
 ```bash
-git clone https://github.com/Aya0wind/Rabe-ffi.git
-cd Rabe-ffi
+git clone https://github.com/WanThinnn/librabe-ffi.git
+cd librabe-ffi
 cargo build --release
 ```
 3. After building, copy the generated library (e.g., `target/release/librabe_ffi.a` or `.so`/`.lib`) to the `lib/static/` directory of your project, and copy the `rabe.h` header to your `include` directory.
