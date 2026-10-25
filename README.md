@@ -13,34 +13,74 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 >
 > Rationale: fully "native" post-quantum CP-ABE (e.g. lattice-based) is still an active area of **academic research**, with no published implementation that has reached a level of maturity or performance suitable for real-world use — most existing work remains at the **Proof-of-Concept (PoC)** stage or purely theoretical in papers, with no stable, runnable open-source code available. This library therefore takes a pragmatic approach: keep the well-established, high-performance classical CP-ABE core, and add a PQC signature layer on top to strengthen security in a way that's deployable today.
 
-## Why Use This Library? (Performance & Benchmarks)
+## Performance & Benchmarks
 
-This library implements a highly optimized **KEM/DEM Hybrid Encryption architecture** combining the advanced access control of CP-ABE (using `rabe` & Rust) with the blazing-fast symmetric encryption of AES-GCM (using `CryptoPP` & C++). 
+The library uses a **hybrid KEM/DEM-style architecture**: CP-ABE protects a randomly generated secret under the access policy, SHA3-256 derives the AES-256 key, and AES-GCM handles the bulk payload. The optional post-quantum path adds **ML-DSA-87 Sign-then-Encrypt** before the payload enters the hybrid encryption pipeline.
 
-### Quantum-Resistant "Sign-then-Encrypt" Architecture
-This branch heavily upgrades the security model by integrating **Post-Quantum Signatures (ML-DSA-87)** via `liboqs` to protect against quantum adversaries! 
-- **CCA Security & AAD Binding:** The AES-GCM symmetric encryption securely binds the Ciphertext Policy and PQC Public Key as Authenticated Additional Data (AAD) to prevent malleability.
-- **Anti-Surreptitious Forwarding:** The ML-DSA-87 signature algorithm signs the `[Policy] + [Plaintext]` securely, preventing malicious users from re-encrypting the payload for unintended recipients.
+For the current binary format, AES-GCM authenticates the header as AAD:
 
-When benchmarked against the standard Python-based `charm-crypto` library using the AC17 scheme, this library demonstrates massive performance advantages, especially during decryption:
+`[Version | Scheme | IV | Encapsulated-Key Length | Encapsulated CP-ABE Key]`
 
-*   **Lightning-fast Decryption (O(1) Decryption Time):** Thanks to Rust's intelligent Minimum Satisfying Subset evaluation and optimized multi-pairing techniques, the decryption time is almost constant regardless of how complex the policy is. While `charm-crypto` scales linearly and takes >200ms for complex policies (12 attributes), this custom library completes decryption in a flat **~23ms**.
-*   **Hardware-accelerated AES-GCM (AES-NI):** By using `CryptoPP` for the Data Encapsulation Mechanism (DEM) phase, the actual file data is encrypted and decrypted in less than 1 millisecond.
-*   **Zero Python Interpreter Overhead:** Being a pre-compiled native library (C++/Rust FFI), it eliminates the heavy overhead of the Python interpreter and Python object conversions, making it ideal for integration into high-performance backends, embedded systems, or mobile applications.
+The ML-DSA-87 layer signs:
 
-### Benchmark Results (Complex Policy - 12 Attributes)
+`[PolicyLen | Policy | Plaintext]`
+
+before encryption.
+
+### Published Benchmark Snapshot
+
+A reproducible benchmark snapshot is published under [`benchmark/published/2026-10-25_i5-12450HX_standard/`](benchmark/published/2026-10-25_i5-12450HX_standard/).
+
+Benchmark environment:
+
+- **CPU:** Intel Core i5-12450HX
+- **Library:** v5.2.0
+- **Profile:** Standard
+- **Timed iterations:** 100 after 5 warm-up iterations
+- **Payload:** 4 KiB
+- **Policy:** 12 distinct attributes
+- **Primary metric:** Median latency
+- **Outlier policy:** No samples removed
+
+| Implementation | Setup | KeyGen | Encrypt | Decrypt |
+| --- | ---: | ---: | ---: | ---: |
+| **AC17 Buffer** | 24.165 ms | 144.200 ms | 148.099 ms | **38.539 ms** |
+| **TKN20 Buffer** | **14.710 ms** | 310.463 ms | **122.048 ms** | **30.654 ms** |
+| **Charm-Crypto AC17** | 90.553 ms | 207.685 ms | 136.268 ms | 303.351 ms |
+
 <p align="center">
-  <img src="benchmark/image/benchmark_chart.png" alt="Benchmark Chart" width="800"/>
-  <br/>
-  <img src="benchmark/image/encrypt_decrypt_focus_chart.png" alt="Encrypt/Decrypt Focus Chart" width="800"/>
+  <img src="benchmark/published/2026-10-25_i5-12450HX_standard/charts/01_core_buffer_vs_charm.png" alt="AC17, TKN20 and Charm-Crypto AC17 benchmark" width="900"/>
 </p>
 
-> [!NOTE]
-> 
-> The minor trade-off for this extreme decryption speed is a slightly slower encryption phase for very complex policies (due to the Rust `pest` parser generating the abstract syntax tree), but the massive decryption gains (nearly 10x faster) make it exceptionally well-suited for scalable real-world systems.
+The largest separation in this run appears in **decryption latency**: AC17 Buffer measured **38.539 ms**, TKN20 Buffer **30.654 ms**, and Charm-Crypto AC17 **303.351 ms**. TKN20 also produced the lowest setup and encryption medians in this test, while its KeyGen operation was the most expensive of the three.
 
-> [!WARNING]
-> **Disclaimer (Scope of Library):** This library is highly specialized and is optimized for the **AC17** and **TKN20** CP-ABE schemes. It is built specifically to achieve maximum performance and seamless C++ integration. If your project requires a broader variety of cryptographic schemes (such as KP-ABE, IBE, etc.), we highly recommend using [Charm-Crypto](https://github.com/JHUISI/charm), which offers a vast and flexible collection of cryptographic primitives.
+### Post-Quantum Signature Cost
+
+ML-DSA-87 primitive measurements for the same published run:
+
+| Operation | Median |
+| --- | ---: |
+| KeyGen | 0.404 ms |
+| Sign | 0.783 ms |
+| Verify | 0.276 ms |
+
+In the end-to-end Sign-then-Encrypt benchmark, the measured differences between the standard and ML-DSA-87 paths were smaller than the normal CP-ABE run-to-run variation. The primitive results are therefore the more useful signal for the actual cost of the post-quantum signature layer.
+
+### Reproducibility
+
+The published snapshot includes:
+
+- [`report.md`](benchmark/published/2026-10-25_i5-12450HX_standard/report.md) — methodology, environment, results, and interpretation notes.
+- [`summary.csv`](benchmark/published/2026-10-25_i5-12450HX_standard/summary.csv) — median, mean, p95, p99, standard deviation, and coefficient of variation.
+- [`raw_samples.csv`](benchmark/published/2026-10-25_i5-12450HX_standard/raw_samples.csv) — every recorded timing sample.
+- [`benchmark_results.json`](benchmark/published/2026-10-25_i5-12450HX_standard/benchmark_results.json) — machine-readable results and benchmark metadata.
+- [`benchmark/`](benchmark/) — scripts and instructions required to reproduce the tests.
+
+> [!IMPORTANT]
+> **Benchmark comparison scope:** the native AC17/TKN20 measurements use the library's in-memory Buffer API and its byte-oriented hybrid pipeline. Charm-Crypto AC17 is also measured in memory, but its API operates directly on a GT group element. Charm is therefore included as a useful reference implementation rather than a strict end-to-end equivalent. The published results should not be interpreted as a universal speedup ratio across all workloads.
+
+> [!NOTE]
+> This library is specialized around **AC17** and **TKN20** CP-ABE with a native C/C++ integration surface. For projects that need a broader research-oriented collection of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.
 
 ## Building (Multi-OS)
 > [!IMPORTANT]
@@ -52,7 +92,7 @@ When benchmarked against the standard Python-based `charm-crypto` library using 
 - [HashiCorp Vault Secrets Engine](src/go/README.md) (Native Go plugin for Enterprise Cryptography-as-a-Service)
 
 > [!NOTE]
-> 
+>
 > **Note on Dependencies:** All necessary dependencies (`CryptoPP`, `liboqs`, `rabe-ffi`, `circl`) have already been pre-compiled and included in the `src/cpp/lib/` folder for your convenience. You can build the main library immediately without installing anything else. However, if you wish to re-build these dependencies from source (e.g., for a different architecture), please read the instructions in [`src/cpp/lib/README.md`](file:///src/cpp/lib/README.md).
 
 1. Clone the repository and navigate to the C++ source directory:
