@@ -354,4 +354,7 @@ src/cpp/test/
 
 src/cpp/build_for_old_linux.py
 
+# Local benchmark run outputs
+benchmark/results/
+
 test*/
