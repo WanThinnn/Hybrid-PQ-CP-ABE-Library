@@ -34,7 +34,6 @@ BUILD_DIR = $(BUILD_ROOT)/$(PLATFORM)
 # Directories
 INC_DIR = include
 VENDOR_SRC_INC_DIR = vendor
-COMPAT_INC_DIR = vendor/include
 DEPS_INC_DIR = build/deps/$(PLATFORM)/include
 TKN20_INC_DIR = bindings/tkn20/include
 SCHEMES_DIR = src/schemes
@@ -57,7 +56,7 @@ MAIN_SRC = src/main.cpp
 
 ifeq ($(COMPILER),msvc)
     CXX = cl.exe
-    CXXFLAGS = /MD /GS /O2 /Zi /EHsc /utf-8 /I$(INC_DIR) /I$(VENDOR_SRC_INC_DIR) /I$(DEPS_INC_DIR) /I$(TKN20_INC_DIR) /I$(COMPAT_INC_DIR)
+    CXXFLAGS = /MD /GS /O2 /Zi /EHsc /utf-8 /I$(INC_DIR) /I$(VENDOR_SRC_INC_DIR) /I$(DEPS_INC_DIR) /I$(TKN20_INC_DIR)
     DLL_FLAGS = /LD /DBUILD_DLL
     
     # MSVC object files
@@ -76,7 +75,7 @@ ifeq ($(COMPILER),msvc)
     LDFLAGS = /link /ignore:4099 /LIBPATH:$(subst /,\,$(LIB_STATIC_DIR)) /MACHINE:X64
 else
     CXX = g++
-    CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -I$(VENDOR_SRC_INC_DIR) -I$(DEPS_INC_DIR) -I$(TKN20_INC_DIR) -I$(COMPAT_INC_DIR) -fPIC
+    CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -I$(VENDOR_SRC_INC_DIR) -I$(DEPS_INC_DIR) -I$(TKN20_INC_DIR) -fPIC
 
     # No intermediate objects needed, we compile inline to keep output clean
 

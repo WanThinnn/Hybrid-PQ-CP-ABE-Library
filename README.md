@@ -96,7 +96,6 @@ vendor/liboqs/          Vendored Open Quantum Safe source
 vendor/librabe-ffi/     Vendored AC17 Rust FFI source
 vendor/circl/           Vendored Cloudflare CIRCL v1.6.4 source
 vendor/cover_crypt/     Vendored Cosmian CoverCrypt source
-vendor/include/         Compatibility headers for existing prebuilt artifacts
 lib/                    Generated/prebuilt native libraries
 tests/cpp/              Native test suite
 build/windows/          Windows build output
