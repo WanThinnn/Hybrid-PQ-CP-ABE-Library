@@ -33,7 +33,10 @@ BUILD_DIR = $(BUILD_ROOT)/$(PLATFORM)
 
 # Directories
 INC_DIR = include
-VENDOR_INC_DIR = vendor/include
+VENDOR_SRC_INC_DIR = vendor
+COMPAT_INC_DIR = vendor/include
+DEPS_INC_DIR = build/deps/$(PLATFORM)/include
+TKN20_INC_DIR = bindings/tkn20/include
 SCHEMES_DIR = src/schemes
 CORE_DIR = src/core
 CRYPTO_DIR = src/crypto
@@ -54,7 +57,7 @@ MAIN_SRC = src/main.cpp
 
 ifeq ($(COMPILER),msvc)
     CXX = cl.exe
-    CXXFLAGS = /MD /GS /O2 /Zi /EHsc /utf-8 /I$(INC_DIR) /I$(VENDOR_INC_DIR)
+    CXXFLAGS = /MD /GS /O2 /Zi /EHsc /utf-8 /I$(INC_DIR) /I$(VENDOR_SRC_INC_DIR) /I$(DEPS_INC_DIR) /I$(TKN20_INC_DIR) /I$(COMPAT_INC_DIR)
     DLL_FLAGS = /LD /DBUILD_DLL
     
     # MSVC object files
@@ -73,7 +76,7 @@ ifeq ($(COMPILER),msvc)
     LDFLAGS = /link /ignore:4099 /LIBPATH:$(subst /,\,$(LIB_STATIC_DIR)) /MACHINE:X64
 else
     CXX = g++
-    CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -I$(VENDOR_INC_DIR) -fPIC
+    CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -I$(VENDOR_SRC_INC_DIR) -I$(DEPS_INC_DIR) -I$(TKN20_INC_DIR) -I$(COMPAT_INC_DIR) -fPIC
 
     # No intermediate objects needed, we compile inline to keep output clean
 
@@ -95,7 +98,7 @@ else
     STATIC_LIBS_GCC = $(LIB_STATIC_DIR)/libcryptopp.a $(LIB_STATIC_DIR)/librabe_ffi.a $(LIB_STATIC_DIR)/libcpabe_tkn20.a $(LIB_STATIC_DIR)/liboqs.a
 endif
 
-.PHONY: all clean executable shared static help test
+.PHONY: all clean deps deps-clean executable shared static help test
 
 all: static shared executable
 	@echo "================================================================"
@@ -111,11 +114,13 @@ help:
 	@echo "Usage:"
 	@echo "  make                 Build everything (static, shared, executable)"
 	@echo "  make all             Same as above"
+	@echo "  make deps            Build vendored third-party dependencies"
+	@echo "  make deps-clean      Remove dependency build cache for this platform"
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the main executable"
 	@echo "  make test            Run an automated test using the executable"
-	@echo "  make clean           Remove all build artifacts and temporary files"
+	@echo "  make clean           Remove core build artifacts and temporary files"
 	@echo "  make help            Show this help message"
 	@echo ""
 	@echo "Environment variables:"
@@ -125,9 +130,15 @@ help:
 
 ifeq ($(COMPILER),msvc)
 
+deps:
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\build-deps.ps1
+
+deps-clean:
+	@if exist build\\deps\\windows rmdir /S /Q build\\deps\\windows
+
 static: $(STATIC_LIB)
 
-$(STATIC_LIB):
+$(STATIC_LIB): | deps
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 	@echo Generating TKN20 import lib...
 	lib.exe /NOLOGO /DEF:$(subst /,\,$(LIB_STATIC_DIR))\libcpabe_tkn20.def /OUT:$(subst /,\,$(LIB_STATIC_DIR))\libcpabe_tkn20.lib /MACHINE:X64
@@ -179,9 +190,15 @@ test: $(EXEC)
 	@echo Test completed! Check $(TEST_CASE_DIR)\recovertext.txt
 else
 
+deps:
+	@bash scripts/build-deps.sh $(PLATFORM)
+
+deps-clean:
+	@rm -rf build/deps/$(PLATFORM)
+
 static: $(STATIC_LIB)
 
-$(STATIC_LIB): $(SRCS)
+$(STATIC_LIB): $(SRCS) | deps
 	@mkdir -p $(BUILD_DIR)
 	@rm -f $(STATIC_LIB)
 	@echo Compiling...
@@ -218,7 +235,7 @@ executable: $(EXEC)
 
 $(EXEC): $(MAIN_SRC) $(STATIC_LIB)
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) -O2 -g -Wall -I$(INC_DIR) -I$(VENDOR_INC_DIR) $(MAIN_SRC) -o $(EXEC) $(STATIC_LIB) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(MAIN_SRC) -o $(EXEC) $(STATIC_LIB) $(LDFLAGS)
 	@echo Done! Output at $(EXEC)
 
 clean:

@@ -12,7 +12,7 @@
 #include "hybrid_pq_cp_abe/cpabe-scheme.h"
 #include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
 #include "hybrid_pq_cp_abe/common-utils.h"
-#include "tkn20/cpabe_tkn20.h"
+#include "cpabe_tkn20.h"
 
 #include <iostream>
 #include <string>

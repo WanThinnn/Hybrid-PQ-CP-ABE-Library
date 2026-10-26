@@ -1,0 +1,24 @@
+[package]
+name = "rabe-ffi"
+version = "0.1.0"
+edition = "2021"
+build = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib","staticlib"]
+
+[dependencies]
+rabe = "0.4.2"
+serde = "1.0"
+serde_json = "1.0"
+libc = "0.2"
+
+[profile.release]
+opt-level = 3
+overflow-checks = false
+lto = true
+rpath = false
+debug-assertions = false
+panic = 'abort'
+debug = false

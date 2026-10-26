@@ -88,11 +88,16 @@ The published snapshot includes:
 src/                    C++ core implementation only
 include/                Public C/C++ API
 bindings/python/        Python binding
+bindings/tkn20/         Project-owned Go/C bridge for CIRCL TKN20
 plugins/vault/          Optional HashiCorp Vault plugin
 plugins/covercrypt/     Optional CoverCrypt integration layer
-vendor/include/         Third-party C/C++ headers
+vendor/cryptopp/        Vendored Crypto++ source
+vendor/liboqs/          Vendored Open Quantum Safe source
+vendor/librabe-ffi/     Vendored AC17 Rust FFI source
+vendor/circl/           Vendored Cloudflare CIRCL v1.6.4 source
 vendor/cover_crypt/     Vendored Cosmian CoverCrypt source
-lib/                    Prebuilt native libraries
+vendor/include/         Compatibility headers for existing prebuilt artifacts
+lib/                    Generated/prebuilt native libraries
 tests/cpp/              Native test suite
 build/windows/          Windows build output
 build/linux/            Linux build output
@@ -113,7 +118,7 @@ build/macos/            macOS build output
 
 > [!NOTE]
 >
-> **Note on Dependencies:** Prebuilt native dependencies are kept in `lib/`, third-party C/C++ headers in `vendor/include/`, and rebuild instructions in [`lib/README.md`](lib/README.md). The public `include/` directory contains only this project's API.
+> **Note on Dependencies:** Primary dependency source is vendored directly in `vendor/`. `make all` automatically builds Crypto++, liboqs, librabe-ffi, and CIRCL/TKN20 before the C++ core. `lib/` is now an artifact/cache layer, not the source of truth. See [`vendor/README.md`](vendor/README.md) and [`lib/README.md`](lib/README.md).
 
 1. Clone the repository and build from the repository root:
     ```sh
@@ -122,7 +127,9 @@ build/macos/            macOS build output
     ```
 
 ### Option 1: Using Make (Recommended)
-We provide a unified `Makefile` that automatically detects your operating system and compiler.
+The unified `Makefile` automatically detects the platform and builds vendored dependencies on the first build. No separate dependency repositories need to be cloned.
+
+Required toolchains: CMake, Rust/Cargo, Go 1.24+, and a native C/C++ compiler. Windows additionally needs Visual Studio 2022/MSVC plus MinGW-w64 `gcc` for Go CGO/TKN20.
 
 - **On Windows**: Open the **x64 Native Tools Command Prompt for VS 2022** (or equivalent) and run:
   ```cmd
@@ -132,7 +139,7 @@ We provide a unified `Makefile` that automatically detects your operating system
   ```
   *(Note: If you use MSYS2 or MinGW `make`, it works seamlessly as well!)*
 
-- **On Linux / WSL**: Open your terminal and run:
+- **On Linux / WSL / macOS**: Open your terminal and run:
   ```bash
   make clean
   make all
@@ -140,12 +147,14 @@ We provide a unified `Makefile` that automatically detects your operating system
   ```
 
 **Available Make Commands:**
-- `make all`: Builds the static library, shared library, and executable.
+- `make deps`: Builds vendored native dependencies and caches them under `build/deps/<platform>/`.
+- `make deps-clean`: Removes the dependency build cache for the current platform.
+- `make all`: Builds dependencies if needed, then the static library, shared library, and executable.
 - `make static`: Builds only the static library (`.lib` or `.a`).
 - `make shared`: Builds only the shared library (`.dll` or `.so`).
 - `make executable`: Builds only the CLI executable.
 - `make test`: Runs the test suite. See `tests/cpp/run_test.sh` or `tests/cpp/run_test.bat`.
-- `make clean`: Removes all build artifacts and temporary files.
+- `make clean`: Removes core build artifacts and temporary test files; use `make deps-clean` for dependency cache.
 
 ### Option 2: Using Visual Studio Code
 The repository is also configured with a smart `tasks.json` for VS Code.

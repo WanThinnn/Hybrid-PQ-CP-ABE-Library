@@ -1,0 +1,93 @@
+# Valgrind suppression file for SNOVA
+
+# q=16
+
+{
+   Rejection sampling when no valid solution was found, no GFNI
+   Memcheck:Cond
+   src:snova_opt_16.c:1290
+}
+
+{
+   Rejection sampling when no valid solution was found, no GFNI
+   Memcheck:Cond
+   src:snova_opt_16.c:1322
+}
+
+# q=16, l=2
+
+{
+   Rejection sampling when no valid solution was found
+   Memcheck:Cond
+   src:snova_opt_16_2.c:1373
+}
+
+{
+   Rejection sampling when no valid solution was found
+   Memcheck:Cond
+   src:snova_opt_16_2.c:1405
+}
+
+# q=16, AVX2
+
+{
+   Rejection sampling when no valid solution was found, no GFNI
+   Memcheck:Cond
+   src:snova_avx2_16.c:6731
+}
+
+{
+   Rejection sampling when no valid solution was found, no GFNI
+   Memcheck:Cond
+   src:snova_avx2_16.c:6787
+}
+
+{
+   Obscure error message on a fixed for loop
+   Memcheck:Cond
+   src:snova_avx2_16.c:4099
+}
+
+{
+   Lookup depending on public data
+   Memcheck:Value8
+   src:snova_avx2_16.c:3947
+}
+
+{
+   Lookup depending on public data
+   Memcheck:Value8
+   src:snova_avx2_16.c:3963
+}
+
+{
+   Lookup, always only depending on public data
+   Memcheck:Value8
+   fun:rct_vtl128
+}
+
+{
+   Lookup depending on public data
+   Memcheck:Value8
+   src:snova_avx2_16.c:4899
+}
+
+{
+   Lookup, always only depending on public data
+   Memcheck:Value8
+   fun:rct_sj_bc128_pub
+}
+
+{
+   Lookup, always only depending on public data
+   Memcheck:Value8
+   fun:rct_sj_bc256_pub
+}
+
+# q=16, memopt
+
+{
+   Rejection sampling when no valid solution was found
+   Memcheck:Cond
+   src:snova_memopt_16.c:840
+}
