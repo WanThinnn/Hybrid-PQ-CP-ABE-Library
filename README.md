@@ -117,51 +117,70 @@ build/macos/            macOS build output
 
 > [!NOTE]
 >
-> **Note on Dependencies:** Primary dependency source is vendored directly in `vendor/`. `make all` automatically builds Crypto++, liboqs, librabe-ffi, and CIRCL/TKN20 before the C++ core. `lib/` is now an artifact/cache layer, not the source of truth. See [`vendor/README.md`](vendor/README.md) and [`lib/README.md`](lib/README.md).
+> **Dependency source of truth:** third-party source is vendored under `vendor/`. Built dependency headers and libraries are normalized under `build/deps/<platform>/`; the top level of that directory contains only `include/` and `lib/` after a successful dependency build.
 
-1. Clone the repository and build from the repository root:
+1. Clone the repository:
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git
     cd Hybrid-PQ-CP-ABE-Library
     ```
 
-### Option 1: Using Make (Recommended)
-The unified `Makefile` automatically detects the platform and builds vendored dependencies on the first build. No separate dependency repositories need to be cloned.
+Required toolchains: CMake, Rust/Cargo, Go 1.24+, GNU Make, and a native C/C++ compiler. Windows additionally requires Visual Studio 2022/MSVC and MinGW-w64 `gcc` for Go CGO/TKN20.
 
-Required toolchains: CMake, Rust/Cargo, Go 1.24+, and a native C/C++ compiler. Windows additionally needs Visual Studio 2022/MSVC plus MinGW-w64 `gcc` for Go CGO/TKN20.
+Build order from a fresh clone:
 
-- **On Windows**: Open the **x64 Native Tools Command Prompt for VS 2022** (or equivalent) and run:
-  ```cmd
-  make clean
-  make all
-  make test
-  ```
-  *(Note: If you use MSYS2 or MinGW `make`, it works seamlessly as well!)*
+1. **Build native dependencies**
+   ```sh
+   make deps -j8
+   ```
+   This builds Crypto++, liboqs, librabe-ffi, and CIRCL/TKN20. liboqs is configured as a minimal ML-KEM + ML-DSA build only: ML-KEM-512/768/1024 and ML-DSA-44/65/87. The `-jN` budget is distributed across the four dependency builds without oversubscribing the requested total.
 
-- **On Linux / WSL / macOS**: Open your terminal and run:
-  ```bash
-  make clean
-  make all
-  make test
-  ```
+2. **Dependency output**
+   ```text
+   build/deps/<platform>/
+   ├── include/
+   │   ├── cryptopp/
+   │   ├── liboqs/
+   │   ├── rabe/
+   │   └── tkn20/
+   └── lib/
+       ├── cryptopp/
+       ├── liboqs/
+       ├── rabe/
+       └── tkn20/
+   ```
+   Temporary CMake/Cargo/Go/Crypto++ build trees are removed after success. Fingerprint metadata is kept inside each `lib/<dep>/` directory so unchanged dependencies can be skipped on the next build.
+
+3. **Build the Hybrid-CP-ABE native core**
+   ```sh
+   make -j8
+   ```
+   The core consumes headers and libraries directly from `build/deps/<platform>/`. After a successful dependency build, `build/deps/<platform>/lib/.ready` marks the dependency set as ready; normal `make -jN` builds do not run the dependency scripts again and go straight to the native core.
+
+4. **Run tests**
+   ```sh
+   make test -j8
+   ```
+
+On Windows, run these commands from an **x64 Native Tools Command Prompt for VS 2022**. Windows uses the MSVC x64 ABI; `librabe-ffi` is forced to `x86_64-pc-windows-msvc`, while TKN20 uses Go/MinGW only behind a C ABI DLL plus an MSVC import `.lib`.
+
+After `make`, the build prints the exact include, dependency-library, native-library, shared-library, runtime-DLL, and CLI output paths. `include/` and `lib/` at the repository root are project-only: `include/hybrid_pq_cp_abe/` contains the public Hybrid-CP-ABE API, while `lib/` contains the project static and shared libraries side by side. All third-party headers/libraries stay exclusively under `build/deps/<platform>/`.
+
+Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make deps-clean` to remove the complete dependency output for the current platform.
 
 **Available Make Commands:**
-- `make deps`: Builds vendored native dependencies and caches them under `build/deps/<platform>/`.
-- `make deps-clean`: Removes the dependency build cache for the current platform.
-- `make all`: Builds dependencies if needed, then the static library, shared library, and executable.
-- `make static`: Builds only the static library (`.lib` or `.a`).
-- `make shared`: Builds only the shared library (`.dll` or `.so`).
-- `make executable`: Builds only the CLI executable.
-- `make test`: Runs the test suite. See `tests/cpp/run_test.sh` or `tests/cpp/run_test.bat`.
-- `make clean`: Removes core build artifacts and temporary test files; use `make deps-clean` for dependency cache.
+- `make deps -j8`: Build/check the four native dependencies and print their final include/library layout.
+- `make -j8`: Build the native C++ core directly from the existing dependency output. It only auto-builds dependencies when the ready marker is missing (fresh clone or after `make deps-clean`).
+- `make deps-clean`: Remove `build/deps/<platform>/`.
+- `make static`: Build only the project static library.
+- `make shared`: Build only the project shared library.
+- `make executable`: Build only the CLI executable.
+- `make test -j8`: Incrementally build and run the tests.
+- `make abi-info`: Show the platform ABI/toolchain policy.
+- `make clean`: Remove only project core/object output.
 
-### Option 2: Using Visual Studio Code
-The repository is also configured with a smart `tasks.json` for VS Code.
+If installed, `sccache` is used automatically where supported. liboqs prefers Ninja when available.
 
-- **On Windows**: Open VS Code from the **x64 Native Tools Command Prompt for VS 2022**.
-- **On Linux / WSL**: Open VS Code natively.
-- Press `Ctrl+Shift+B` to run the configured build task.
-- **Windows** will build using MSVC (`cl.exe`), and **Linux** will build using `g++`.
 ## Usage
 
 ### Using the Executable

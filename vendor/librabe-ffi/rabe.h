@@ -1,3 +1,10 @@
+#ifndef LIBRABE_FFI_RABE_H
+#define LIBRABE_FFI_RABE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -454,3 +461,9 @@ void rabe_kp_lsw_free_public_key(const void *ptr);
 void rabe_kp_lsw_free_secret_key(const void *ptr);
 
 void rabe_kp_lsw_free_ciphertext(const void *ptr);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // LIBRABE_FFI_RABE_H

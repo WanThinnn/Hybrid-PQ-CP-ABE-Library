@@ -1,3 +1,9 @@
+param(
+    [ValidateSet("all", "cryptopp", "liboqs", "rabe", "tkn20")]
+    [string]$Dependency = "all",
+    [int]$Jobs = 0
+)
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -5,91 +11,433 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $Root
 
 $DepsDir = Join-Path $Root "build\deps\windows"
-$StageDir = Join-Path $DepsDir "stage"
+$WorkDir = Join-Path $DepsDir ".work"
 $IncludeDir = Join-Path $DepsDir "include"
-$TempDir = Join-Path $DepsDir "tmp"
-$Stamp = Join-Path $DepsDir ".ready"
+$LibDir = Join-Path $DepsDir "lib"
+$BuildVersion = "6"
 
-New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
-$env:TEMP = $TempDir
-$env:TMP = $TempDir
-$env:TMPDIR = $TempDir
+$TotalJobs = $Jobs
+if ($TotalJobs -le 0 -and $env:JOBS -match '^\d+$') {
+    $TotalJobs = [int]$env:JOBS
+} elseif ($TotalJobs -le 0 -and $env:MAKEFLAGS -match '(?:^|\s)-?j\s*(\d+)(?:\s|$)') {
+    $TotalJobs = [int]$Matches[1]
+} elseif ($TotalJobs -le 0 -and $env:MAKEFLAGS -match '--jobs(?:=|\s+)(\d+)') {
+    $TotalJobs = [int]$Matches[1]
+}
+if ($TotalJobs -le 0) {
+    $TotalJobs = [Environment]::ProcessorCount
+}
+if ($TotalJobs -le 0) {
+    throw "Invalid job count: $TotalJobs"
+}
 
-$Required = @("cmake", "msbuild", "cargo", "go", "gcc", "lib.exe")
+Remove-Item Env:MAKEFLAGS -ErrorAction SilentlyContinue
+Remove-Item Env:MFLAGS -ErrorAction SilentlyContinue
+Remove-Item Env:MAKELEVEL -ErrorAction SilentlyContinue
+
+$InnerJobs = $TotalJobs
+
+New-Item -ItemType Directory -Force -Path $WorkDir, $IncludeDir, $LibDir | Out-Null
+
+$Required = @("cmake", "msbuild", "cargo", "go", "gcc", "lib.exe", "cl.exe")
 foreach ($Tool in $Required) {
     if (-not (Get-Command $Tool -ErrorAction SilentlyContinue)) {
         throw "Missing required tool: $Tool"
     }
 }
 
-New-Item -ItemType Directory -Force -Path $DepsDir, $StageDir, (Join-Path $IncludeDir "rabe"), "lib\static", "lib\dynamic", "bindings\tkn20\include" | Out-Null
-
-$Expected = @(
-    "lib\static\libcryptopp.lib",
-    "lib\static\liboqs.lib",
-    "lib\static\librabe_ffi.lib",
-    "lib\dynamic\libcpabe_tkn20.dll"
-)
-if ((Test-Path $Stamp) -and (($Expected | Where-Object { -not (Test-Path $_) }).Count -eq 0)) {
-    Write-Host "Dependencies already built for Windows. Use 'make deps-clean' to force a rebuild."
-    exit 0
+function Get-TextHash([string]$Text) {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+        return ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        $sha.Dispose()
+    }
 }
 
-Write-Host "==> Crypto++"
-& msbuild "vendor\cryptopp\cryptlib.vcxproj" /m /p:Configuration=Release /p:Platform=x64
-if ($LASTEXITCODE -ne 0) { throw "Crypto++ build failed" }
-$CryptoLib = Get-ChildItem "vendor\cryptopp" -Recurse -Filter "cryptlib.lib" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if (-not $CryptoLib) { throw "cryptlib.lib not found after Crypto++ build" }
-Copy-Item $CryptoLib.FullName "lib\static\libcryptopp.lib" -Force
-
-Write-Host "==> liboqs"
-$OqsBuild = Join-Path $DepsDir "liboqs"
-& cmake -S "vendor\liboqs" -B $OqsBuild -G "Visual Studio 17 2022" -A x64 "-DCMAKE_INSTALL_PREFIX=$StageDir" "-DBUILD_SHARED_LIBS=OFF" "-DOQS_BUILD_ONLY_LIB=ON" "-DOQS_USE_OPENSSL=OFF" "-DOQS_ALGS_ENABLED=STD"
-if ($LASTEXITCODE -ne 0) { throw "liboqs configure failed" }
-& cmake --build $OqsBuild --config Release --target install
-if ($LASTEXITCODE -ne 0) { throw "liboqs build failed" }
-$OqsLib = Get-ChildItem $StageDir -Recurse -Filter "oqs.lib" | Select-Object -First 1
-if (-not $OqsLib) { throw "oqs.lib not found after liboqs build" }
-Copy-Item $OqsLib.FullName "lib\static\liboqs.lib" -Force
-$OqsInclude = Join-Path $StageDir "include\oqs"
-if (Test-Path (Join-Path $IncludeDir "oqs")) { Remove-Item (Join-Path $IncludeDir "oqs") -Recurse -Force }
-Copy-Item $OqsInclude (Join-Path $IncludeDir "oqs") -Recurse -Force
-
-Write-Host "==> librabe-ffi"
-$env:CARGO_TARGET_DIR = Join-Path $DepsDir "rabe-target"
-& cargo build --locked --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
-if ($LASTEXITCODE -ne 0) { throw "librabe-ffi build failed" }
-$RabeRelease = Join-Path $env:CARGO_TARGET_DIR "release"
-$RabeStatic = Get-ChildItem $RabeRelease -Filter "rabe_ffi.lib" | Select-Object -First 1
-if (-not $RabeStatic) { throw "rabe_ffi.lib not found after Cargo build" }
-Copy-Item $RabeStatic.FullName "lib\static\librabe_ffi.lib" -Force
-$RabeDll = Get-ChildItem $RabeRelease -Filter "rabe_ffi.dll" | Select-Object -First 1
-if ($RabeDll) { Copy-Item $RabeDll.FullName "lib\dynamic\librabe_ffi.dll" -Force }
-Copy-Item "vendor\librabe-ffi\rabe.h" (Join-Path $IncludeDir "rabe\rabe.h") -Force
-
-Write-Host "==> CIRCL/TKN20 C bridge"
-$TknDir = Join-Path $DepsDir "tkn20"
-New-Item -ItemType Directory -Force -Path $TknDir | Out-Null
-Push-Location "bindings\tkn20"
-try {
-    $env:CGO_ENABLED = "1"
-    & go build -buildmode=c-shared -o (Join-Path $TknDir "libcpabe_tkn20.dll") .
-    if ($LASTEXITCODE -ne 0) { throw "TKN20 Go bridge build failed" }
-} finally {
-    Pop-Location
+function Get-FileDigest([string]$Path) {
+    return (Get-FileHash -Algorithm SHA256 $Path).Hash.ToLowerInvariant()
 }
-Copy-Item (Join-Path $TknDir "libcpabe_tkn20.dll") "lib\dynamic\libcpabe_tkn20.dll" -Force
-Copy-Item (Join-Path $TknDir "libcpabe_tkn20.h") "bindings\tkn20\include\cpabe_tkn20.h" -Force
-Copy-Item "bindings\tkn20\libcpabe_tkn20.def" "lib\static\libcpabe_tkn20.def" -Force
-& lib.exe /NOLOGO "/DEF:lib\static\libcpabe_tkn20.def" "/OUT:lib\static\libcpabe_tkn20.lib" /MACHINE:X64
-if ($LASTEXITCODE -ne 0) { throw "TKN20 MSVC import library generation failed" }
 
-@(
-    "platform=windows",
-    "cryptopp=5873a73a231c95771f5bbf3466a484952fb22780",
-    "liboqs=e1f480f382d9443c4412133b55948374c77a5c21",
-    "librabe-ffi=ff828d13a635042c9569cfb29117f299b553f946",
-    "circl=901199c7d4fcefc8c43e8ad46397439ccd3a0ed0"
-) | Set-Content $Stamp
+function Get-FingerprintPath([string]$Name) {
+    return Join-Path (Join-Path $LibDir $Name) ".fingerprint"
+}
 
-Write-Host "Dependencies built successfully for Windows."
+function Test-DependencyCache([string]$Name, [string]$Fingerprint, [string[]]$Outputs) {
+    $FingerprintPath = Get-FingerprintPath $Name
+    if (-not (Test-Path $FingerprintPath)) { return $false }
+    if (-not (Select-String -Path $FingerprintPath -SimpleMatch "fingerprint=$Fingerprint" -Quiet)) { return $false }
+
+    foreach ($Output in $Outputs) {
+        if (-not (Test-Path $Output)) { return $false }
+    }
+    return $true
+}
+
+function Write-DependencyFingerprint([string]$Name, [string]$Fingerprint, [string[]]$Extra = @()) {
+    $DepLibDir = Join-Path $LibDir $Name
+    New-Item -ItemType Directory -Force -Path $DepLibDir | Out-Null
+
+    @(
+        "fingerprint=$Fingerprint",
+        "platform=windows",
+        "abi=msvc",
+        "build_version=$BuildVersion"
+    ) + $Extra | Set-Content (Get-FingerprintPath $Name)
+}
+
+function Get-Sccache {
+    $Command = Get-Command sccache -ErrorAction SilentlyContinue
+    if ($Command) { return $Command.Source }
+    return $null
+}
+
+function Build-CryptoPP {
+    $Upstream = Get-FileDigest "vendor\cryptopp\UPSTREAM.md"
+    $Toolchain = (Get-Command cl.exe).Source
+    $Fingerprint = Get-TextHash "cryptopp|$BuildVersion|windows|$Upstream|$Toolchain|Release|x64|MSVC|out-of-source"
+
+    $DepLibDir = Join-Path $LibDir "cryptopp"
+    $DepIncludeDir = Join-Path $IncludeDir "cryptopp"
+    $Work = Join-Path $WorkDir "cryptopp"
+    $OutDir = Join-Path $Work "out"
+    $ObjDir = Join-Path $Work "obj"
+    $CryptoLib = Join-Path $DepLibDir "libcryptopp.lib"
+    $CryptoHeader = Join-Path $DepIncludeDir "aes.h"
+
+    if (Test-DependencyCache "cryptopp" $Fingerprint @($CryptoLib, $CryptoHeader)) {
+        Write-Host "==> Crypto++: cached"
+        return
+    }
+
+    Write-Host "==> Crypto++ ($InnerJobs jobs, MSVC)"
+    Remove-Item $Work, $DepLibDir, $DepIncludeDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $OutDir, $ObjDir, $DepLibDir, $DepIncludeDir | Out-Null
+
+    $MsbuildOut = $OutDir.TrimEnd('\') + "\"
+    $MsbuildObj = $ObjDir.TrimEnd('\') + "\"
+
+    & msbuild "vendor\cryptopp\cryptlib.vcxproj" "/m:$InnerJobs" /p:Configuration=Release /p:Platform=x64 "/p:OutDir=$MsbuildOut" "/p:IntDir=$MsbuildObj"
+    if ($LASTEXITCODE -ne 0) { throw "Crypto++ build failed" }
+
+    $Built = Join-Path $OutDir "cryptlib.lib"
+    if (-not (Test-Path $Built)) { throw "cryptlib.lib not found after Crypto++ build: $Built" }
+
+    Copy-Item $Built $CryptoLib -Force
+    Get-ChildItem "vendor\cryptopp" -Filter "*.h" | Copy-Item -Destination $DepIncludeDir -Force
+
+    Write-DependencyFingerprint "cryptopp" $Fingerprint
+    Remove-Item $Work -Recurse -Force
+}
+
+function Build-LibOqs {
+    $Upstream = Get-FileDigest "vendor\liboqs\UPSTREAM.md"
+    $Toolchain = (Get-Command cl.exe).Source
+    $Ninja = Get-Command ninja -ErrorAction SilentlyContinue
+    $Generator = if ($Ninja) { "Ninja" } else { "Visual Studio 17 2022" }
+    $Fingerprint = Get-TextHash "liboqs|$BuildVersion|windows|$Upstream|$Toolchain|$Generator|ML-KEM+ML-DSA|minimal|static+shared|PIC|no-openssl"
+
+    $DepLibDir = Join-Path $LibDir "liboqs"
+    $DepIncludeDir = Join-Path $IncludeDir "liboqs"
+    $WorkStatic = Join-Path $WorkDir "liboqs-static"
+    $WorkShared = Join-Path $WorkDir "liboqs-shared"
+    $StageStatic = Join-Path $WorkDir "liboqs-stage-static"
+    $StageShared = Join-Path $WorkDir "liboqs-stage-shared"
+    $OutStaticLib = Join-Path $DepLibDir "liboqs.lib"
+    $OutDll = Join-Path $DepLibDir "liboqs.dll"
+    $OutImportLib = Join-Path $DepLibDir "liboqs_import.lib"
+    $OqsHeader = Join-Path $DepIncludeDir "oqs\oqs.h"
+
+    if (Test-DependencyCache "liboqs" $Fingerprint @($OutStaticLib, $OutDll, $OutImportLib, $OqsHeader)) {
+        Write-Host "==> liboqs: cached"
+        return
+    }
+
+    Write-Host "==> liboqs ($InnerJobs jobs, $Generator, MSVC, static + shared)"
+    Remove-Item $DepLibDir, (Join-Path $IncludeDir "oqs"), $DepIncludeDir, $StageStatic, $StageShared -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $WorkStatic, $WorkShared, $StageStatic, $StageShared, $DepLibDir, $DepIncludeDir | Out-Null
+
+    $BaseArgs = @(
+        "-S", "vendor\liboqs",
+        "-G", $Generator,
+        "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+        "-DOQS_BUILD_ONLY_LIB=ON",
+        "-DOQS_USE_OPENSSL=OFF",
+        "-DOQS_MINIMAL_BUILD=KEM_ml_kem_512;KEM_ml_kem_768;KEM_ml_kem_1024;SIG_ml_dsa_44;SIG_ml_dsa_65;SIG_ml_dsa_87"
+    )
+
+    if ($Generator -eq "Visual Studio 17 2022") {
+        $BaseArgs += @("-A", "x64")
+    } else {
+        $BaseArgs += @("-DCMAKE_BUILD_TYPE=Release")
+    }
+
+    $Sccache = Get-Sccache
+    if ($Sccache) {
+        $BaseArgs += @("-DCMAKE_C_COMPILER_LAUNCHER=$Sccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=$Sccache")
+    }
+
+    # Static pass.
+    & cmake @BaseArgs "-B" $WorkStatic "-DCMAKE_INSTALL_PREFIX=$StageStatic" "-DBUILD_SHARED_LIBS=OFF"
+    if ($LASTEXITCODE -ne 0) { throw "liboqs static configure failed" }
+
+    & cmake --build $WorkStatic --config Release --target install --parallel $InnerJobs
+    if ($LASTEXITCODE -ne 0) { throw "liboqs static build failed" }
+
+    $BuiltStatic = Get-ChildItem $StageStatic -Recurse -Filter "oqs.lib" | Select-Object -First 1
+    if (-not $BuiltStatic) { throw "oqs.lib not found after liboqs static build" }
+
+    Copy-Item $BuiltStatic.FullName $OutStaticLib -Force
+    Copy-Item (Join-Path $StageStatic "include\oqs") (Join-Path $DepIncludeDir "oqs") -Recurse -Force
+
+    # Shared pass uses a separate CMake cache to avoid Ninja regeneration loops.
+    & cmake @BaseArgs "-B" $WorkShared "-DCMAKE_INSTALL_PREFIX=$StageShared" "-DBUILD_SHARED_LIBS=ON"
+    if ($LASTEXITCODE -ne 0) { throw "liboqs shared configure failed" }
+
+    & cmake --build $WorkShared --config Release --target install --parallel $InnerJobs
+    if ($LASTEXITCODE -ne 0) { throw "liboqs shared build failed" }
+
+    $BuiltDll = Get-ChildItem $StageShared -Recurse -Filter "oqs.dll" | Select-Object -First 1
+    $BuiltImport = Get-ChildItem $StageShared -Recurse -Filter "oqs.lib" | Select-Object -First 1
+    if (-not $BuiltDll) { throw "oqs.dll not found after liboqs shared build" }
+    if (-not $BuiltImport) { throw "oqs.lib import library not found after liboqs shared build" }
+
+    Copy-Item $BuiltDll.FullName $OutDll -Force
+    Copy-Item $BuiltImport.FullName $OutImportLib -Force
+
+    Write-DependencyFingerprint "liboqs" $Fingerprint
+    Remove-Item $WorkStatic, $WorkShared, $StageStatic, $StageShared -Recurse -Force
+}
+
+function Build-Rabe {
+    $RustTarget = "x86_64-pc-windows-msvc"
+    $Upstream = Get-FileDigest "vendor\librabe-ffi\UPSTREAM.md"
+    $Lock = Get-FileDigest "vendor\librabe-ffi\Cargo.lock"
+    $Header = Get-FileDigest "vendor\librabe-ffi\rabe.h"
+    $Rustup = Get-Command rustup -ErrorAction SilentlyContinue
+    $RustToolchain = $null
+
+    if ($Rustup) {
+        $Toolchains = @(& rustup toolchain list) | ForEach-Object { ($_ -split '\s+')[0] }
+        $RustToolchain = $Toolchains | Where-Object { $_ -eq "stable-x86_64-pc-windows-msvc" } | Select-Object -First 1
+        if (-not $RustToolchain) {
+            $RustToolchain = $Toolchains | Where-Object { $_ -match 'x86_64-pc-windows-msvc$' } | Select-Object -First 1
+        }
+        if (-not $RustToolchain) {
+            throw "No x86_64-pc-windows-msvc Rust toolchain is installed."
+        }
+        $RustVersion = (& rustup run $RustToolchain rustc -vV) -join [Environment]::NewLine
+    } else {
+        $Rustc = Get-Command rustc -ErrorAction SilentlyContinue
+        if (-not $Rustc) { throw "rustc was not found" }
+        $RustVersion = (& rustc -vV) -join [Environment]::NewLine
+    }
+
+    $Fingerprint = Get-TextHash "rabe|$BuildVersion|windows|$Upstream|$Lock|$Header|$RustVersion|$RustTarget|$RustToolchain|release"
+
+    $DepLibDir = Join-Path $LibDir "rabe"
+    $DepIncludeDir = Join-Path $IncludeDir "rabe"
+    $Work = Join-Path $WorkDir "rabe-target"
+    $OutLib = Join-Path $DepLibDir "librabe_ffi.lib"
+    $RabeHeader = Join-Path $DepIncludeDir "rabe.h"
+
+    if (Test-DependencyCache "rabe" $Fingerprint @($OutLib, $RabeHeader)) {
+        Write-Host "==> librabe-ffi: cached"
+        return
+    }
+
+    Write-Host "==> librabe-ffi ($InnerJobs jobs, target=$RustTarget)"
+    Remove-Item $Work, $DepLibDir, $DepIncludeDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $DepLibDir, $DepIncludeDir | Out-Null
+
+    if ($Rustup) {
+        $InstalledTargets = @(& rustup target list --installed --toolchain $RustToolchain)
+        if ($InstalledTargets -notcontains $RustTarget) {
+            throw "Rust target $RustTarget is not installed for $RustToolchain"
+        }
+    }
+
+    $env:CARGO_TARGET_DIR = $Work
+    $Sccache = Get-Sccache
+    if ($Sccache) { $env:RUSTC_WRAPPER = $Sccache }
+
+    if ($RustToolchain) {
+        & cargo "+$RustToolchain" build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
+    } else {
+        & cargo build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
+    }
+    if ($LASTEXITCODE -ne 0) { throw "librabe-ffi build failed" }
+
+    $Release = Join-Path $Work "$RustTarget\release"
+    $BuiltLib = Join-Path $Release "rabe_ffi.lib"
+    if (-not (Test-Path $BuiltLib)) { throw "MSVC rabe_ffi.lib not found after Cargo build" }
+
+    Copy-Item $BuiltLib $OutLib -Force
+    $BuiltDll = Join-Path $Release "rabe_ffi.dll"
+    if (Test-Path $BuiltDll) { Copy-Item $BuiltDll $DepLibDir -Force }
+
+    Copy-Item "vendor\librabe-ffi\rabe.h" $RabeHeader -Force
+    Write-DependencyFingerprint "rabe" $Fingerprint @("rust_target=$RustTarget", "rust_toolchain=$RustToolchain")
+    Remove-Item $Work -Recurse -Force
+}
+
+function Build-Tkn20 {
+    $Upstream = Get-FileDigest "vendor\circl\UPSTREAM.md"
+    $GoMod = Get-FileDigest "bindings\tkn20\go.mod"
+    $GoSum = Get-FileDigest "bindings\tkn20\go.sum"
+    $Bridge = Get-FileDigest "bindings\tkn20\cpabe_tkn20.go"
+    $DefHash = Get-FileDigest "bindings\tkn20\libcpabe_tkn20.def"
+    $GoVersion = (& go version)
+    $GccPath = (Get-Command gcc).Source
+    $GccMachine = (& gcc -dumpmachine).Trim()
+
+    if ($GccMachine -notmatch 'mingw') {
+        throw "Windows TKN20 CGO requires MinGW-w64 gcc; detected: $GccMachine"
+    }
+
+    $Fingerprint = Get-TextHash "tkn20|$BuildVersion|windows|$Upstream|$GoMod|$GoSum|$Bridge|$DefHash|$GoVersion|$GccPath|$GccMachine|dll-c-abi"
+
+    $DepLibDir = Join-Path $LibDir "tkn20"
+    $DepIncludeDir = Join-Path $IncludeDir "tkn20"
+    $Work = Join-Path $WorkDir "tkn20"
+    $OutDll = Join-Path $DepLibDir "libcpabe_tkn20.dll"
+    $OutLib = Join-Path $DepLibDir "libcpabe_tkn20.lib"
+    $TknHeader = Join-Path $DepIncludeDir "cpabe_tkn20.h"
+
+    if (Test-DependencyCache "tkn20" $Fingerprint @($OutDll, $OutLib, $TknHeader)) {
+        Write-Host "==> CIRCL/TKN20: cached"
+        return
+    }
+
+    Write-Host "==> CIRCL/TKN20 ($InnerJobs jobs, MinGW CGO -> C ABI DLL -> MSVC import lib)"
+    Remove-Item $Work, $DepLibDir, $DepIncludeDir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $Work, $DepLibDir, $DepIncludeDir | Out-Null
+
+    Push-Location "bindings\tkn20"
+    try {
+        $env:CGO_ENABLED = "1"
+        $env:CC = $GccPath
+        & go build -p $InnerJobs -buildmode=c-shared -o (Join-Path $Work "libcpabe_tkn20.dll") .
+        if ($LASTEXITCODE -ne 0) { throw "TKN20 Go bridge build failed" }
+    } finally {
+        Pop-Location
+    }
+
+    Copy-Item (Join-Path $Work "libcpabe_tkn20.dll") $OutDll -Force
+    Copy-Item (Join-Path $Work "libcpabe_tkn20.h") $TknHeader -Force
+    Copy-Item "bindings\tkn20\libcpabe_tkn20.def" (Join-Path $DepLibDir "libcpabe_tkn20.def") -Force
+
+    & lib.exe /NOLOGO "/DEF:$DepLibDir\libcpabe_tkn20.def" "/OUT:$OutLib" /MACHINE:X64
+    if ($LASTEXITCODE -ne 0) { throw "TKN20 MSVC import library generation failed" }
+
+    Write-DependencyFingerprint "tkn20" $Fingerprint @(
+        "go_cc=$GccMachine",
+        "boundary=C-ABI-DLL",
+        "consumer_abi=MSVC"
+    )
+    Remove-Item $Work -Recurse -Force
+}
+
+function Start-DependencyProcess([string]$Name, [int]$JobCount) {
+    $Args = @(
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", ('"' + $PSCommandPath + '"'),
+        "-Dependency", $Name,
+        "-Jobs", $JobCount
+    )
+    return Start-Process -FilePath "powershell.exe" -ArgumentList $Args -NoNewWindow -PassThru
+}
+
+function Wait-DependencyProcesses([System.Collections.ArrayList]$Processes) {
+    $Failed = $false
+    foreach ($Process in $Processes) {
+        $Process.WaitForExit()
+        if ($Process.ExitCode -ne 0) { $Failed = $true }
+    }
+    if ($Failed) { throw "One or more dependency builds failed" }
+}
+
+function Show-Outputs {
+    Write-Host ""
+    Write-Host "================================================================"
+    Write-Host " Dependency build complete: windows"
+    Write-Host " Includes : build/deps/windows/include/"
+    Write-Host " Libraries: build/deps/windows/lib/"
+    Write-Host "----------------------------------------------------------------"
+
+    foreach ($Name in @("cryptopp", "liboqs", "rabe", "tkn20")) {
+        Write-Host " [$Name]"
+        Write-Host "   include: build/deps/windows/include/$Name/"
+        Write-Host "   lib    : build/deps/windows/lib/$Name/"
+        $Dir = Join-Path $LibDir $Name
+        if (Test-Path $Dir) {
+            Get-ChildItem $Dir -File | Where-Object { $_.Name -ne ".fingerprint" } |
+                ForEach-Object { Write-Host ("            " + $_.Name) }
+        }
+    }
+    Write-Host "================================================================"
+}
+
+function Write-ReadyMarker {
+    $Ready = Join-Path $LibDir ".ready"
+    @(
+        "platform=windows",
+        "build_version=$BuildVersion",
+        "cryptopp=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'cryptopp')).Hash.ToLowerInvariant())",
+        "liboqs=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'liboqs')).Hash.ToLowerInvariant())",
+        "rabe=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'rabe')).Hash.ToLowerInvariant())",
+        "tkn20=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'tkn20')).Hash.ToLowerInvariant())"
+    ) | Set-Content $Ready
+}
+
+function Build-All {
+    $Priority = @("liboqs", "cryptopp", "rabe", "tkn20")
+    $Count = $Priority.Count
+
+    if ($TotalJobs -lt $Count) {
+        Write-Host "Dependency worker budget: total=$TotalJobs; up to $TotalJobs dependencies concurrently (1 job each)"
+        for ($Offset = 0; $Offset -lt $Count; $Offset += $TotalJobs) {
+            $Processes = [System.Collections.ArrayList]::new()
+            $End = [Math]::Min($Offset + $TotalJobs, $Count)
+
+            for ($i = $Offset; $i -lt $End; $i++) {
+                [void]$Processes.Add((Start-DependencyProcess $Priority[$i] 1))
+            }
+            Wait-DependencyProcesses $Processes
+        }
+    } else {
+        $Base = [Math]::Floor($TotalJobs / $Count)
+        $Extra = $TotalJobs % $Count
+        $Processes = [System.Collections.ArrayList]::new()
+
+        Write-Host "Dependency worker budget: total=$TotalJobs"
+        for ($i = 0; $i -lt $Count; $i++) {
+            $Assigned = $Base
+            if ($i -lt $Extra) { $Assigned++ }
+
+            Write-Host ("  {0}: {1}" -f $Priority[$i], $Assigned)
+            [void]$Processes.Add((Start-DependencyProcess $Priority[$i] $Assigned))
+        }
+        Wait-DependencyProcesses $Processes
+    }
+
+    Remove-Item $WorkDir -Recurse -Force -ErrorAction SilentlyContinue
+
+    # Migrate/clean the legacy layout. Keep only the stable consumer surface.
+    Get-ChildItem $DepsDir -Force | Where-Object {
+        $_.Name -notin @("include", "lib")
+    } | Remove-Item -Recurse -Force
+
+    Write-ReadyMarker
+    Show-Outputs
+}
+
+switch ($Dependency) {
+    "cryptopp" { Build-CryptoPP }
+    "liboqs"   { Build-LibOqs }
+    "rabe"     { Build-Rabe }
+    "tkn20"    { Build-Tkn20 }
+    "all"      { Build-All }
+}

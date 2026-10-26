@@ -93,6 +93,6 @@ vault write abe/decrypt scheme=tkn20 ciphertext="<CIPHERTEXT>" secret_key="<BASE
 
 To develop locally, your host machine must fulfill the following CGO requirements:
 - `gcc` or `g++` (e.g. MinGW-w64 on Windows, `build-essential` on Linux)
-- The static C++ libraries available in `../../lib/static/`
+- The Hybrid-CP-ABE native libraries available directly in `../../lib/`
 - Run `go build -o build/vault-plugin-abe ./cmd/vault-plugin-abe/main.go` inside the `vault-plugin-abe` folder.
 *(Note: On Windows, CGO linking against Unix POSIX libraries like `-ldl` is not supported natively, hence Docker is highly recommended.)*
