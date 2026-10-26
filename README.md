@@ -11,7 +11,7 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 >
 > The **CP-ABE core (AC17/TKN20) remains classical**, based on pairing/discrete-log problems over elliptic curves — it is **not quantum-resistant**. In other words, this library is a **hybrid**: the attribute-based encryption (ABE) layer is still "classical," while only the signing/authentication layer is "post-quantum."
 >
-> Rationale: fully "native" post-quantum CP-ABE (e.g. lattice-based) is still an active area of **academic research**, with no published implementation that has reached a level of maturity or performance suitable for real-world use — most existing work remains at the **Proof-of-Concept (PoC)** stage or purely theoretical in papers, with no stable, runnable open-source code available. This library therefore takes a pragmatic approach: keep the well-established, high-performance classical CP-ABE core, and add a PQC signature layer on top to strengthen security in a way that's deployable today.
+> The stable v5.2.0 core remains AC17/TKN20 + ML-DSA-87. A separate CoverCrypt post-quantum integration is being developed under `plugins/covercrypt/`; vendored upstream source is kept under `vendor/cover_crypt/` and is not yet part of the stable core API.
 
 ## Performance & Benchmarks
 
@@ -82,6 +82,25 @@ The published snapshot includes:
 > [!NOTE]
 > This library is specialized around **AC17** and **TKN20** CP-ABE with a native C/C++ integration surface. For projects that need a broader research-oriented collection of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.
 
+## Repository Layout
+
+```text
+src/                    C++ core implementation only
+include/                Public C/C++ API
+bindings/python/        Python binding
+plugins/vault/          Optional HashiCorp Vault plugin
+plugins/covercrypt/     Optional CoverCrypt integration layer
+vendor/include/         Third-party C/C++ headers
+vendor/cover_crypt/     Vendored Cosmian CoverCrypt source
+lib/                    Prebuilt native libraries
+tests/cpp/              Native test suite
+build/windows/          Windows build output
+build/linux/            Linux build output
+build/macos/            macOS build output
+```
+
+`src/` is intentionally reserved for the project's C++ implementation. Optional integrations, bindings, and third-party source live outside it. All native build artifacts are grouped under the single `build/` root by platform.
+
 ## Building (Multi-OS)
 > [!IMPORTANT]
 > This library integrates the following cryptographic primitives and dependencies:
@@ -89,17 +108,17 @@ The published snapshot includes:
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
 - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2020/733) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
 - [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
-- [HashiCorp Vault Secrets Engine](src/go/README.md) (Native Go plugin for Enterprise Cryptography-as-a-Service)
+- [HashiCorp Vault Secrets Engine](plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
+- [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (vendored for the optional post-quantum integration; see `vendor/cover_crypt/`)
 
 > [!NOTE]
 >
-> **Note on Dependencies:** All necessary dependencies (`CryptoPP`, `liboqs`, `rabe-ffi`, `circl`) have already been pre-compiled and included in the `src/cpp/lib/` folder for your convenience. You can build the main library immediately without installing anything else. However, if you wish to re-build these dependencies from source (e.g., for a different architecture), please read the instructions in [`src/cpp/lib/README.md`](file:///src/cpp/lib/README.md).
+> **Note on Dependencies:** Prebuilt native dependencies are kept in `lib/`, third-party C/C++ headers in `vendor/include/`, and rebuild instructions in [`lib/README.md`](lib/README.md). The public `include/` directory contains only this project's API.
 
-1. Clone the repository and navigate to the C++ source directory:
+1. Clone the repository and build from the repository root:
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git
     cd Hybrid-PQ-CP-ABE-Library
-    cd src/cpp
     ```
 
 ### Option 1: Using Make (Recommended)
@@ -125,7 +144,7 @@ We provide a unified `Makefile` that automatically detects your operating system
 - `make static`: Builds only the static library (`.lib` or `.a`).
 - `make shared`: Builds only the shared library (`.dll` or `.so`).
 - `make executable`: Builds only the CLI executable.
-- `make test`: Runs the test suite. See `src/cpp/test/run_test.sh` or `src/cpp/test/run_test.bat` for more information.
+- `make test`: Runs the test suite. See `tests/cpp/run_test.sh` or `tests/cpp/run_test.bat`.
 - `make clean`: Removes all build artifacts and temporary files.
 
 ### Option 2: Using Visual Studio Code
@@ -167,17 +186,19 @@ main decrypt --pqc "test_case/cpabe_sk.key" "test_case/pqc_pk.key" "test_case/ci
 ```
 ### Integrating the Library
 After building the library, you can integrate it into any program on Windows/Linux. Here are the steps to include the library in your project.
-Please go to <b>python-sources</b> folder to see more.
+See [`bindings/python/`](bindings/python/) for the Python binding.
 
 ### HashiCorp Vault Plugin
 This library natively provides a **HashiCorp Vault Custom Secrets Engine** written in Go (using Cgo to wrap the C++ core). It enables you to run a true "Cryptography-as-a-Service" architecture where the Master Secret Key (MSK) never leaves the Vault enclave.
 - Exposes RESTful APIs: `/v1/abe/setup`, `/v1/abe/genkey`, `/v1/abe/encrypt`, `/v1/abe/decrypt`.
 - Multi-stage Docker environments for seamless building and testing.
-Please see the [**src/go/README.md**](src/go/README.md) and [**src/vault/README.md**](src/vault/README.md) for instructions on how to build, test, and deploy the plugin.
+See [`plugins/vault/README.md`](plugins/vault/README.md) and [`plugins/vault/TESTING.md`](plugins/vault/TESTING.md) for build, test, and deployment instructions.
 
 ## Acknowledgements
-Special thanks to [Aya0wind](https://github.com/Aya0wind) for the [Rabe-ffi](https://github.com/Aya0wind/Rabe-ffi) project, [Cloudflare](https://github.com/cloudflare/circl) for the Go-based CIRCL TKN20 implementation, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, and the [CryptoPP](https://github.com/weidai11/cryptopp) Library for helping me build this library.
+Special thanks to [Aya0wind](https://github.com/Aya0wind) for Rabe-ffi, [Cloudflare](https://github.com/cloudflare/circl) for CIRCL TKN20, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, [CryptoPP](https://github.com/weidai11/cryptopp), and [Cosmian](https://github.com/Cosmian/cover_crypt) for CoverCrypt. CoverCrypt attribution and its BUSL-1.1 license are retained in `vendor/cover_crypt/`.
 ## License
 
 This project is open-source and available for anyone to use, modify, and distribute. We encourage you to clone, fork, and contribute to this project to help improve and expand its capabilities.
 By contributing to this project, you agree that your contributions will be available under the same open terms.
+
+Third-party code under `vendor/` retains its original license. In particular, `vendor/cover_crypt/` is governed by its bundled BUSL-1.1 license; see `vendor/cover_crypt/LICENSE.md` and `vendor/cover_crypt/UPSTREAM.md`.

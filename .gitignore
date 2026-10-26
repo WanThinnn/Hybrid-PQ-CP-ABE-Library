@@ -350,11 +350,12 @@ MigrationBackup/
 .ionide/
 .build/
 
-src/cpp/test/
+tests/cpp/cases/
 
-src/cpp/build_for_old_linux.py
+build_for_old_linux.py
 
 # Local benchmark run outputs
 benchmark/results/
 
-test*/
+build/
+vendor/cover_crypt/target/

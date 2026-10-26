@@ -516,7 +516,7 @@ def repo_root(script: Path, explicit: Optional[str]):
     if env:
         return Path(env).expanduser().resolve()
     candidate = script.parent.parent
-    return candidate if (candidate / "src" / "cpp").exists() else None
+    return candidate if (candidate / "src").exists() and (candidate / "Makefile").exists() else None
 
 
 def find_lib(root: Optional[Path], explicit: Optional[str]):
@@ -528,10 +528,12 @@ def find_lib(root: Optional[Path], explicit: Optional[str]):
     candidates = []
     if root:
         name = lib_name()
+        system = platform.system()
+        platform_dir = "windows" if system == "Windows" else "macos" if system == "Darwin" else "linux"
         candidates = [
-            root / "src" / "cpp" / "lib" / "dynamic" / name,
-            root / "src" / "python" / "lib" / name,
-            root / "src" / "cpp" / "build_linux" / name,
+            root / "lib" / "dynamic" / name,
+            root / "bindings" / "python" / "lib" / name,
+            root / "build" / platform_dir / name,
         ]
     for path in candidates:
         if path.exists():

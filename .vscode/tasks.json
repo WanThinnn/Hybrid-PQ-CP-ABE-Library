@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build all",
+            "type": "shell",
+            "command": "make",
+            "args": ["all"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build static library",
+            "type": "shell",
+            "command": "make",
+            "args": ["static"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build shared library",
+            "type": "shell",
+            "command": "make",
+            "args": ["shared"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build executable",
+            "type": "shell",
+            "command": "make",
+            "args": ["executable"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["test"],
+            "problemMatcher": []
+        }
+    ]
+}

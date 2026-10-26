@@ -4,6 +4,4 @@
 __pycache__
 *.pyc
 **/build/
-**/build_linux/
-**/build_windows/
 **/.DS_Store
