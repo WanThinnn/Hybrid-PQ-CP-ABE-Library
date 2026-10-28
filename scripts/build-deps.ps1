@@ -7,6 +7,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# GitHub Actions starts this script from pwsh, but workers use Windows
+# PowerShell. Prefer its own modules over inherited PowerShell 7 modules.
+if ($PSVersionTable.PSEdition -eq "Desktop") {
+    $NativeModules = Join-Path $PSHOME "Modules"
+    $ModulePaths = @($env:PSModulePath -split ';' | Where-Object { $_ -and $_ -ne $NativeModules })
+    $env:PSModulePath = (@($NativeModules) + $ModulePaths) -join ';'
+}
+
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $Root
 
@@ -59,7 +67,18 @@ function Get-TextHash([string]$Text) {
 }
 
 function Get-FileDigest([string]$Path) {
-    return (Get-FileHash -Algorithm SHA256 $Path).Hash.ToLowerInvariant()
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    $Stream = $null
+    try {
+        # Resolve against PowerShell's location; Set-Location does not update
+        # the process working directory used by System.IO relative paths.
+        $ResolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+        $Stream = [System.IO.File]::OpenRead($ResolvedPath)
+        return ([BitConverter]::ToString($sha.ComputeHash($Stream))).Replace("-", "").ToLowerInvariant()
+    } finally {
+        if ($Stream) { $Stream.Dispose() }
+        $sha.Dispose()
+    }
 }
 
 function Get-FingerprintPath([string]$Name) {
@@ -446,11 +465,11 @@ function Write-ReadyMarker {
     @(
         "platform=windows",
         "build_version=$BuildVersion",
-        "cryptopp=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'cryptopp')).Hash.ToLowerInvariant())",
-        "cryptopp_dll=$((Get-FileHash -Algorithm SHA256 (Join-Path $LibDir 'cryptopp\.dll-fingerprint')).Hash.ToLowerInvariant())",
-        "liboqs=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'liboqs')).Hash.ToLowerInvariant())",
-        "rabe=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'rabe')).Hash.ToLowerInvariant())",
-        "tkn20=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'tkn20')).Hash.ToLowerInvariant())"
+        "cryptopp=$(Get-FileDigest (Get-FingerprintPath 'cryptopp'))",
+        "cryptopp_dll=$(Get-FileDigest (Join-Path $LibDir 'cryptopp\.dll-fingerprint'))",
+        "liboqs=$(Get-FileDigest (Get-FingerprintPath 'liboqs'))",
+        "rabe=$(Get-FileDigest (Get-FingerprintPath 'rabe'))",
+        "tkn20=$(Get-FileDigest (Get-FingerprintPath 'tkn20'))"
     ) | Set-Content $Ready
 }
 

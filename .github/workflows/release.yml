@@ -108,6 +108,8 @@ jobs:
         run: |
           # Keep MSVC link.exe ahead of the unrelated MSYS utility of that name.
           $env:PATH = (Split-Path (Get-Command cl.exe).Source) + ';' + $env:PATH
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/windows/test-dependency-hashes.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & make deps -j4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & make -j4
