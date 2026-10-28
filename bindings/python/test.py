@@ -50,6 +50,19 @@ def run_scheme_tests(scheme, scheme_name):
 
     policy = "admin and it"
     attributes = "admin it security"
+
+    if scheme == abe.CPABE_SCHEME_COVERCRYPT:
+        covercrypt_config = os.path.join(test_dir, "covercrypt.json")
+        with open(covercrypt_config, "w", encoding="utf-8") as f:
+            f.write(
+                '{"dimensions":['
+                '{"name":"admin","attributes":["present","absent"]},'
+                '{"name":"it","attributes":["present","absent"]},'
+                '{"name":"security","attributes":["present","absent"]}'
+                ']}'
+            )
+        os.environ["HCPABE_COVERCRYPT_CONFIG"] = os.path.abspath(covercrypt_config)
+        os.environ["HCPABE_COVERCRYPT_MODE"] = "hybridized"
     
     print("\n[1/5] TEST SETUP PQC (Generate both classic and ML-DSA keys)")
     # Call PQC setup to generate all 4 keys
@@ -115,3 +128,5 @@ if __name__ == "__main__":
     run_scheme_tests(abe.CPABE_SCHEME_AC17, "AC17")
     print("\n\n")
     run_scheme_tests(abe.CPABE_SCHEME_TKN20, "TKN20")
+    print("\n\n")
+    run_scheme_tests(abe.CPABE_SCHEME_COVERCRYPT, "COVERCRYPT")

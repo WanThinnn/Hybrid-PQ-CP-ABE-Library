@@ -4,26 +4,36 @@ import sys
 import os
 import platform
 
-# Path to the library (same directory as this script)
+# Load the canonical native library published at the repository root.
 script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
+lib_dir = os.path.join(project_root, "lib")
 
 # Select the library name based on the operating system
 system = platform.system()
 if system == "Windows":
     lib_name = "libhybrid-pq-cp-abe.dll"
 elif system == "Darwin":
-    lib_name = "libhybrid-pq-cp-abe.dylib" 
+    lib_name = "libhybrid-pq-cp-abe.dylib"
 else:
     lib_name = "libhybrid-pq-cp-abe.so"
 
-lib_path = os.path.join(script_dir, "lib",lib_name)
+lib_path = os.path.join(lib_dir, lib_name)
 
 if not os.path.exists(lib_path):
     print(f"Error: Library not found at {lib_path}")
-    print(f"   Make sure {lib_name} is in the same directory as this script.")
+    print(f"   Build the project first so {lib_name} is published under {lib_dir}.")
     sys.exit(1)
 
-# Load the shared library (.dll/.so)
+# The public Python binding loads only libhybrid-pq-cp-abe. On Windows its
+# TKN20 runtime dependency is produced under build/windows.
+_dll_directories = []
+if system == "Windows" and hasattr(os, "add_dll_directory"):
+    for dll_dir in (lib_dir, os.path.join(project_root, "build", "windows")):
+        if os.path.isdir(dll_dir):
+            _dll_directories.append(os.add_dll_directory(dll_dir))
+
+# Load the single public Hybrid CP-ABE shared library.
 abe_lib = ctypes.CDLL(lib_path)
 
 # Setup function prototypes

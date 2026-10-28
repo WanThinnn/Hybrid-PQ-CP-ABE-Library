@@ -40,6 +40,86 @@ bool equal(const Buffer &result, const Bytes &expected)
     return result.length == expected.size() &&
            (expected.empty() || std::memcmp(result.data, expected.data(), expected.size()) == 0);
 }
+struct CoverCryptBuffer
+{
+    cc_buffer value{nullptr, 0};
+    CoverCryptBuffer() = default;
+    CoverCryptBuffer(const CoverCryptBuffer &) = delete;
+    CoverCryptBuffer &operator=(const CoverCryptBuffer &) = delete;
+    ~CoverCryptBuffer()
+    {
+        cc_buffer_free(&value);
+    }
+};
+bool equal(const CoverCryptBuffer &left, const CoverCryptBuffer &right)
+{
+    return left.value.len == right.value.len &&
+           (left.value.len == 0 || std::memcmp(left.value.data, right.value.data, left.value.len) == 0);
+}
+void check_attribute_growth()
+{
+    const char *initial_config =
+        R"({"dimensions":[{"name":"DPT","attributes":["FIN","HR"]},{"name":"SEC","attributes":["LOW","TOP"],"hierarchical":true}]})";
+
+    CoverCryptBuffer initial_msk, initial_mpk;
+    require(cc_setup(initial_config, CC_HYBRIDIZED, &initial_msk.value, &initial_mpk.value) == CC_OK,
+            "attribute-growth setup failed");
+
+    CoverCryptBuffer authority_after_old_user, old_user;
+    require(cc_genkey(initial_msk.value.data, initial_msk.value.len, "DPT::FIN && SEC::TOP",
+                      &authority_after_old_user.value, &old_user.value) == CC_OK,
+            "old-attribute user key generation failed");
+
+    CoverCryptBuffer old_secret, old_encapsulation, old_recovered;
+    require(cc_encaps(initial_mpk.value.data, initial_mpk.value.len, "DPT::FIN && SEC::LOW",
+                      &old_secret.value, &old_encapsulation.value) == CC_OK,
+            "old-attribute encryption failed");
+    require(cc_decaps(old_user.value.data, old_user.value.len,
+                      old_encapsulation.value.data, old_encapsulation.value.len,
+                      &old_recovered.value) == CC_OK &&
+                equal(old_secret, old_recovered),
+            "old-attribute ciphertext did not decrypt before policy growth");
+
+    CoverCryptBuffer grown_msk, grown_mpk;
+    require(cc_add_attribute(authority_after_old_user.value.data, authority_after_old_user.value.len,
+                             "DPT", "Sales", CC_HYBRIDIZED, nullptr,
+                             &grown_msk.value, &grown_mpk.value) == CC_OK,
+            "adding DPT::Sales to existing authority failed");
+
+    CoverCryptBuffer authority_after_new_user, sales_user;
+    require(cc_genkey(grown_msk.value.data, grown_msk.value.len, "DPT::Sales && SEC::TOP",
+                      &authority_after_new_user.value, &sales_user.value) == CC_OK,
+            "updated master key could not mint a user key for DPT::Sales");
+
+    CoverCryptBuffer sales_secret, sales_encapsulation, sales_recovered;
+    require(cc_encaps(grown_mpk.value.data, grown_mpk.value.len, "DPT::Sales && SEC::LOW",
+                      &sales_secret.value, &sales_encapsulation.value) == CC_OK,
+            "new-attribute encryption failed");
+    require(cc_decaps(sales_user.value.data, sales_user.value.len,
+                      sales_encapsulation.value.data, sales_encapsulation.value.len,
+                      &sales_recovered.value) == CC_OK &&
+                equal(sales_secret, sales_recovered),
+            "new DPT::Sales user could not decrypt new-attribute ciphertext");
+
+    CoverCryptBuffer old_recovered_after_growth;
+    require(cc_decaps(old_user.value.data, old_user.value.len,
+                      old_encapsulation.value.data, old_encapsulation.value.len,
+                      &old_recovered_after_growth.value) == CC_OK &&
+                equal(old_secret, old_recovered_after_growth),
+            "policy growth invalidated an existing ciphertext/user key");
+
+    CoverCryptBuffer current_old_secret, current_old_encapsulation, current_old_recovered;
+    require(cc_encaps(grown_mpk.value.data, grown_mpk.value.len, "DPT::FIN && SEC::LOW",
+                      &current_old_secret.value, &current_old_encapsulation.value) == CC_OK,
+            "updated public key could not encrypt an existing attribute");
+    require(cc_decaps(old_user.value.data, old_user.value.len,
+                      current_old_encapsulation.value.data, current_old_encapsulation.value.len,
+                      &current_old_recovered.value) == CC_OK &&
+                equal(current_old_secret, current_old_recovered),
+            "existing user key could not decrypt existing rights after policy growth");
+
+    std::cout << "PASS: CoverCrypt attribute growth preserves old access and mints new user keys\n";
+}
 void check_mode(const char *mode)
 {
     environment("HCPABE_COVERCRYPT_MODE", mode);
@@ -173,6 +253,7 @@ int main()
         environment("HCPABE_COVERCRYPT_CONFIG", configuration.c_str());
         for (const char *mode : {"classic", "post_quantum", "hybridized"})
             check_mode(mode);
+        check_attribute_growth();
         check_files(prefix);
         cc_buffer first{nullptr, 0}, second{nullptr, 0};
         require(cc_setup(nullptr, CC_HYBRIDIZED, &first, &second) == CC_INVALID_INPUT, "null input accepted");

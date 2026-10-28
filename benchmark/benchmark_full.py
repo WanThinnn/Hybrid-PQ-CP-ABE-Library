@@ -39,8 +39,10 @@ from typing import Any, Callable, Optional
 
 AC17 = 0
 TKN20 = 1
+COVERCRYPT = 2
 OK = 0
-SCHEMES = {AC17: "AC17", TKN20: "TKN20"}
+SCHEMES = {AC17: "AC17", TKN20: "TKN20", COVERCRYPT: "CoverCrypt"}
+NATIVE_SCHEMES = (AC17, TKN20, COVERCRYPT)
 
 PROFILES = {
     "quick": {
@@ -127,6 +129,25 @@ def attrs_for(n: int) -> str:
     attrs = [f"ATTR{i}" for i in range(1, n + 1)]
     attrs += [f"EXTRA{i}" for i in range(1, 5)]
     return " ".join(attrs)
+
+
+def configure_covercrypt(tmp: Path, max_policy_attributes: int) -> Path:
+    dimensions = [
+        {"name": f"attr{i}", "attributes": ["present", "absent"]}
+        for i in range(1, max_policy_attributes + 1)
+    ]
+    dimensions += [
+        {"name": f"extra{i}", "attributes": ["present", "absent"]}
+        for i in range(1, 5)
+    ]
+    config_path = tmp / "covercrypt.json"
+    config_path.write_text(
+        json.dumps({"dimensions": dimensions}, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    os.environ["HCPABE_COVERCRYPT_CONFIG"] = str(config_path.resolve())
+    os.environ["HCPABE_COVERCRYPT_MODE"] = "hybridized"
+    return config_path
 
 
 def adaptive_iterations(base: int, size: int) -> int:
@@ -254,9 +275,14 @@ class Native:
 
     def __init__(self, path: Path):
         self.path = path.resolve()
-        self._dll_handle = None
+        self._dll_handles = []
         if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
-            self._dll_handle = os.add_dll_directory(str(self.path.parent))
+            dll_dirs = [self.path.parent]
+            if self.path.parent.name.lower() == "lib":
+                dll_dirs.append(self.path.parent.parent / "build" / "windows")
+            for dll_dir in dll_dirs:
+                if dll_dir.is_dir():
+                    self._dll_handles.append(os.add_dll_directory(str(dll_dir)))
         self.lib = ctypes.CDLL(str(self.path))
         self.bind()
 
@@ -531,8 +557,7 @@ def find_lib(root: Optional[Path], explicit: Optional[str]):
         system = platform.system()
         platform_dir = "windows" if system == "Windows" else "macos" if system == "Darwin" else "linux"
         candidates = [
-            root / "lib" / "dynamic" / name,
-            root / "bindings" / "python" / "lib" / name,
+            root / "lib" / name,
             root / "build" / platform_dir / name,
         ]
     for path in candidates:
@@ -638,7 +663,7 @@ def run_aes(native, rec, sizes, base, warm, quiet):
 
 def run_policy_scaling(native, rec, sizes, n, warm, quiet):
     payload = os.urandom(4096)
-    for scheme in (AC17, TKN20):
+    for scheme in NATIVE_SCHEMES:
         name = SCHEMES[scheme]
         pk, msk = native.setup_buffer(scheme)
         for count in sizes:
@@ -654,7 +679,7 @@ def run_policy_scaling(native, rec, sizes, n, warm, quiet):
 
 def run_payload_scaling(native, rec, sizes, base, warm, quiet, policy_count, with_pqc):
     policy, attrs = policy_for(policy_count), attrs_for(policy_count)
-    for scheme in (AC17, TKN20):
+    for scheme in NATIVE_SCHEMES:
         name = SCHEMES[scheme]
         pk, msk = native.setup_buffer(scheme)
         sk = native.genkey_buffer(msk, attrs, scheme)
@@ -819,15 +844,15 @@ def make_charts(rec, out):
     if core:
         fig, ax = plt.subplots(figsize=(12, 6))
         ops = ["setup", "keygen", "encrypt", "decrypt"]
-        series = [("AC17", "file"), ("AC17", "buffer"), ("TKN20", "file"), ("TKN20", "buffer")]
+        series = [(scheme, mode) for scheme in SCHEMES.values() for mode in ("file", "buffer")]
         x = list(range(4))
-        width = 0.18
+        width = 0.12
         for idx, (scheme, mode) in enumerate(series):
             vals = []
             for op in ops:
                 rows = rec.find(suite="core", scheme=scheme, mode=mode, operation=op)
                 vals.append(rows[0].stats["median_ms"] if rows else 0)
-            offset = (idx - 1.5) * width
+            offset = (idx - (len(series) - 1) / 2) * width
             ax.bar([v + offset for v in x], vals, width, label=f"{scheme} {mode}")
         ax.set_xticks(x, ["Setup", "KeyGen", "Encrypt", "Decrypt"])
         ax.set_ylabel("Median latency (ms)")
@@ -857,7 +882,7 @@ def make_charts(rec, out):
     if pq:
         fig, ax = plt.subplots(figsize=(10, 6))
         labels, std, pqc = [], [], []
-        for scheme in ("AC17", "TKN20"):
+        for scheme in SCHEMES.values():
             for stdop, pqop, label in (
                 ("encrypt", "encrypt_sign", "Encrypt"),
                 ("decrypt", "decrypt_verify", "Decrypt"),
@@ -883,7 +908,7 @@ def make_charts(rec, out):
     rows = rec.find(suite="policy_scaling")
     if rows:
         fig, ax = plt.subplots(figsize=(10, 6))
-        for scheme in ("AC17", "TKN20"):
+        for scheme in SCHEMES.values():
             for op in ("encrypt", "decrypt"):
                 sub = sorted(rec.find(suite="policy_scaling", scheme=scheme, operation=op), key=lambda r: r.policy_attributes)
                 ax.plot([r.policy_attributes for r in sub], [r.stats["median_ms"] for r in sub], marker="o", label=f"{scheme} {op}")
@@ -899,7 +924,7 @@ def make_charts(rec, out):
     rows = rec.find(suite="payload_scaling")
     if rows:
         fig, ax = plt.subplots(figsize=(11, 6))
-        for scheme in ("AC17", "TKN20"):
+        for scheme in SCHEMES.values():
             for variant, op in (("standard", "encrypt"), ("standard", "decrypt"), ("pqc", "encrypt_sign"), ("pqc", "decrypt_verify")):
                 sub = sorted(rec.find(suite="payload_scaling", scheme=scheme, variant=variant, operation=op), key=lambda r: r.payload_bytes)
                 if sub:
@@ -971,7 +996,7 @@ def one(rec, **kwargs):
 
 def report(rec, out, env, config, charm):
     findings = []
-    for scheme in ("AC17", "TKN20"):
+    for scheme in SCHEMES.values():
         f = one(rec, suite="core", scheme=scheme, mode="file", operation="decrypt")
         b = one(rec, suite="core", scheme=scheme, mode="buffer", operation="decrypt")
         if f and b and b.stats["median_ms"]:
@@ -1009,9 +1034,9 @@ Generated: {env.get('timestamp_utc')}
 
 ## Executive summary
 
-This run measures native AC17/TKN20 performance, File I/O versus Buffer APIs,
-ML-DSA-87 Sign-then-Encrypt overhead, ML-DSA and AES-GCM primitives, policy
-complexity scaling, and payload-size scaling.
+This run measures native AC17/TKN20/CoverCrypt performance, File I/O versus
+Buffer APIs, ML-DSA-87 Sign-then-Encrypt overhead, ML-DSA and AES-GCM primitives,
+policy complexity scaling, and payload-size scaling.
 
 {chr(10).join(findings) if findings else "No derived findings available."}
 
@@ -1104,8 +1129,9 @@ must not be inferred directly from this comparison.
 4. One local benchmark is not a substitute for independent third-party testing.
 5. For publishable claims, rerun on multiple machines and publish raw_samples.csv
    together with compiler/build flags.
-6. AC17/TKN20 remain classical pairing/discrete-log cryptography. The
-   post-quantum component measured here is ML-DSA-87 signatures.
+6. AC17/TKN20 remain classical pairing/discrete-log cryptography. CoverCrypt
+   is benchmarked in this repository's default hybridized mode
+   (Curve25519 + ML-KEM-768). ML-DSA-87 remains the optional signature layer.
 """
     (out / "report.md").write_text(text, encoding="utf-8")
 
@@ -1156,6 +1182,11 @@ def main():
     tmp = out / "_tmp"
     tmp.mkdir(exist_ok=True)
 
+    max_covercrypt_attributes = max(
+        [a.policy_attributes] + (profile["policy_sizes"] if not a.no_scaling else [])
+    )
+    covercrypt_config = configure_covercrypt(tmp, max_covercrypt_attributes)
+
     policy = policy_for(a.policy_attributes)
     attrs = attrs_for(a.policy_attributes)
     payload = os.urandom(a.payload_bytes)
@@ -1173,6 +1204,9 @@ def main():
         "include_micro": not a.no_micro,
         "include_scaling": not a.no_scaling,
         "include_charm": not a.no_charm,
+        "covercrypt_mode": "hybridized",
+        "covercrypt_config": str(covercrypt_config),
+        "covercrypt_max_policy_attributes": max_covercrypt_attributes,
         "library_path": str(path),
         "repo_root": str(root) if root else None,
     }
@@ -1187,7 +1221,7 @@ def main():
     print(f"Profile: {a.profile}")
     print(f"Output:  {out}")
 
-    schemes = [AC17, TKN20]
+    schemes = list(NATIVE_SCHEMES)
     random.Random(a.seed).shuffle(schemes)
 
     try:

@@ -35,6 +35,11 @@ extern "C"
      * Build configuration: Curve25519 provider + ML-KEM-768.
      */
     int cc_setup(const char *dimensions_json, int mode, cc_buffer *msk, cc_buffer *mpk);
+    /* Adds one attribute to an existing authority and returns the updated MSK/MPK.
+     * after_or_null is only relevant for hierarchical dimensions; pass NULL otherwise. */
+    int cc_add_attribute(const uint8_t *msk, size_t msk_len,
+                         const char *dimension, const char *attribute, int mode,
+                         const char *after_or_null, cc_buffer *updated_msk, cc_buffer *updated_mpk);
     /* Persist updated_msk on success: key generation updates upstream authority state. */
     int cc_genkey(const uint8_t *msk, size_t msk_len, const char *policy,
                   cc_buffer *updated_msk, cc_buffer *usk);

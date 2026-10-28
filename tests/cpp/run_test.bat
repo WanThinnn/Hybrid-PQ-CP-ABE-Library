@@ -16,11 +16,18 @@ if not exist %TC%\ac17 mkdir %TC%\ac17
 if not exist %TC%\ac17_pqc mkdir %TC%\ac17_pqc
 if not exist %TC%\tkn20 mkdir %TC%\tkn20
 if not exist %TC%\tkn20_pqc mkdir %TC%\tkn20_pqc
+if not exist %TC%\covercrypt mkdir %TC%\covercrypt
+if not exist %TC%\covercrypt_pqc mkdir %TC%\covercrypt_pqc
 if not exist %TC%\buf_ac17 mkdir %TC%\buf_ac17
 if not exist %TC%\buf_ac17_pqc mkdir %TC%\buf_ac17_pqc
 if not exist %TC%\buf_tkn20 mkdir %TC%\buf_tkn20
 if not exist %TC%\buf_tkn20_pqc mkdir %TC%\buf_tkn20_pqc
+if not exist %TC%\buf_covercrypt mkdir %TC%\buf_covercrypt
+if not exist %TC%\buf_covercrypt_pqc mkdir %TC%\buf_covercrypt_pqc
 echo This is a secret message for testing Hybrid CP-ABE!> %TC%\plaintext.txt
+> %TC%\covercrypt.json echo {"dimensions":[{"name":"admin","attributes":["present","absent"]},{"name":"it","attributes":["present","absent"]}]}
+set HCPABE_COVERCRYPT_CONFIG=%TC%\covercrypt.json
+set HCPABE_COVERCRYPT_MODE=hybridized
 
 :: ================================================================
 :: 1. VERSION / HELP
@@ -47,6 +54,10 @@ call :check "setup ac17+pqc"
 call :check "setup tkn20"
 %EXEC% setup --scheme tkn20 --pqc %TC%\tkn20_pqc
 call :check "setup tkn20+pqc"
+%EXEC% setup --scheme covercrypt %TC%\covercrypt
+call :check "setup covercrypt"
+%EXEC% setup --scheme covercrypt --pqc %TC%\covercrypt_pqc
+call :check "setup covercrypt+pqc"
 
 :: ================================================================
 :: 3. GENKEY (file-based, all schemes)
@@ -59,6 +70,9 @@ call :check "genkey ac17"
 %EXEC% genkey --scheme tkn20 %TC%\tkn20\cpabe_msk.key       "admin it" %TC%\tkn20\sk.key
 call :check "genkey tkn20"
 %EXEC% genkey --scheme tkn20 %TC%\tkn20_pqc\cpabe_msk.key   "admin it" %TC%\tkn20_pqc\sk.key >nul 2>&1
+%EXEC% genkey --scheme covercrypt %TC%\covercrypt\cpabe_msk.key "admin it" %TC%\covercrypt\sk.key
+call :check "genkey covercrypt"
+%EXEC% genkey --scheme covercrypt %TC%\covercrypt_pqc\cpabe_msk.key "admin it" %TC%\covercrypt_pqc\sk.key >nul 2>&1
 
 :: ================================================================
 :: 4. ENCRYPT / DECRYPT  ac17
@@ -233,6 +247,81 @@ echo --- [10] EncryptBuffer+Sign / DecryptBuffer+Verify tkn20 ---
 call :check "encrypt_buffer tkn20+pqc"
 %EXEC% decrypt_buffer --pqc %TC%\buf_tkn20_pqc\sk.key %TC%\buf_tkn20_pqc\pqc_pk.key %TC%\buf_tkn20_pqc\ct_pqc.bin
 call :check "decrypt_buffer tkn20+pqc"
+
+:: ================================================================
+:: 11. ENCRYPT / DECRYPT covercrypt
+:: ================================================================
+echo.
+echo --- [11] Encrypt/Decrypt covercrypt ---
+%EXEC% encrypt --scheme covercrypt %TC%\covercrypt\cpabe_pk.key %TC%\plaintext.txt "admin and it" %TC%\covercrypt\ct.bin
+call :check "encrypt covercrypt"
+%EXEC% decrypt %TC%\covercrypt\sk.key %TC%\covercrypt\ct.bin %TC%\covercrypt\recovered.txt
+call :check "decrypt covercrypt"
+fc /b %TC%\plaintext.txt %TC%\covercrypt\recovered.txt >nul 2>&1
+call :check "content match covercrypt"
+
+:: ================================================================
+:: 12. ENCRYPT / DECRYPT covercrypt + PQC signature
+:: ================================================================
+echo.
+echo --- [12] Encrypt/Decrypt covercrypt+PQC ---
+%EXEC% encrypt --scheme covercrypt --pqc %TC%\covercrypt_pqc\cpabe_pk.key %TC%\covercrypt_pqc\pqc_sk.key %TC%\plaintext.txt "admin and it" %TC%\covercrypt_pqc\ct.bin
+call :check "encrypt covercrypt+pqc"
+%EXEC% decrypt --pqc %TC%\covercrypt_pqc\sk.key %TC%\covercrypt_pqc\pqc_pk.key %TC%\covercrypt_pqc\ct.bin %TC%\covercrypt_pqc\recovered.txt
+call :check "decrypt covercrypt+pqc"
+fc /b %TC%\plaintext.txt %TC%\covercrypt_pqc\recovered.txt >nul 2>&1
+call :check "content match covercrypt+pqc"
+
+:: ================================================================
+:: 13. SETUP_BUFFER / GENKEY_BUFFER covercrypt
+:: ================================================================
+echo.
+echo --- [13] Setup_Buffer / GenKey_Buffer covercrypt ---
+%EXEC% setup_buffer --scheme covercrypt > %TC%\buf_covercrypt\setup.txt 2>&1
+call :check "setup_buffer covercrypt"
+powershell -NoProfile -Command ^
+    "$lines = Get-Content '%TC%\buf_covercrypt\setup.txt';" ^
+    "for ($i=0; $i -lt $lines.Count; $i++) {" ^
+    "  if ($lines[$i] -match 'PUBLIC KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt\pk.key' -NoNewline }" ^
+    "  if ($lines[$i] -match 'MASTER SECRET KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt\msk.key' -NoNewline }" ^
+    "}" >nul 2>&1
+%EXEC% genkey_buffer --scheme covercrypt %TC%\buf_covercrypt\msk.key "admin it" >nul 2>&1
+call :check "genkey_buffer covercrypt"
+
+%EXEC% setup_buffer --scheme covercrypt --pqc > %TC%\buf_covercrypt_pqc\setup.txt 2>&1
+call :check "setup_buffer covercrypt+pqc"
+powershell -NoProfile -Command ^
+    "$lines = Get-Content '%TC%\buf_covercrypt_pqc\setup.txt';" ^
+    "for ($i=0; $i -lt $lines.Count; $i++) {" ^
+    "  if ($lines[$i] -match 'PUBLIC KEY' -and -not ($lines[$i] -match 'PQC') -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt_pqc\cpabe_pk.key' -NoNewline }" ^
+    "  if ($lines[$i] -match 'MASTER SECRET KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt_pqc\cpabe_msk.key' -NoNewline }" ^
+    "  if ($lines[$i] -match 'PQC PUBLIC KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt_pqc\pqc_pk.key' -NoNewline }" ^
+    "  if ($lines[$i] -match 'PQC SECRET KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt_pqc\pqc_sk.key' -NoNewline }" ^
+    "}" >nul 2>&1
+%EXEC% genkey_buffer --scheme covercrypt %TC%\buf_covercrypt_pqc\cpabe_msk.key "admin it" > %TC%\buf_covercrypt_pqc\sk_raw.txt 2>&1
+call :check "genkey_buffer covercrypt+pqc"
+powershell -NoProfile -Command ^
+    "$lines = Get-Content '%TC%\buf_covercrypt_pqc\sk_raw.txt';" ^
+    "for ($i=0; $i -lt $lines.Count; $i++) {" ^
+    "  if ($lines[$i] -match 'SECRET KEY' -and $i+1 -lt $lines.Count) { $lines[$i+1] | Set-Content '%TC%\buf_covercrypt_pqc\sk.key' -NoNewline }" ^
+    "}" >nul 2>&1
+
+:: ================================================================
+:: 14. BUFFER covercrypt
+:: ================================================================
+echo.
+echo --- [14] EncryptBuffer/DecryptBuffer covercrypt ---
+%EXEC% encrypt_buffer --scheme covercrypt %TC%\covercrypt\cpabe_pk.key "Hello from buffer covercrypt!" "admin and it" %TC%\buf_covercrypt\ct.bin
+call :check "encrypt_buffer covercrypt"
+%EXEC% decrypt_buffer %TC%\covercrypt\sk.key %TC%\buf_covercrypt\ct.bin
+call :check "decrypt_buffer covercrypt"
+
+echo.
+echo --- [14] EncryptBuffer+Sign / DecryptBuffer+Verify covercrypt ---
+%EXEC% encrypt_buffer --scheme covercrypt --pqc %TC%\buf_covercrypt_pqc\cpabe_pk.key %TC%\buf_covercrypt_pqc\pqc_sk.key "Hello signed buffer covercrypt!" "admin and it" %TC%\buf_covercrypt_pqc\ct_pqc.bin
+call :check "encrypt_buffer covercrypt+pqc"
+%EXEC% decrypt_buffer --pqc %TC%\buf_covercrypt_pqc\sk.key %TC%\buf_covercrypt_pqc\pqc_pk.key %TC%\buf_covercrypt_pqc\ct_pqc.bin
+call :check "decrypt_buffer covercrypt+pqc"
 
 :: ================================================================
 :: SUMMARY

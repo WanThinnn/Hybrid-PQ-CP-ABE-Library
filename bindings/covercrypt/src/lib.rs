@@ -105,6 +105,32 @@ pub unsafe extern "C" fn cc_setup(config: *const c_char, mode: i32, msk_out: *mu
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cc_add_attribute(msk: *const u8, len: usize,
+    dimension: *const c_char, attribute: *const c_char, mode: i32, after: *const c_char,
+    updated_msk: *mut Buffer, updated_mpk: *mut Buffer) -> i32 {
+    operation(|| {
+        outputs(updated_msk, updated_mpk)?;
+        let hint = match mode {
+            0 => EncryptionHint::Classic,
+            1 => EncryptionHint::PostQuantum,
+            2 => EncryptionHint::Hybridized,
+            _ => return Err((INVALID, "unknown encryption mode".into())),
+        };
+        let dimension = text(dimension)?;
+        let attribute = text(attribute)?;
+        let after = if after.is_null() { None } else { Some(text(after)?) };
+        let mut msk = MasterSecretKey::deserialize(bytes(msk, len)?).map_err(failure)?;
+        msk.access_structure
+            .add_attribute(QualifiedAttribute::new(dimension, attribute), hint, after)
+            .map_err(failure)?;
+        let mpk = Covercrypt::default().update_msk(&mut msk).map_err(failure)?;
+        store(updated_msk, serialize(&msk)?);
+        store(updated_mpk, serialize(&mpk)?);
+        Ok(())
+    })
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cc_genkey(msk: *const u8, len: usize, ap: *const c_char,
     updated: *mut Buffer, usk_out: *mut Buffer) -> i32 {
     operation(|| {

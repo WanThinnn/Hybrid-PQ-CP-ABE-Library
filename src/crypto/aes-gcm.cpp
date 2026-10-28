@@ -110,9 +110,8 @@ extern "C"
 
             return HCPABE_SUCCESS;
         }
-        catch (const CryptoPP::Exception &e)
+        catch (const CryptoPP::Exception &)
         {
-            std::cerr << "AES-GCM Decrypt Crypto++ Error: " << e.what() << std::endl;
             return HCPABE_ERR_CRYPTO_FAILED;
         }
         catch (...)

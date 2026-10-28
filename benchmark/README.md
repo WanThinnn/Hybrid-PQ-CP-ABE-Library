@@ -1,10 +1,16 @@
 # Hybrid PQ-CP-ABE Benchmark Suite
 
-This benchmark is intended to replace the old average-only benchmark with a more reproducible methodology.
+This directory is the canonical benchmark location for the project. The old
+`bindings/python/benchmark.py` benchmark has been removed so benchmark logic is
+not duplicated across the repository.
+
+`benchmark_full.py` is the source of truth for measurement methodology.
+`showcase_benchmark.py` is only a presentation-oriented frontend that reuses
+the canonical benchmark engine.
 
 ## What it measures
 
-- AC17 and TKN20 native operations
+- AC17, TKN20, and CoverCrypt native operations
   - Setup
   - KeyGen
   - Encrypt

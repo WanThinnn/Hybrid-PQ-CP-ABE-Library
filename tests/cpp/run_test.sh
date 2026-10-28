@@ -20,7 +20,13 @@ echo "================================================================"
 
 # Create dedicated directories for each scheme
 mkdir -p "$TC/ac17" "$TC/ac17_pqc" "$TC/tkn20" "$TC/tkn20_pqc" "$TC/buf_ac17" "$TC/buf_ac17_pqc" "$TC/buf_tkn20" "$TC/buf_tkn20_pqc"
+mkdir -p "$TC/covercrypt" "$TC/covercrypt_pqc" "$TC/buf_covercrypt" "$TC/buf_covercrypt_pqc"
 echo "This is a secret message for testing Hybrid CP-ABE!" > "$TC/plaintext.txt"
+cat > "$TC/covercrypt.json" <<'JSON'
+{"dimensions":[{"name":"admin","attributes":["present","absent"]},{"name":"it","attributes":["present","absent"]}]}
+JSON
+export HCPABE_COVERCRYPT_CONFIG="$TC/covercrypt.json"
+export HCPABE_COVERCRYPT_MODE="hybridized"
 
 # ----------------------------------------------------------------
 run() {
@@ -66,6 +72,8 @@ run "setup ac17"        $EXEC setup --scheme ac17  "$TC/ac17"
 run "setup ac17+pqc"    $EXEC setup --scheme ac17  --pqc "$TC/ac17_pqc"
 run "setup tkn20"       $EXEC setup --scheme tkn20 "$TC/tkn20"
 run "setup tkn20+pqc"   $EXEC setup --scheme tkn20 --pqc "$TC/tkn20_pqc"
+run "setup covercrypt"       $EXEC setup --scheme covercrypt "$TC/covercrypt"
+run "setup covercrypt+pqc"   $EXEC setup --scheme covercrypt --pqc "$TC/covercrypt_pqc"
 
 # ================================================================
 # 3. GENKEY (file-based, all schemes)
@@ -75,6 +83,8 @@ run "genkey ac17"       $EXEC genkey --scheme ac17  "$TC/ac17/cpabe_msk.key"    
 $EXEC genkey --scheme ac17  "$TC/ac17_pqc/cpabe_msk.key"    "A B C"    "$TC/ac17_pqc/sk.key" >/dev/null 2>&1
 run "genkey tkn20"      $EXEC genkey --scheme tkn20 "$TC/tkn20/cpabe_msk.key"       "admin it" "$TC/tkn20/sk.key"
 $EXEC genkey --scheme tkn20 "$TC/tkn20_pqc/cpabe_msk.key"   "admin it" "$TC/tkn20_pqc/sk.key" >/dev/null 2>&1
+run "genkey covercrypt" $EXEC genkey --scheme covercrypt "$TC/covercrypt/cpabe_msk.key" "admin it" "$TC/covercrypt/sk.key"
+$EXEC genkey --scheme covercrypt "$TC/covercrypt_pqc/cpabe_msk.key" "admin it" "$TC/covercrypt_pqc/sk.key" >/dev/null 2>&1
 
 # ================================================================
 # 4. ENCRYPT / DECRYPT  ac17
@@ -170,6 +180,54 @@ run "decrypt_buffer ac17+pqc" $EXEC decrypt_buffer --pqc "$TC/buf_ac17_pqc/sk.ke
 echo; echo "--- [10] EncryptBuffer+Sign / DecryptBuffer+Verify tkn20 ---"
 run "encrypt_buffer tkn20+pqc" $EXEC encrypt_buffer --scheme tkn20 --pqc "$TC/buf_tkn20_pqc/cpabe_pk.key" "$TC/buf_tkn20_pqc/pqc_sk.key" "Hello signed buffer tkn20!" "admin and it" "$TC/buf_tkn20_pqc/ct_pqc.bin"
 run "decrypt_buffer tkn20+pqc" $EXEC decrypt_buffer --pqc "$TC/buf_tkn20_pqc/sk.key" "$TC/buf_tkn20_pqc/pqc_pk.key" "$TC/buf_tkn20_pqc/ct_pqc.bin"
+
+# ================================================================
+# 11. ENCRYPT / DECRYPT covercrypt
+# ================================================================
+echo; echo "--- [11] Encrypt/Decrypt covercrypt ---"
+run "encrypt covercrypt" $EXEC encrypt --scheme covercrypt "$TC/covercrypt/cpabe_pk.key" "$TC/plaintext.txt" "admin and it" "$TC/covercrypt/ct.bin"
+run "decrypt covercrypt" $EXEC decrypt "$TC/covercrypt/sk.key" "$TC/covercrypt/ct.bin" "$TC/covercrypt/recovered.txt"
+diff_check "content match covercrypt" "$TC/plaintext.txt" "$TC/covercrypt/recovered.txt"
+
+# ================================================================
+# 12. ENCRYPT / DECRYPT covercrypt + PQC signature
+# ================================================================
+echo; echo "--- [12] Encrypt/Decrypt covercrypt+PQC ---"
+run "encrypt covercrypt+pqc" $EXEC encrypt --scheme covercrypt --pqc "$TC/covercrypt_pqc/cpabe_pk.key" "$TC/covercrypt_pqc/pqc_sk.key" "$TC/plaintext.txt" "admin and it" "$TC/covercrypt_pqc/ct.bin"
+run "decrypt covercrypt+pqc" $EXEC decrypt --pqc "$TC/covercrypt_pqc/sk.key" "$TC/covercrypt_pqc/pqc_pk.key" "$TC/covercrypt_pqc/ct.bin" "$TC/covercrypt_pqc/recovered.txt"
+diff_check "content match covercrypt+pqc" "$TC/plaintext.txt" "$TC/covercrypt_pqc/recovered.txt"
+
+# ================================================================
+# 13. SETUP_BUFFER / GENKEY_BUFFER covercrypt
+# ================================================================
+echo; echo "--- [13] Setup_Buffer / GenKey_Buffer covercrypt ---"
+
+$EXEC setup_buffer --scheme covercrypt 2>/dev/null > "$TC/buf_covercrypt/setup.txt"
+run "setup_buffer covercrypt" test -s "$TC/buf_covercrypt/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_covercrypt/setup.txt" | grep -v "PUBLIC KEY" | grep -v '^--$' > "$TC/buf_covercrypt/pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_covercrypt/setup.txt" | grep -v "MASTER SECRET KEY" | grep -v '^--$' > "$TC/buf_covercrypt/msk.key"
+run "genkey_buffer covercrypt" $EXEC genkey_buffer --scheme covercrypt "$TC/buf_covercrypt/msk.key" "admin it"
+
+$EXEC setup_buffer --scheme covercrypt --pqc 2>/dev/null > "$TC/buf_covercrypt_pqc/setup.txt"
+run "setup_buffer covercrypt+pqc" test -s "$TC/buf_covercrypt_pqc/setup.txt"
+grep -A1 "PUBLIC KEY" "$TC/buf_covercrypt_pqc/setup.txt" | head -n 2 | tail -n 1 > "$TC/buf_covercrypt_pqc/cpabe_pk.key"
+grep -A1 "MASTER SECRET KEY" "$TC/buf_covercrypt_pqc/setup.txt" | tail -n 1 > "$TC/buf_covercrypt_pqc/cpabe_msk.key"
+grep -A1 "PQC PUBLIC KEY" "$TC/buf_covercrypt_pqc/setup.txt" | tail -n 1 > "$TC/buf_covercrypt_pqc/pqc_pk.key"
+grep -A1 "PQC SECRET KEY" "$TC/buf_covercrypt_pqc/setup.txt" | tail -n 1 > "$TC/buf_covercrypt_pqc/pqc_sk.key"
+$EXEC genkey_buffer --scheme covercrypt "$TC/buf_covercrypt_pqc/cpabe_msk.key" "admin it" 2>/dev/null > "$TC/buf_covercrypt_pqc/sk_raw.txt"
+run "genkey_buffer covercrypt+pqc" test -s "$TC/buf_covercrypt_pqc/sk_raw.txt"
+grep -A1 "SECRET KEY" "$TC/buf_covercrypt_pqc/sk_raw.txt" | tail -n 1 > "$TC/buf_covercrypt_pqc/sk.key"
+
+# ================================================================
+# 14. BUFFER covercrypt
+# ================================================================
+echo; echo "--- [14] EncryptBuffer/DecryptBuffer covercrypt ---"
+run "encrypt_buffer covercrypt" $EXEC encrypt_buffer --scheme covercrypt "$TC/covercrypt/cpabe_pk.key" "Hello from buffer covercrypt!" "admin and it" "$TC/buf_covercrypt/ct.bin"
+run_visible "decrypt_buffer covercrypt" $EXEC decrypt_buffer "$TC/covercrypt/sk.key" "$TC/buf_covercrypt/ct.bin"
+
+echo; echo "--- [14] EncryptBuffer+Sign / DecryptBuffer+Verify covercrypt ---"
+run "encrypt_buffer covercrypt+pqc" $EXEC encrypt_buffer --scheme covercrypt --pqc "$TC/buf_covercrypt_pqc/cpabe_pk.key" "$TC/buf_covercrypt_pqc/pqc_sk.key" "Hello signed buffer covercrypt!" "admin and it" "$TC/buf_covercrypt_pqc/ct_pqc.bin"
+run "decrypt_buffer covercrypt+pqc" $EXEC decrypt_buffer --pqc "$TC/buf_covercrypt_pqc/sk.key" "$TC/buf_covercrypt_pqc/pqc_pk.key" "$TC/buf_covercrypt_pqc/ct_pqc.bin"
 
 # ================================================================
 # SUMMARY
