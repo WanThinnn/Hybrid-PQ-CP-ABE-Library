@@ -358,6 +358,8 @@ build_for_old_linux.py
 # Local benchmark run outputs
 benchmark/results/
 
-build/
+# Keep the root build directory in fresh clones without tracking build outputs.
+/build/*
+!/build/.gitkeep
 vendor/cover_crypt/target/
 tmp/
