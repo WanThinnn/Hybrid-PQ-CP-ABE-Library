@@ -45,7 +45,8 @@ def required_outputs(target):
         deps = ["cryptopp/libcryptopp.lib", "cryptopp/cryptopp.dll", "cryptopp/cryptopp.lib",
                 "liboqs/liboqs.lib", "liboqs/liboqs.dll", "liboqs/liboqs_import.lib",
                 "rabe/librabe_ffi.lib", "rabe/rabe_ffi.dll",
-                "tkn20/libcpabe_tkn20.lib", "tkn20/libcpabe_tkn20.dll"]
+                "tkn20/libcpabe_tkn20.lib", "tkn20/libcpabe_tkn20.dll",
+                "covercrypt/libcovercrypt_ffi.lib"]
     else:
         extension = "dylib" if target == "macos" else "so"
         core = [f"{LIBRARY}.a", f"{LIBRARY}.{extension}", "main"]
@@ -53,6 +54,7 @@ def required_outputs(target):
             ("cryptopp", "libcryptopp"), ("liboqs", "liboqs"),
             ("rabe", "librabe_ffi"), ("tkn20", "libcpabe_tkn20"))
             for ext in ("a", extension)]
+        deps.append("covercrypt/libcovercrypt_ffi.a")
     return core, deps
 
 
@@ -76,11 +78,15 @@ def collect_notices(root, package):
         recorded = re.search(r"^rust_toolchain=(.+)$", fingerprint.read_text(), re.MULTILINE)
         if recorded:
             cargo.append("+" + recorded[1].strip())
-    metadata = json.loads(subprocess.check_output(cargo + [
-        "metadata", "--format-version", "1", "--locked", "--manifest-path",
-        str(root / "vendor/librabe-ffi/Cargo.toml")], cwd=root, text=True, encoding="utf-8"))
+    packages = {}
+    for manifest in ("vendor/librabe-ffi/Cargo.toml", "bindings/covercrypt/Cargo.toml"):
+        metadata = json.loads(subprocess.check_output(cargo + [
+            "metadata", "--format-version", "1", "--locked", "--manifest-path",
+            str(root / manifest)], cwd=root, text=True, encoding="utf-8"))
+        for dependency in metadata["packages"]:
+            packages[dependency["id"]] = dependency
     inventory = []
-    for dependency in metadata["packages"]:
+    for dependency in packages.values():
         source = Path(dependency["manifest_path"]).parent
         destination = package / "licenses/rust" / f"{dependency['name']}-{dependency['version']}"
         # Cargo crates keep license files in their package root or subdirectories.
@@ -117,7 +123,7 @@ def stage_package(root, package, target):
         require_file(build / name)
     for name in dependencies:
         require_file(deps / "lib" / name)
-    for name in ("cryptopp/aes.h", "rabe/rabe.h", "liboqs/oqs/oqs.h", "tkn20/cpabe_tkn20.h"):
+    for name in ("cryptopp/aes.h", "rabe/rabe.h", "liboqs/oqs/oqs.h", "tkn20/cpabe_tkn20.h", "covercrypt/covercrypt_ffi.h"):
         require_file(deps / "include" / name)
     package.mkdir(parents=True)
     shutil.copytree(root / "include", package / "include")

@@ -61,22 +61,30 @@ TEST_CASE_DIR = $(TEST_DIR)/cases
 
 SRCS = $(SCHEMES_DIR)/ac17.cpp \
        $(SCHEMES_DIR)/tkn20.cpp \
-       $(CORE_DIR)/hybrid-cp-abe.cpp \
-       $(CORE_DIR)/hybrid-oqs-abe.cpp \
+       $(SCHEMES_DIR)/covercrypt.cpp \
+       $(CORE_DIR)/hybrid-pq-cp-abe.cpp \
+       $(CORE_DIR)/abe-setup.cpp \
+       $(CORE_DIR)/abe-genkey.cpp \
+       $(CORE_DIR)/abe-encrypt.cpp \
+       $(CORE_DIR)/abe-decrypt.cpp \
        $(CRYPTO_DIR)/ml-dsa.cpp \
        $(CRYPTO_DIR)/aes-gcm.cpp
 
 MAIN_SRC = src/main.cpp
 SOURCE_NAMES = $(notdir $(SRCS:.cpp=))
 
-PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h)
+PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) $(CORE_DIR)/abe-internal.h
 RABE_HEADER = $(DEPS_INC_DIR)/rabe/rabe.h
 OQS_HEADER = $(OQS_INC_DIR)/oqs/oqs.h
 TKN20_HEADER = $(TKN20_INC_DIR)/cpabe_tkn20.h
+COVERCRYPT_HEADER = $(DEPS_INC_DIR)/covercrypt/covercrypt_ffi.h
+COVERCRYPT_TEST_SRC = tests/cpp/covercrypt_test.cpp
+COVERCRYPT_INPUTS = bindings/covercrypt/Cargo.toml bindings/covercrypt/Cargo.lock bindings/covercrypt/src/lib.rs bindings/covercrypt/include/covercrypt_ffi.h vendor/cover_crypt/Cargo.toml
+$(DEPS_READY): $(COVERCRYPT_INPUTS) scripts/build-deps.ps1 scripts/build-deps.sh
 CRYPTOPP_HEADERS = $(DEPS_INC_DIR)/cryptopp/aes.h $(DEPS_INC_DIR)/cryptopp/gcm.h $(DEPS_INC_DIR)/cryptopp/filters.h \
                    $(DEPS_INC_DIR)/cryptopp/osrng.h $(DEPS_INC_DIR)/cryptopp/sha.h $(DEPS_INC_DIR)/cryptopp/sha3.h \
                    $(DEPS_INC_DIR)/cryptopp/base64.h
-GENERATED_HEADERS = $(RABE_HEADER) $(OQS_HEADER) $(TKN20_HEADER) $(CRYPTOPP_HEADERS)
+GENERATED_HEADERS = $(RABE_HEADER) $(OQS_HEADER) $(TKN20_HEADER) $(CRYPTOPP_HEADERS) $(COVERCRYPT_HEADER)
 COMMON_HEADERS = $(PROJECT_HEADERS) $(GENERATED_HEADERS)
 
 vpath %.cpp $(SCHEMES_DIR) $(CORE_DIR) $(CRYPTO_DIR)
@@ -114,12 +122,14 @@ ifeq ($(COMPILER),msvc)
     SHARED_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.dll
     SHARED_IMPORT_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe_dll.lib
     EXEC = $(BUILD_DIR)/main.exe
+    COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.lib
+    COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test.exe
 
-    WIN_STATIC_DEPS = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.lib $(DEPS_LIB_DIR)/liboqs/liboqs.lib $(DEPS_LIB_DIR)/rabe/librabe_ffi.lib
+    WIN_STATIC_DEPS = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.lib $(DEPS_LIB_DIR)/liboqs/liboqs.lib $(DEPS_LIB_DIR)/rabe/librabe_ffi.lib $(COVERCRYPT_LIB)
     TKN20_IMPORT_LIB = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.lib
     TKN20_DLL = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.dll
     WIN_LINK_DEPS = $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB)
-    WIN_SYSTEM_LIBS = bcrypt.lib advapi32.lib ntdll.lib
+    WIN_SYSTEM_LIBS = bcrypt.lib advapi32.lib ntdll.lib userenv.lib ws2_32.lib
     LDFLAGS = /link /ignore:4099 /MACHINE:X64
 else
     ifeq ($(PLATFORM),macos)
@@ -146,15 +156,18 @@ else
     STATIC_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.a
     CORE_ARCHIVE = $(BUILD_DIR)/libhybrid-pq-cp-abe_core.a
     EXEC = $(BUILD_DIR)/main
+    COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.a
+    COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test
 
     CRYPTOPP_LIB = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.a
     RABE_LIB = $(DEPS_LIB_DIR)/rabe/librabe_ffi.a
     TKN20_LIB = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.a
     OQS_LIB = $(DEPS_LIB_DIR)/liboqs/liboqs.a
-    STATIC_LIBS_GCC = $(CRYPTOPP_LIB) $(RABE_LIB) $(TKN20_LIB) $(OQS_LIB)
+    STATIC_LIBS_GCC = $(CRYPTOPP_LIB) $(RABE_LIB) $(TKN20_LIB) $(OQS_LIB) $(COVERCRYPT_LIB)
 endif
 
-.PHONY: all clean deps deps-clean executable shared static help test tests abi-info
+.DEFAULT_GOAL := all
+.PHONY: all clean deps deps-clean executable shared static help test tests abi-info test-covercrypt test-covercrypt-rust
 
 all: static shared executable
 	@echo "================================================================"
@@ -186,7 +199,9 @@ help:
 	@echo "             Hybrid CP-ABE Library Makefile"
 	@echo "================================================================"
 	@echo "  make -j8             Incremental parallel build"
-	@echo "  make deps -j8        Build/check 4 vendored dependencies in parallel"
+	@echo "  make deps -j8        Build/check 5 native dependencies in parallel"
+	@echo "  make test-covercrypt Native CoverCrypt C++ and C ABI tests"
+	@echo "  make test-covercrypt-rust  CoverCrypt upstream Rust unit tests"
 	@echo "  make deps-clean      Remove dependency build cache"
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
@@ -213,6 +228,11 @@ endif
 # by GNU Make's jobserver. This avoids stale jobserver pipe/file descriptors
 # leaking into Cargo/sub-make/CMake/Go while still honoring make -jN.
 ifeq ($(PLATFORM),windows)
+test-covercrypt-rust: SHELL = sh.exe
+test-covercrypt-rust: .SHELLFLAGS = -c
+test-covercrypt-rust:
+	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-deps.ps1 -Dependency covercrypt-test
+
 deps: SHELL = sh.exe
 deps: .SHELLFLAGS = -c
 deps:
@@ -230,6 +250,9 @@ deps-clean:
 	@rm -rf build/deps/windows
 	@echo Done! Dependency cache cleared.
 else
+test-covercrypt-rust:
+	@bash scripts/build-deps.sh $(PLATFORM) covercrypt-test
+
 deps:
 	@bash scripts/build-deps.sh $(PLATFORM) all
 
@@ -255,6 +278,10 @@ endif
 
 ifeq ($(COMPILER),msvc)
 
+$(COVERCRYPT_TEST): $(COVERCRYPT_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(COVERCRYPT_HEADER) $(TKN20_IMPORT_LIB) $(TKN20_DLL) | $(BUILD_DIR) $(MAIN_OBJ_DIR)
+	$(CXX) $(CXXFLAGS) /Fo"$(subst /,\,$(MAIN_OBJ_DIR))\\" /Fe:"$(subst /,\,$@)" $(COVERCRYPT_TEST_SRC) $(LDFLAGS) "$(subst /,\,$(STATIC_LIB))" "$(subst /,\,$(TKN20_IMPORT_LIB))" $(WIN_SYSTEM_LIBS)
+	@copy /Y "$(subst /,\,$(TKN20_DLL))" "$(subst /,\,$(BUILD_DIR))\" >nul
+
 # Dependency artifacts are produced by the order-only deps phase.
 $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL): | $(DEPS_READY)
 
@@ -278,9 +305,12 @@ $(MAIN_OBJ): $(MAIN_SRC) $(COMMON_HEADERS) | $(DEPS_READY) $(MAIN_OBJ_DIR)
 
 static: $(STATIC_LIB)
 
-$(STATIC_LIB): $(STATIC_OBJS) $(WIN_STATIC_DEPS) | $(BUILD_DIR) $(LIB_DIR)
+$(STATIC_LIB): $(STATIC_OBJS) $(WIN_STATIC_DEPS) Makefile scripts/normalize-msvc-library.ps1 | $(BUILD_DIR) $(LIB_DIR)
 	@if exist "$(subst /,\,$@)" del /Q "$(subst /,\,$@)"
-	lib.exe /NOLOGO /OUT:"$(subst /,\,$@)" $(foreach o,$(STATIC_OBJS),"$(subst /,\,$(o))") $(foreach l,$(WIN_STATIC_DEPS),"$(subst /,\,$(l))")
+	@rem Rust static libraries share runtime objects. Deduplicate identical members after merging.
+	lib.exe /NOLOGO /IGNORE:4006 /OUT:"$(subst /,\,$@).merged" $(foreach o,$(STATIC_OBJS),"$(subst /,\,$(o))") $(foreach l,$(WIN_STATIC_DEPS),"$(subst /,\,$(l))")
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/normalize-msvc-library.ps1 -InputLib "$(subst /,\,$@).merged" -OutputLib "$(subst /,\,$@)"
+	@del /Q "$(subst /,\,$@).merged"
 	@copy /Y "$(subst /,\,$@)" "$(subst /,\,$(LIB_DIR))\" >nul
 	@echo Done! Static library: $@
 
@@ -318,6 +348,10 @@ test: $(EXEC)
 
 else
 
+$(COVERCRYPT_TEST): $(COVERCRYPT_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(COVERCRYPT_HEADER)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(COVERCRYPT_TEST_SRC) $(STATIC_LIB) -o "$@" $(LDFLAGS)
+
 $(STATIC_LIBS_GCC): | $(DEPS_READY)
 
 $(CORE_OBJ_DIR)/%.o: %.cpp $(COMMON_HEADERS) | $(DEPS_READY)
@@ -330,7 +364,7 @@ $(MAIN_OBJ): $(MAIN_SRC) $(COMMON_HEADERS) | $(DEPS_READY)
 
 static: $(STATIC_LIB)
 
-$(STATIC_LIB): $(OBJS) $(STATIC_LIBS_GCC)
+$(STATIC_LIB): $(OBJS) $(STATIC_LIBS_GCC) Makefile
 	@mkdir -p $(BUILD_DIR)
 	@rm -f $(CORE_ARCHIVE) $(STATIC_LIB)
 	ar rcs $(CORE_ARCHIVE) $(OBJS)
@@ -342,12 +376,14 @@ else
 	  "addlib $(CORE_ARCHIVE)" \
 	  "addlib $(TKN20_LIB)" \
 	  "addlib $(RABE_LIB)" \
+	  "addlib $(COVERCRYPT_LIB)" \
 	  "addlib $(OQS_LIB)" \
 	  "addlib $(CRYPTOPP_LIB)" \
 	  "save" "end" > $(BUILD_DIR)/merge.mri
 	ar -M < $(BUILD_DIR)/merge.mri
 	@rm -f $(BUILD_DIR)/merge.mri
 endif
+
 	@rm -f $(CORE_ARCHIVE)
 	@mkdir -p $(LIB_DIR)
 	@cp $(STATIC_LIB) $(LIB_DIR)/
@@ -387,3 +423,8 @@ test: $(EXEC)
 -include $(DEPFILES)
 
 endif
+
+test-covercrypt: $(COVERCRYPT_TEST)
+	@"$(COVERCRYPT_TEST)"
+
+test: test-covercrypt

@@ -20,25 +20,8 @@ name = "cosmian_cover_crypt"
 # The cdylib is only interesting if the `--features ffi` flag is set on build
 # This does not seem to be actionable conditionally https://github.com/rust-lang/cargo/issues/4881
 
-[[bench]]
-name = "benches"
-harness = false
-required-features = ["test-utils"]
-
-[[example]]
-name = "encrypt"
-required-features = ["test-utils"]
-
-[[example]]
-name = "decrypt"
-required-features = ["test-utils"]
-
-[[example]]
-name = "runme"
-required-features = ["test-utils"]
-
 [features]
-default = ["mlkem-512", "curve25519"]
+default = ["mlkem-768", "curve25519"]
 mlkem-512 = []
 mlkem-768 = []
 p-256 = ["cosmian_openssl_provider"]

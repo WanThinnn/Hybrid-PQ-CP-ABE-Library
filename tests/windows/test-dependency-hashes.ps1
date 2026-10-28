@@ -36,17 +36,17 @@ try {
     }
     $LibDir = Join-Path $TestDirectory 'lib'
     $BuildVersion = 'test'
-    foreach ($Name in @('cryptopp', 'liboqs', 'rabe', 'tkn20')) {
+    foreach ($Name in @('cryptopp', 'liboqs', 'rabe', 'tkn20', 'covercrypt')) {
         [void][IO.Directory]::CreateDirectory((Join-Path $LibDir $Name))
         [IO.File]::WriteAllBytes((Get-FingerprintPath $Name), [byte[]]@(97, 98, 99))
     }
     [IO.File]::WriteAllBytes((Join-Path $LibDir 'cryptopp\.dll-fingerprint'), [byte[]]@(97, 98, 99))
     Write-ReadyMarker
     $Ready = [IO.File]::ReadAllText((Join-Path $LibDir '.ready')) -split '\r?\n'
-    foreach ($Name in @('cryptopp', 'cryptopp_dll', 'liboqs', 'rabe', 'tkn20')) {
+    foreach ($Name in @('cryptopp', 'cryptopp_dll', 'liboqs', 'rabe', 'tkn20', 'covercrypt')) {
         if ($Ready -cnotcontains "$Name=$AbcDigest") { throw "Ready-marker digest mismatch: $Name" }
     }
-    Write-Host 'PASS: all five ready-marker digests without Get-FileHash'
+    Write-Host 'PASS: all six ready-marker digests without Get-FileHash'
 } finally {
     Set-Location $OriginalLocation
     $CleanupPath = [IO.Path]::GetFullPath($TestDirectory)

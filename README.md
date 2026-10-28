@@ -6,12 +6,52 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 > This library natively includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks.
 
 > [!IMPORTANT]
-> **On the scope of "Post-Quantum" in this library:**
-> The post-quantum (PQC) component only applies to the **digital signature layer** (ML-DSA-87, via `liboqs`), used to prevent Surreptitious Forwarding attacks in the "Sign-then-Encrypt" architecture.
->
-> The **CP-ABE core (AC17/TKN20) remains classical**, based on pairing/discrete-log problems over elliptic curves — it is **not quantum-resistant**. In other words, this library is a **hybrid**: the attribute-based encryption (ABE) layer is still "classical," while only the signing/authentication layer is "post-quantum."
->
-> The stable v5.2.1 core remains AC17/TKN20 + ML-DSA-87. A separate CoverCrypt post-quantum integration is being developed under `plugins/covercrypt/`; vendored upstream source is kept under `vendor/cover_crypt/` and is not yet part of the stable core API.
+> AC17 and TKN20 remain classical pairing-based ABE. The current source also integrates native CoverCrypt with Curve25519 + ML-KEM-768 (Hybridized by default). ML-DSA-87 signing is optional for every scheme. Historical v5.2 benchmark results below describe AC17/TKN20 only.
+
+## Native interface and source layout
+
+The v5.2 public function names and parameters remain unchanged. Select
+`CPABE_SCHEME_AC17`, `CPABE_SCHEME_TKN20` or `CPABE_SCHEME_COVERCRYPT` in the existing
+`*_with_scheme` functions. Decryption reads the scheme from the ciphertext.
+Existing default functions continue to select AC17. Keys are specific to a scheme;
+changing the selection does not convert existing keys or ciphertexts.
+
+```text
+src/core/hybrid-pq-cp-abe.cpp  Public interface and forwarding
+src/core/abe-setup.cpp         Setup and optional signing-key generation
+src/core/abe-genkey.cpp        User-key generation
+src/core/abe-encrypt.cpp       Encryption and optional signing
+src/core/abe-decrypt.cpp       Decryption and optional verification
+src/schemes/                  ac17.cpp, tkn20.cpp, covercrypt.cpp
+src/crypto/                   aes-gcm.cpp, ml-dsa.cpp
+```
+
+All three scheme adapters provide the same eight operations in
+`include/hybrid_pq_cp_abe/cpabe-scheme.h`: `setup`, `setupBuffer`, `genkey`,
+`genkeyBuffer`, `encapsulate_key`, `decapsulate_key`, `load_pk` and `load_sk`,
+each prefixed with its scheme name. The public library interface remains in
+`include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h`.
+
+For CoverCrypt setup, set `HCPABE_COVERCRYPT_CONFIG` to the path of a JSON
+configuration. Set `HCPABE_COVERCRYPT_MODE` to `hybridized` (default),
+`post_quantum` or `classic`. Applications load their own `.env` files and map
+their scheme setting to the enum; the library reads the process environment.
+
+```json
+{"dimensions":[{"name":"admin","attributes":["present","absent"]},{"name":"it","attributes":["present","absent"]}]}
+```
+
+This configuration accepts the existing attribute list `admin it` and positive
+policies such as `admin AND it` or `admin OR it`. Bare names are mapped to the
+corresponding `<name>::present` attribute. For native dimensions/hierarchies,
+use qualified policies such as `Department::FIN && Security::TOP`. CoverCrypt
+does not translate the TKN20 `NOT` syntax; unsupported policies fail explicitly.
+
+The file-based CoverCrypt key-generation function persists the updated MSK.
+The v5.2 buffer function remains stateless and does not retain the user registry
+used by CoverCrypt tracing; this library does not expose tracing operations.
+Serialize access to authority files when issuing keys from multiple processes.
+See `bindings/covercrypt/README.md` for the native bridge and its upstream license.
 
 ## Performance & Benchmarks
 
@@ -90,7 +130,7 @@ include/                Public C/C++ API
 bindings/python/        Python binding
 bindings/tkn20/         Project-owned Go/C bridge for CIRCL TKN20
 plugins/vault/          Optional HashiCorp Vault plugin
-plugins/covercrypt/     Optional CoverCrypt integration layer
+bindings/covercrypt/    Native Rust/C bridge for CoverCrypt
 vendor/cryptopp/        Vendored Crypto++ source
 vendor/liboqs/          Vendored Open Quantum Safe source
 vendor/librabe-ffi/     Vendored AC17 Rust FFI source
@@ -133,7 +173,7 @@ Build order from a fresh clone:
    ```sh
    make deps -j8
    ```
-   This builds Crypto++, liboqs, librabe-ffi, and CIRCL/TKN20. liboqs is configured as a minimal ML-KEM + ML-DSA build only: ML-KEM-512/768/1024 and ML-DSA-44/65/87. The `-jN` budget is distributed across the four dependency builds without oversubscribing the requested total.
+   This builds Crypto++, liboqs, librabe-ffi, CIRCL/TKN20, and CoverCrypt. liboqs is configured as a minimal ML-KEM + ML-DSA build only: ML-KEM-512/768/1024 and ML-DSA-44/65/87. The `-jN` budget is distributed across the five dependency builds without oversubscribing the requested total.
 
 2. **Dependency output**
    ```text
@@ -171,7 +211,7 @@ After `make`, the build prints the exact include, dependency-library, native-lib
 Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make deps-clean` to remove the complete dependency output for the current platform.
 
 **Available Make Commands:**
-- `make deps -j8`: Build/check the four native dependencies and print their final include/library layout.
+- `make deps -j8`: Build/check the five native dependencies and print their final include/library layout.
 - `make -j8`: Build the native C++ core directly from the existing dependency output. It only auto-builds dependencies when the ready marker is missing (fresh clone or after `make deps-clean`).
 - `make deps-clean`: Remove `build/deps/<platform>/`.
 - `make static`: Build only the project static library.

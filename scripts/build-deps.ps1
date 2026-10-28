@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("all", "cryptopp", "liboqs", "rabe", "tkn20")]
+    [ValidateSet("all", "cryptopp", "liboqs", "rabe", "tkn20", "covercrypt", "covercrypt-test")]
     [string]$Dependency = "all",
     [int]$Jobs = 0
 )
@@ -302,7 +302,7 @@ function Build-Rabe {
 
     $NormalizeScript = Join-Path $PSScriptRoot "normalize-msvc-library.ps1"
     $NormalizeHash = Get-FileDigest $NormalizeScript
-    $Fingerprint = Get-TextHash "rabe|$BuildVersion|windows|$Upstream|$Lock|$Header|$RustVersion|$RustTarget|$RustToolchain|release|$NormalizeHash"
+    $Fingerprint = Get-TextHash "rabe|$BuildVersion|windows|$Upstream|$Lock|$Header|$RustVersion|$RustTarget|$RustToolchain|release|panic=unwind|lto=false|$NormalizeHash"
 
     $DepLibDir = Join-Path $LibDir "rabe"
     $DepIncludeDir = Join-Path $IncludeDir "rabe"
@@ -330,10 +330,21 @@ function Build-Rabe {
     $Sccache = Get-Sccache
     if ($Sccache) { $env:RUSTC_WRAPPER = $Sccache }
 
-    if ($RustToolchain) {
-        & cargo "+$RustToolchain" build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
-    } else {
-        & cargo build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
+    # Both Rust schemes share one runtime when linked into the native library.
+    # LTO must not embed a second copy of std symbols in the Rabe FFI objects.
+    $OldLto = $env:CARGO_PROFILE_RELEASE_LTO
+    $OldPanic = $env:CARGO_PROFILE_RELEASE_PANIC
+    try {
+        $env:CARGO_PROFILE_RELEASE_LTO = 'false'
+        $env:CARGO_PROFILE_RELEASE_PANIC = 'unwind'
+        if ($RustToolchain) {
+            & cargo "+$RustToolchain" build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
+        } else {
+            & cargo build --locked --jobs $InnerJobs --target $RustTarget --manifest-path "vendor\librabe-ffi\Cargo.toml" --release
+        }
+    } finally {
+        $env:CARGO_PROFILE_RELEASE_LTO = $OldLto
+        $env:CARGO_PROFILE_RELEASE_PANIC = $OldPanic
     }
     if ($LASTEXITCODE -ne 0) { throw "librabe-ffi build failed" }
 
@@ -348,6 +359,46 @@ function Build-Rabe {
     Copy-Item "vendor\librabe-ffi\rabe.h" $RabeHeader -Force
     Write-DependencyFingerprint "rabe" $Fingerprint @("rust_target=$RustTarget", "rust_toolchain=$RustToolchain")
     Remove-Item $Work -Recurse -Force
+}
+
+function Build-CoverCrypt([bool]$RunTests = $false) {
+    $Target = "x86_64-pc-windows-msvc"
+    $Toolchains = @(& rustup toolchain list) | ForEach-Object { ($_ -split '\s+')[0] }
+    $Toolchain = $Toolchains | Where-Object { $_ -eq "stable-x86_64-pc-windows-msvc" } | Select-Object -First 1
+    if (-not $Toolchain) { $Toolchain = $Toolchains | Where-Object { $_ -match 'x86_64-pc-windows-msvc$' } | Select-Object -First 1 }
+    if (-not $Toolchain) { throw "CoverCrypt requires an installed x64 MSVC Rust toolchain" }
+    $Version = (& rustup run $Toolchain rustc -vV) -join "`n"
+    $Inputs = @(Get-ChildItem "vendor\cover_crypt\src", "bindings\covercrypt\src" -Recurse -File) + @(
+        Get-Item "vendor\cover_crypt\Cargo.toml", "vendor\cover_crypt\Cargo.lock", "vendor\cover_crypt\UPSTREAM.md",
+            "bindings\covercrypt\Cargo.toml", "bindings\covercrypt\Cargo.lock", "bindings\covercrypt\include\covercrypt_ffi.h", "scripts\normalize-msvc-library.ps1"
+    )
+    $Digests = ($Inputs | Sort-Object FullName | ForEach-Object { Get-FileDigest $_.FullName }) -join '|'
+    $Fingerprint = Get-TextHash "covercrypt|$BuildVersion|$Target|$Version|$Digests|mlkem-768|curve25519"
+    $DepLibDir = Join-Path $LibDir "covercrypt"
+    $DepIncludeDir = Join-Path $IncludeDir "covercrypt"
+    $OutLib = Join-Path $DepLibDir "libcovercrypt_ffi.lib"
+    $Header = Join-Path $DepIncludeDir "covercrypt_ffi.h"
+    $Work = Join-Path $WorkDir "covercrypt-target"
+    if ($RunTests) {
+        $env:CARGO_TARGET_DIR = Join-Path $Root "build\windows\covercrypt-rust-tests"
+        & cargo "+$Toolchain" test --locked --release --jobs $InnerJobs --manifest-path "vendor\cover_crypt\Cargo.toml" --lib --no-default-features --features curve25519,mlkem-768
+        if ($LASTEXITCODE -ne 0) { throw "CoverCrypt upstream tests failed" }
+        return
+    }
+    if (Test-DependencyCache "covercrypt" $Fingerprint @($OutLib, $Header)) {
+        Write-Host "==> CoverCrypt: cached"
+        return
+    }
+    Write-Host "==> CoverCrypt ($InnerJobs jobs, MSVC, Curve25519 + ML-KEM-768, static C ABI)"
+    New-Item -ItemType Directory -Force -Path $DepLibDir, $DepIncludeDir | Out-Null
+    $env:CARGO_TARGET_DIR = $Work
+    $Sccache = Get-Sccache
+    if ($Sccache) { $env:RUSTC_WRAPPER = $Sccache }
+    & cargo "+$Toolchain" build --locked --release --jobs $InnerJobs --target $Target --manifest-path "bindings\covercrypt\Cargo.toml"
+    if ($LASTEXITCODE -ne 0) { throw "CoverCrypt native bridge build failed" }
+    & (Join-Path $PSScriptRoot "normalize-msvc-library.ps1") -InputLib (Join-Path $Work "$Target\release\covercrypt_ffi.lib") -OutputLib $OutLib
+    Copy-Item "bindings\covercrypt\include\covercrypt_ffi.h" $Header -Force
+    Write-DependencyFingerprint "covercrypt" $Fingerprint @("rust_target=$Target", "rust_toolchain=$Toolchain", "features=curve25519,mlkem-768")
 }
 
 function Build-Tkn20 {
@@ -447,7 +498,7 @@ function Show-Outputs {
     Write-Host " Libraries: build/deps/windows/lib/"
     Write-Host "----------------------------------------------------------------"
 
-    foreach ($Name in @("cryptopp", "liboqs", "rabe", "tkn20")) {
+    foreach ($Name in @("cryptopp", "liboqs", "rabe", "tkn20", "covercrypt")) {
         Write-Host " [$Name]"
         Write-Host "   include: build/deps/windows/include/$Name/"
         Write-Host "   lib    : build/deps/windows/lib/$Name/"
@@ -470,11 +521,12 @@ function Write-ReadyMarker {
         "liboqs=$(Get-FileDigest (Get-FingerprintPath 'liboqs'))",
         "rabe=$(Get-FileDigest (Get-FingerprintPath 'rabe'))",
         "tkn20=$(Get-FileDigest (Get-FingerprintPath 'tkn20'))"
+        "covercrypt=$(Get-FileDigest (Get-FingerprintPath 'covercrypt'))"
     ) | Set-Content $Ready
 }
 
 function Build-All {
-    $Priority = @("liboqs", "cryptopp", "rabe", "tkn20")
+    $Priority = @("liboqs", "cryptopp", "rabe", "tkn20", "covercrypt")
     $Count = $Priority.Count
 
     if ($TotalJobs -lt $Count) {
@@ -520,5 +572,7 @@ switch ($Dependency) {
     "liboqs"   { Build-LibOqs }
     "rabe"     { Build-Rabe }
     "tkn20"    { Build-Tkn20 }
+    "covercrypt" { Build-CoverCrypt }
+    "covercrypt-test" { Build-CoverCrypt $true }
     "all"      { Build-All }
 }

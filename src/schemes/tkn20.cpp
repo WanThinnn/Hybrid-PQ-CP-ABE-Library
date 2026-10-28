@@ -1,10 +1,10 @@
 /**
  * @file tkn20.cpp
  * @brief TKN20 CP-ABE scheme implementation using Go CIRCL DLL
- * 
+ *
  * Provides CP-ABE operations for the TKN20 scheme:
  * Setup, KeyGen, Encrypt, Decrypt, Load keys
- * 
+ *
  * Policy and attributes are input by the user in AC17 format,
  * this file automatically converts them to TKN20 format (key:value).
  */
@@ -46,17 +46,22 @@ static std::string convertPolicyToTKN20(const std::string &input)
                 {
                     std::string part = token.substr(start, end - start);
                     // Remove double quotes if present
-                    if (!part.empty() && part.front() == '"') part = part.substr(1);
-                    if (!part.empty() && part.back() == '"') part.pop_back();
+                    if (!part.empty() && part.front() == '"')
+                        part = part.substr(1);
+                    if (!part.empty() && part.back() == '"')
+                        part.pop_back();
                     if (part == "and" || part == "or" || part == "not")
                     {
                         tokens.push_back(part);
                     }
                     else if (!part.empty())
                     {
-                        if (part.find(':') != std::string::npos) {
+                        if (part.find(':') != std::string::npos)
+                        {
                             tokens.push_back(part);
-                        } else {
+                        }
+                        else
+                        {
                             tokens.push_back(part + ":" + part);
                         }
                     }
@@ -70,17 +75,22 @@ static std::string convertPolicyToTKN20(const std::string &input)
         {
             std::string part = token.substr(start, end - start);
             // Remove double quotes if present
-            if (!part.empty() && part.front() == '"') part = part.substr(1);
-            if (!part.empty() && part.back() == '"') part.pop_back();
+            if (!part.empty() && part.front() == '"')
+                part = part.substr(1);
+            if (!part.empty() && part.back() == '"')
+                part.pop_back();
             if (part == "and" || part == "or" || part == "not")
             {
                 tokens.push_back(part);
             }
             else if (!part.empty())
             {
-                if (part.find(':') != std::string::npos) {
+                if (part.find(':') != std::string::npos)
+                {
                     tokens.push_back(part);
-                } else {
+                }
+                else
+                {
                     tokens.push_back(part + ":" + part);
                 }
             }
@@ -111,7 +121,8 @@ static std::string convertPolicyToTKN20(const std::string &input)
     std::string result;
     for (const auto &t : processed)
     {
-        if (!result.empty()) result += " ";
+        if (!result.empty())
+            result += " ";
         result += t;
     }
     return result;
@@ -127,10 +138,14 @@ static std::string convertAttrsToTKN20(const std::string &attrs)
     std::string result;
     while (iss >> attr)
     {
-        if (!result.empty()) result += ",";
-        if (attr.find(':') != std::string::npos) {
+        if (!result.empty())
+            result += ",";
+        if (attr.find(':') != std::string::npos)
+        {
             result += attr;
-        } else {
+        }
+        else
+        {
             result += attr + ":" + attr;
         }
     }
@@ -155,13 +170,18 @@ int tkn20_setup(const char *path)
 
         std::string mskPath, pkPath;
         struct stat info;
-        if (stat(strPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
+        if (stat(strPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR))
+        {
             mskPath = strPath + "/cpabe_msk.key";
             pkPath = strPath + "/cpabe_pk.key";
-        } else if (strPath.empty() || strPath.back() == '/' || strPath.back() == '\\') {
+        }
+        else if (strPath.empty() || strPath.back() == '/' || strPath.back() == '\\')
+        {
             mskPath = strPath + "cpabe_msk.key";
             pkPath = strPath + "cpabe_pk.key";
-        } else {
+        }
+        else
+        {
             mskPath = strPath + "_msk.key";
             pkPath = strPath + "_pk.key";
         }
@@ -200,12 +220,14 @@ int tkn20_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **m
 
         *pkLen = pubKey.len;
         *pkBuffer = (unsigned char *)malloc(*pkLen);
-        if (!*pkBuffer) return HCPABE_ERR_MEMORY;
+        if (!*pkBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*pkBuffer, pubKey.data, *pkLen);
 
         *mskLen = msk.len;
         *mskBuffer = (unsigned char *)malloc(*mskLen);
-        if (!*mskBuffer) return HCPABE_ERR_MEMORY;
+        if (!*mskBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*mskBuffer, msk.data, *mskLen);
 
         TKN20_FreeByteArray(pubKey);
@@ -266,7 +288,6 @@ int tkn20_genkey(const char *mskFile, const char *attrs, const char *skFile)
     }
 }
 
-
 int tkn20_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer, size_t *skLen)
 {
     try
@@ -280,11 +301,13 @@ int tkn20_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char
             const_cast<char *>(tkn20Attrs.c_str()),
             &attrKeyOut);
 
-        if (res != 0) return HCPABE_ERR_CRYPTO_FAILED;
+        if (res != 0)
+            return HCPABE_ERR_CRYPTO_FAILED;
 
         *skLen = attrKeyOut.len;
         *skBuffer = (unsigned char *)malloc(*skLen);
-        if (!*skBuffer) return HCPABE_ERR_MEMORY;
+        if (!*skBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*skBuffer, attrKeyOut.data, *skLen);
 
         TKN20_FreeByteArray(attrKeyOut);
@@ -425,4 +448,3 @@ int tkn20_load_sk(const char *file, unsigned char **skData, size_t *skLen)
         return HCPABE_ERR_FILE_NOT_FOUND;
     }
 }
-

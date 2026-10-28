@@ -1,7 +1,7 @@
 /**
  * @file ac17.cpp
  * @brief AC17 CP-ABE scheme implementation using rabe FFI (Rust)
- * 
+ *
  * Provides CP-ABE operations for the AC17 scheme:
  * Setup, KeyGen, Encrypt, Decrypt, Load keys
  */
@@ -96,13 +96,18 @@ int ac17_setup(const char *path)
 
         std::string mskPath, pkPath;
         struct stat info;
-        if (stat(strPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
+        if (stat(strPath.c_str(), &info) == 0 && (info.st_mode & S_IFDIR))
+        {
             mskPath = strPath + "/cpabe_msk.key";
             pkPath = strPath + "/cpabe_pk.key";
-        } else if (strPath.empty() || strPath.back() == '/' || strPath.back() == '\\') {
+        }
+        else if (strPath.empty() || strPath.back() == '/' || strPath.back() == '\\')
+        {
             mskPath = strPath + "cpabe_msk.key";
             pkPath = strPath + "cpabe_pk.key";
-        } else {
+        }
+        else
+        {
             mskPath = strPath + "_msk.key";
             pkPath = strPath + "_pk.key";
         }
@@ -111,18 +116,18 @@ int ac17_setup(const char *path)
         {
             bool masterKeySaved = SaveFile(mskPath, masterKeyJson, strFileFormat);
             bool publicKeySaved = SaveFile(pkPath, publicKeyJson, strFileFormat);
-            
+
             rabe_free_json(masterKeyJson);
             rabe_free_json(publicKeyJson);
             rabe_ac17_free_master_key(setupResult.master_key);
             rabe_ac17_free_public_key(setupResult.public_key);
-            
+
             if (!masterKeySaved || !publicKeySaved)
             {
                 std::cerr << "AC17 Setup failed: Could not save key files." << std::endl;
                 return HCPABE_ERR_FILE_NOT_FOUND;
             }
-            
+
             std::cout << "AC17 Setup completed successfully." << std::endl;
             return HCPABE_SUCCESS;
         }
@@ -152,19 +157,21 @@ int ac17_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **ms
 
         *pkLen = std::strlen(publicKeyJson);
         *pkBuffer = (unsigned char *)malloc(*pkLen);
-        if (!*pkBuffer) return HCPABE_ERR_MEMORY;
+        if (!*pkBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*pkBuffer, publicKeyJson, *pkLen);
 
         *mskLen = std::strlen(masterKeyJson);
         *mskBuffer = (unsigned char *)malloc(*mskLen);
-        if (!*mskBuffer) return HCPABE_ERR_MEMORY;
+        if (!*mskBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*mskBuffer, masterKeyJson, *mskLen);
 
         rabe_free_json(masterKeyJson);
         rabe_free_json(publicKeyJson);
         rabe_ac17_free_master_key(setupResult.master_key);
         rabe_ac17_free_public_key(setupResult.public_key);
-        
+
         return HCPABE_SUCCESS;
     }
     catch (...)
@@ -181,10 +188,11 @@ int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char 
 {
     try
     {
-        std::string mskDecoded(reinterpret_cast<const char*>(mskBuffer), mskLen);
+        std::string mskDecoded(reinterpret_cast<const char *>(mskBuffer), mskLen);
 
         const void *masterKey = rabe_ac17_master_key_from_json(mskDecoded.c_str());
-        if (!masterKey) return HCPABE_ERR_INVALID_KEY;
+        if (!masterKey)
+            return HCPABE_ERR_INVALID_KEY;
 
         std::string lowerAttributes = toLowerCase(attrs);
         std::vector<std::string> attrVec = splitAttributes(lowerAttributes);
@@ -196,20 +204,23 @@ int ac17_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char 
 
         const void *secretKey = rabe_cp_ac17_generate_secret_key(masterKey, attrList.data(), attrList.size());
         rabe_ac17_free_master_key(masterKey);
-        if (!secretKey) return HCPABE_ERR_CRYPTO_FAILED;
+        if (!secretKey)
+            return HCPABE_ERR_CRYPTO_FAILED;
 
         char *secretKeyJson = rabe_cp_ac17_secret_key_to_json(secretKey);
         rabe_cp_ac17_free_secret_key(secretKey);
-        if (!secretKeyJson) return HCPABE_ERR_CRYPTO_FAILED;
+        if (!secretKeyJson)
+            return HCPABE_ERR_CRYPTO_FAILED;
 
         *skLen = std::strlen(secretKeyJson);
         *skBuffer = (unsigned char *)malloc(*skLen);
-        if (!*skBuffer) return HCPABE_ERR_MEMORY;
+        if (!*skBuffer)
+            return HCPABE_ERR_MEMORY;
         std::memcpy(*skBuffer, secretKeyJson, *skLen);
 
         secureWipe(secretKeyJson, std::strlen(secretKeyJson));
         rabe_free_json(secretKeyJson);
-        
+
         return HCPABE_SUCCESS;
     }
     catch (...)
@@ -253,13 +264,13 @@ int ac17_genkey(const char *mskFile, const char *attrs, const char *skFile)
             bool saved = SaveFile(skFile, secretKeyJson, strFileFormat);
             secureWipe(secretKeyJson, std::strlen(secretKeyJson));
             rabe_free_json(secretKeyJson);
-            
+
             if (!saved)
             {
                 std::cerr << "AC17: Failed to save private key file." << std::endl;
                 return HCPABE_ERR_FILE_NOT_FOUND;
             }
-            
+
             std::cout << "AC17: Private key generated successfully." << std::endl;
             return HCPABE_SUCCESS;
         }
@@ -296,7 +307,7 @@ int ac17_encapsulate_key(
 
         std::string jsonPolicy = ensureJsonString(policy);
         const void *encKey = rabe_cp_ac17_encrypt(publicKey, jsonPolicy.c_str(),
-                                                   reinterpret_cast<const char *>(plaintext), ptLen);
+                                                  reinterpret_cast<const char *>(plaintext), ptLen);
         rabe_ac17_free_public_key(publicKey);
         if (!encKey)
             return HCPABE_ERR_CRYPTO_FAILED;
@@ -428,4 +439,3 @@ int ac17_load_sk(const char *file, unsigned char **skData, size_t *skLen)
         return HCPABE_ERR_FILE_NOT_FOUND;
     }
 }
-

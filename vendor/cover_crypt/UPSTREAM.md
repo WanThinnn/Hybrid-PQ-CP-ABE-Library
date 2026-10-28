@@ -16,3 +16,8 @@ Upstream authors listed in `Cargo.toml`:
 - Emmanuel COSTE <emmanuel.coste@cosmian.com>
 
 The original README, changelog, license, Cargo metadata, and CoverCrypt paper are retained alongside the vendored source. Local integration changes should remain clearly distinguishable from upstream code.
+
+Local integration patch: the manifest omits example/benchmark targets whose
+source directories are not included in this snapshot. Library source and its
+cryptographic implementation are unchanged. Use `cargo test --lib` for the
+vendored upstream unit tests.

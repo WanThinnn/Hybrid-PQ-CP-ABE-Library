@@ -17,7 +17,7 @@ if [[ -z "$PLATFORM" ]]; then
 fi
 
 case "$DEPENDENCY" in
-  all|cryptopp|liboqs|rabe|tkn20) ;;
+  all|cryptopp|liboqs|rabe|tkn20|covercrypt|covercrypt-test) ;;
   *) echo "Unknown dependency: $DEPENDENCY" >&2; exit 2 ;;
 esac
 
@@ -244,7 +244,7 @@ build_rabe() {
   lock="$(hash_file vendor/librabe-ffi/Cargo.lock)"
   header="$(hash_file vendor/librabe-ffi/rabe.h)"
   rustc_info="$(rustc -vV)"
-  fingerprint="$(hash_text "rabe|$BUILD_VERSION|$PLATFORM|$upstream|$lock|$header|$rustc_info|release")"
+  fingerprint="$(hash_text "rabe|$BUILD_VERSION|$PLATFORM|$upstream|$lock|$header|$rustc_info|release|panic=unwind|lto=false")"
   outlib="$LIB_DIR/rabe/librabe_ffi.a"
 
   if cache_matches rabe "$fingerprint" "$outlib" "$INCLUDE_DIR/rabe/rabe.h"; then
@@ -258,9 +258,9 @@ build_rabe() {
   mkdir -p "$INCLUDE_DIR/rabe" "$LIB_DIR/rabe"
 
   if [[ -n "$sccache_prefix" ]]; then
-    RUSTC_WRAPPER=sccache CARGO_TARGET_DIR="$work"       cargo build --locked --jobs "$INNER_JOBS" --manifest-path vendor/librabe-ffi/Cargo.toml --release
+    CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_PANIC=unwind RUSTC_WRAPPER=sccache CARGO_TARGET_DIR="$work" cargo build --locked --jobs "$INNER_JOBS" --manifest-path vendor/librabe-ffi/Cargo.toml --release
   else
-    CARGO_TARGET_DIR="$work"       cargo build --locked --jobs "$INNER_JOBS" --manifest-path vendor/librabe-ffi/Cargo.toml --release
+    CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_PANIC=unwind CARGO_TARGET_DIR="$work" cargo build --locked --jobs "$INNER_JOBS" --manifest-path vendor/librabe-ffi/Cargo.toml --release
   fi
 
   cp "$work/release/librabe_ffi.a" "$outlib"
@@ -273,6 +273,28 @@ build_rabe() {
 
   write_fingerprint rabe "$fingerprint"
   rm -rf "$work"
+}
+
+build_covercrypt() {
+  local digest fingerprint work outlib
+  digest="$( { find vendor/cover_crypt/src bindings/covercrypt/src -type f; printf '%s\n' vendor/cover_crypt/Cargo.toml vendor/cover_crypt/Cargo.lock vendor/cover_crypt/UPSTREAM.md bindings/covercrypt/Cargo.toml bindings/covercrypt/Cargo.lock bindings/covercrypt/include/covercrypt_ffi.h; } | LC_ALL=C sort | while IFS= read -r input; do hash_file "$input"; done )"
+  fingerprint="$(hash_text "covercrypt|$BUILD_VERSION|$PLATFORM|$(rustc -vV)|$digest|curve25519|mlkem-768")"
+  outlib="$LIB_DIR/covercrypt/libcovercrypt_ffi.a"
+  if cache_matches covercrypt "$fingerprint" "$outlib" "$INCLUDE_DIR/covercrypt/covercrypt_ffi.h"; then
+    echo "==> CoverCrypt: cached"
+    return
+  fi
+  echo "==> CoverCrypt ($INNER_JOBS jobs, Curve25519 + ML-KEM-768, static C ABI)"
+  work="$WORK_DIR/covercrypt-target"
+  mkdir -p "$LIB_DIR/covercrypt" "$INCLUDE_DIR/covercrypt"
+  CARGO_TARGET_DIR="$work" cargo build --locked --release --jobs "$INNER_JOBS" --manifest-path bindings/covercrypt/Cargo.toml
+  cp "$work/release/libcovercrypt_ffi.a" "$outlib"
+  cp bindings/covercrypt/include/covercrypt_ffi.h "$INCLUDE_DIR/covercrypt/"
+  write_fingerprint covercrypt "$fingerprint"
+}
+
+test_covercrypt() {
+  CARGO_TARGET_DIR="$ROOT/build/$PLATFORM/covercrypt-rust-tests" cargo test --locked --release --jobs "$INNER_JOBS" --manifest-path vendor/cover_crypt/Cargo.toml --lib --no-default-features --features curve25519,mlkem-768
 }
 
 build_tkn20() {
@@ -330,7 +352,7 @@ print_outputs() {
   echo " Libraries: build/deps/$PLATFORM/lib/"
   echo "----------------------------------------------------------------"
   local dep
-  for dep in cryptopp liboqs rabe tkn20; do
+  for dep in cryptopp liboqs rabe tkn20 covercrypt; do
     echo " [$dep]"
     echo "   include: build/deps/$PLATFORM/include/$dep/"
     echo "   lib    : build/deps/$PLATFORM/lib/$dep/"
@@ -350,6 +372,7 @@ write_ready_marker() {
     printf 'liboqs=%s\n' "$(hash_file "$LIB_DIR/liboqs/.fingerprint")"
     printf 'rabe=%s\n' "$(hash_file "$LIB_DIR/rabe/.fingerprint")"
     printf 'tkn20=%s\n' "$(hash_file "$LIB_DIR/tkn20/.fingerprint")"
+    printf 'covercrypt=%s\n' "$(hash_file "$LIB_DIR/covercrypt/.fingerprint")"
   } > "$LIB_DIR/.ready"
 }
 
@@ -360,7 +383,7 @@ run_dep() {
 }
 
 run_all() {
-  local deps=(liboqs cryptopp rabe tkn20)
+  local deps=(liboqs cryptopp rabe tkn20 covercrypt)
   local count="${#deps[@]}"
   local status=0
   local pids=()
@@ -419,5 +442,7 @@ case "$DEPENDENCY" in
   liboqs) build_liboqs ;;
   rabe) build_rabe ;;
   tkn20) build_tkn20 ;;
+  covercrypt) build_covercrypt ;;
+  covercrypt-test) test_covercrypt ;;
   all) run_all ;;
 esac

@@ -17,14 +17,14 @@
 
 #include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
 
-void printUsage(const char* programName)
+void printUsage(const char *programName)
 {
     std::cout << "Hybrid PQ-CP-ABE Library v" << getVersion() << std::endl;
     std::cout << "Usage: " << programName << " [command] [options] <args>" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "  --pqc               - Use PQC signature" << std::endl;
-    std::cout << "  --scheme <name>     - Specify scheme: 'ac17' (default) or 'tkn20'" << std::endl;
+    std::cout << "  --scheme <name>     - Specify scheme: 'ac17' (default), 'tkn20' or 'covercrypt'" << std::endl;
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "  setup   <path_or_prefix>                             - Generate Master Key and Public Key" << std::endl;
@@ -50,32 +50,50 @@ int main(int argc, char *argv[])
         printUsage(argv[0]);
         return 1;
     }
-    
+
     std::vector<std::string> args;
     bool use_pqc = false;
     CPABEScheme scheme = CPABE_SCHEME_AC17;
 
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 0; i < argc; ++i)
+    {
         std::string arg = argv[i];
-        if (arg == "--pqc") {
+        if (arg == "--pqc")
+        {
             use_pqc = true;
-        } else if (arg == "--scheme") {
-            if (i + 1 < argc) {
+        }
+        else if (arg == "--scheme")
+        {
+            if (i + 1 < argc)
+            {
                 std::string schemeName = argv[++i];
                 std::transform(schemeName.begin(), schemeName.end(), schemeName.begin(), ::tolower);
-                if (schemeName == "ac17") {
+                if (schemeName == "ac17")
+                {
                     scheme = CPABE_SCHEME_AC17;
-                } else if (schemeName == "tkn20") {
+                }
+                else if (schemeName == "tkn20")
+                {
                     scheme = CPABE_SCHEME_TKN20;
-                } else {
-                    std::cerr << "Error: Unknown scheme '" << schemeName << "'. Supported: ac17, tkn20." << std::endl;
+                }
+                else if (schemeName == "covercrypt")
+                {
+                    scheme = CPABE_SCHEME_COVERCRYPT;
+                }
+                else
+                {
+                    std::cerr << "Error: Unknown scheme '" << schemeName << "'. Supported: ac17, tkn20, covercrypt." << std::endl;
                     return 1;
                 }
-            } else {
+            }
+            else
+            {
                 std::cerr << "Error: --scheme requires an argument." << std::endl;
                 return 1;
             }
-        } else {
+        }
+        else
+        {
             args.push_back(arg);
         }
     }
@@ -85,31 +103,33 @@ int main(int argc, char *argv[])
         printUsage(args[0].c_str());
         return 1;
     }
-    
+
     std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "setup_buffer", "genkey_buffer", "encrypt_buffer", "decrypt_buffer"};
-    for (size_t i = 2; i < args.size(); ++i) {
-        if (std::find(reserved_commands.begin(), reserved_commands.end(), args[i]) != reserved_commands.end()) {
+    for (size_t i = 2; i < args.size(); ++i)
+    {
+        if (std::find(reserved_commands.begin(), reserved_commands.end(), args[i]) != reserved_commands.end())
+        {
             std::cerr << "Error: You used a reserved command name '" << args[i] << "' as an argument." << std::endl;
             return 1;
         }
     }
-    
+
     std::string mode = args[1];
-    
+
     if (mode == "-h" || mode == "--help" || mode == "help")
     {
         printUsage(args[0].c_str());
         return 0;
     }
-    
+
     if (mode == "-v" || mode == "--version" || mode == "version")
     {
         std::cout << "Hybrid PQ-CP-ABE Library v" << getVersion() << std::endl;
         return 0;
     }
-    
+
     int result = HCPABE_SUCCESS;
-    
+
     try
     {
         if (mode == "setup")
@@ -119,9 +139,12 @@ int main(int argc, char *argv[])
                 std::cerr << "Usage: " << args[0] << " setup [--scheme <name>] [--pqc] <path_or_prefix>" << std::endl;
                 return 1;
             }
-            if (use_pqc) {
+            if (use_pqc)
+            {
                 result = hybrid_cpabe_setup_with_pqc_scheme(args[2].c_str(), scheme);
-            } else {
+            }
+            else
+            {
                 result = setup_with_scheme(args[2].c_str(), scheme);
             }
         }
@@ -136,14 +159,19 @@ int main(int argc, char *argv[])
         }
         else if (mode == "encrypt")
         {
-            if (use_pqc) {
-                if (args.size() != 7) {
+            if (use_pqc)
+            {
+                if (args.size() != 7)
+                {
                     std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] --pqc <public_key_file> <pqc_private_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 result = hybrid_cpabe_encrypt_and_sign_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme);
-            } else {
-                if (args.size() != 6) {
+            }
+            else
+            {
+                if (args.size() != 6)
+                {
                     std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] <public_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
@@ -152,14 +180,19 @@ int main(int argc, char *argv[])
         }
         else if (mode == "decrypt")
         {
-            if (use_pqc) {
-                if (args.size() != 6) {
+            if (use_pqc)
+            {
+                if (args.size() != 6)
+                {
                     std::cerr << "Usage: " << args[0] << " decrypt --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
                     return 1;
                 }
                 result = hybrid_cpabe_decrypt_and_verify(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str());
-            } else {
-                if (args.size() != 5) {
+            }
+            else
+            {
+                if (args.size() != 5)
+                {
                     std::cerr << "Usage: " << args[0] << " decrypt <private_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
                     return 1;
                 }
@@ -168,63 +201,76 @@ int main(int argc, char *argv[])
         }
         else if (mode == "encrypt_buffer")
         {
-            if (use_pqc) {
-                if (args.size() != 7) {
+            if (use_pqc)
+            {
+                if (args.size() != 7)
+                {
                     std::cerr << "Usage: " << args[0] << " encrypt_buffer [--scheme <name>] --pqc <public_key_file> <pqc_private_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 std::ifstream pkFile(args[2], std::ios::binary);
-                if (!pkFile) return 1;
+                if (!pkFile)
+                    return 1;
                 std::string pkStr((std::istreambuf_iterator<char>(pkFile)), std::istreambuf_iterator<char>());
                 pkFile.close();
                 std::string decodedPkStr;
                 CryptoPP::StringSource(pkStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPkStr)));
-                
+
                 std::ifstream mskFile(args[3], std::ios::binary);
-                if (!mskFile) return 1;
+                if (!mskFile)
+                    return 1;
                 std::string mskStr((std::istreambuf_iterator<char>(mskFile)), std::istreambuf_iterator<char>());
                 mskFile.close();
                 std::string decodedMskStr;
                 CryptoPP::StringSource(mskStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedMskStr)));
-                
+
                 std::string ptStr = args[4];
-                unsigned char* ct = nullptr;
+                unsigned char *ct = nullptr;
                 size_t ctLen = 0;
-                
+
                 result = hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
-                                                    (const unsigned char*)decodedPkStr.data(), decodedPkStr.size(), 
-                                                    (const unsigned char*)decodedMskStr.data(), decodedMskStr.size(), 
-                                                    (const unsigned char*)ptStr.data(), ptStr.size(), 
-                                                    args[5].c_str(), &ct, &ctLen, scheme);
-                if (result == HCPABE_SUCCESS) {
+                    (const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                    (const unsigned char *)decodedMskStr.data(), decodedMskStr.size(),
+                    (const unsigned char *)ptStr.data(), ptStr.size(),
+                    args[5].c_str(), &ct, &ctLen, scheme);
+                if (result == HCPABE_SUCCESS)
+                {
                     std::ofstream outFile(args[6], std::ios::binary);
-                    outFile.write((char*)ct, ctLen);
+                    outFile.write((char *)ct, ctLen);
                     outFile.close();
                     freeBuffer(ct);
                 }
-            } else {
-                if (args.size() != 6) {
+            }
+            else
+            {
+                if (args.size() != 6)
+                {
                     std::cerr << "Usage: " << args[0] << " encrypt_buffer [--scheme <name>] <public_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 std::ifstream pkFile(args[2], std::ios::binary);
-                if (!pkFile) { std::cerr << "Cannot open public key file." << std::endl; return 1; }
+                if (!pkFile)
+                {
+                    std::cerr << "Cannot open public key file." << std::endl;
+                    return 1;
+                }
                 std::string pkStr((std::istreambuf_iterator<char>(pkFile)), std::istreambuf_iterator<char>());
                 pkFile.close();
-                
+
                 std::string decodedPkStr;
                 CryptoPP::StringSource(pkStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPkStr)));
-                
+
                 std::string ptStr = args[3];
-                unsigned char* ct = nullptr;
+                unsigned char *ct = nullptr;
                 size_t ctLen = 0;
-                
-                result = hybrid_cpabe_encryptBuffer_with_scheme((const unsigned char*)decodedPkStr.data(), decodedPkStr.size(), 
-                                                    (const unsigned char*)ptStr.data(), ptStr.size(), 
-                                                    args[4].c_str(), &ct, &ctLen, scheme);
-                if (result == HCPABE_SUCCESS) {
+
+                result = hybrid_cpabe_encryptBuffer_with_scheme((const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                                                                (const unsigned char *)ptStr.data(), ptStr.size(),
+                                                                args[4].c_str(), &ct, &ctLen, scheme);
+                if (result == HCPABE_SUCCESS)
+                {
                     std::ofstream outFile(args[5], std::ios::binary);
-                    outFile.write((char*)ct, ctLen);
+                    outFile.write((char *)ct, ctLen);
                     outFile.close();
                     freeBuffer(ct);
                 }
@@ -232,69 +278,87 @@ int main(int argc, char *argv[])
         }
         else if (mode == "decrypt_buffer")
         {
-            if (use_pqc) {
-                if (args.size() != 5) {
+            if (use_pqc)
+            {
+                if (args.size() != 5)
+                {
                     std::cerr << "Usage: " << args[0] << " decrypt_buffer --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 std::ifstream skFile(args[2], std::ios::binary);
-                if (!skFile) return 1;
+                if (!skFile)
+                    return 1;
                 std::string skStr((std::istreambuf_iterator<char>(skFile)), std::istreambuf_iterator<char>());
                 skFile.close();
                 std::string decodedSkStr;
                 CryptoPP::StringSource(skStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSkStr)));
-                
+
                 std::ifstream pkFile(args[3], std::ios::binary);
-                if (!pkFile) return 1;
+                if (!pkFile)
+                    return 1;
                 std::string pkStr((std::istreambuf_iterator<char>(pkFile)), std::istreambuf_iterator<char>());
                 pkFile.close();
                 std::string decodedPkStr;
                 CryptoPP::StringSource(pkStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedPkStr)));
-                
+
                 std::ifstream ctFile(args[4], std::ios::binary);
-                if (!ctFile) return 1;
+                if (!ctFile)
+                    return 1;
                 std::string ctStr((std::istreambuf_iterator<char>(ctFile)), std::istreambuf_iterator<char>());
                 ctFile.close();
-                
-                unsigned char* pt = nullptr;
+
+                unsigned char *pt = nullptr;
                 size_t ptLen = 0;
-                
+
                 result = hybrid_cpabe_decryptBuffer_and_verify(
-                                                    (const unsigned char*)decodedSkStr.data(), decodedSkStr.size(), 
-                                                    (const unsigned char*)decodedPkStr.data(), decodedPkStr.size(), 
-                                                    (const unsigned char*)ctStr.data(), ctStr.size(), 
-                                                    &pt, &ptLen);
-                if (result == HCPABE_SUCCESS) {
-                    std::string ptOut((char*)pt, ptLen);
+                    (const unsigned char *)decodedSkStr.data(), decodedSkStr.size(),
+                    (const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                    (const unsigned char *)ctStr.data(), ctStr.size(),
+                    &pt, &ptLen);
+                if (result == HCPABE_SUCCESS)
+                {
+                    std::string ptOut((char *)pt, ptLen);
                     std::cout << "Decrypted Buffer: " << ptOut << std::endl;
                     freeBuffer(pt);
                 }
-            } else {
-                if (args.size() != 4) {
+            }
+            else
+            {
+                if (args.size() != 4)
+                {
                     std::cerr << "Usage: " << args[0] << " decrypt_buffer <private_key_file> <ciphertext_file>" << std::endl;
                     return 1;
                 }
                 std::ifstream skFile(args[2], std::ios::binary);
-                if (!skFile) { std::cerr << "Cannot open private key file." << std::endl; return 1; }
+                if (!skFile)
+                {
+                    std::cerr << "Cannot open private key file." << std::endl;
+                    return 1;
+                }
                 std::string skStr((std::istreambuf_iterator<char>(skFile)), std::istreambuf_iterator<char>());
                 skFile.close();
-                
+
                 std::string decodedSkStr;
                 CryptoPP::StringSource(skStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedSkStr)));
-                
+
                 std::ifstream ctFile(args[3], std::ios::binary);
-                if (!ctFile) { std::cerr << "Cannot open ciphertext file." << std::endl; return 1; }
+                if (!ctFile)
+                {
+                    std::cerr << "Cannot open ciphertext file." << std::endl;
+                    return 1;
+                }
                 std::string ctStr((std::istreambuf_iterator<char>(ctFile)), std::istreambuf_iterator<char>());
                 ctFile.close();
-                
-                unsigned char* pt = nullptr;
+
+                unsigned char *pt = nullptr;
                 size_t ptLen = 0;
-                
-                result = hybrid_cpabe_decryptBuffer((const unsigned char*)decodedSkStr.data(), decodedSkStr.size(), 
-                                                    (const unsigned char*)ctStr.data(), ctStr.size(), 
+
+                result = hybrid_cpabe_decryptBuffer((const unsigned char *)decodedSkStr.data(), decodedSkStr.size(),
+                                                    (const unsigned char *)ctStr.data(), ctStr.size(),
                                                     &pt, &ptLen);
-                if (result == HCPABE_SUCCESS) {
-                    std::string ptOut((char*)pt, ptLen);
+                if (result == HCPABE_SUCCESS)
+                {
+                    std::string ptOut((char *)pt, ptLen);
                     std::cout << "Decrypted Buffer: " << ptOut << std::endl;
                     freeBuffer(pt);
                 }
@@ -302,48 +366,59 @@ int main(int argc, char *argv[])
         }
         else if (mode == "setup_buffer")
         {
-            if (use_pqc) {
-                unsigned char* abePk = nullptr;
+            if (use_pqc)
+            {
+                unsigned char *abePk = nullptr;
                 size_t abePkLen = 0;
-                unsigned char* abeMsk = nullptr;
+                unsigned char *abeMsk = nullptr;
                 size_t abeMskLen = 0;
-                unsigned char* pqcPk = nullptr;
+                unsigned char *pqcPk = nullptr;
                 size_t pqcPkLen = 0;
-                unsigned char* pqcMsk = nullptr;
+                unsigned char *pqcMsk = nullptr;
                 size_t pqcMskLen = 0;
-                
+
                 result = hybrid_cpabe_setupBuffer_with_pqc_scheme(&abePk, &abePkLen, &abeMsk, &abeMskLen, &pqcPk, &pqcPkLen, &pqcMsk, &pqcMskLen, scheme);
-                if (result == HCPABE_SUCCESS) {
+                if (result == HCPABE_SUCCESS)
+                {
                     std::string pkBase64, mskBase64, pqcPkBase64, pqcMskBase64;
                     CryptoPP::StringSource(abePk, abePkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
                     CryptoPP::StringSource(abeMsk, abeMskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
                     CryptoPP::StringSource(pqcPk, pqcPkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcPkBase64), false));
                     CryptoPP::StringSource(pqcMsk, pqcMskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pqcMskBase64), false));
-                    
-                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
-                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
-                    std::cout << "--- PQC PUBLIC KEY (Base64) ---" << std::endl << pqcPkBase64 << std::endl;
-                    std::cout << "--- PQC SECRET KEY (Base64) ---" << std::endl << pqcMskBase64 << std::endl;
-                    
+
+                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl
+                              << pkBase64 << std::endl;
+                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl
+                              << mskBase64 << std::endl;
+                    std::cout << "--- PQC PUBLIC KEY (Base64) ---" << std::endl
+                              << pqcPkBase64 << std::endl;
+                    std::cout << "--- PQC SECRET KEY (Base64) ---" << std::endl
+                              << pqcMskBase64 << std::endl;
+
                     freeBuffer(abePk);
                     freeBuffer(abeMsk);
                     freeBuffer(pqcPk);
                     freeBuffer(pqcMsk);
                 }
-            } else {
-                unsigned char* pk = nullptr;
+            }
+            else
+            {
+                unsigned char *pk = nullptr;
                 size_t pkLen = 0;
-                unsigned char* msk = nullptr;
+                unsigned char *msk = nullptr;
                 size_t mskLen = 0;
-                
+
                 result = hybrid_cpabe_setupBuffer_with_scheme(&pk, &pkLen, &msk, &mskLen, scheme);
-                if (result == HCPABE_SUCCESS) {
+                if (result == HCPABE_SUCCESS)
+                {
                     std::string pkBase64;
                     CryptoPP::StringSource(pk, pkLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(pkBase64), false));
                     std::string mskBase64;
                     CryptoPP::StringSource(msk, mskLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(mskBase64), false));
-                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl << pkBase64 << std::endl;
-                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl << mskBase64 << std::endl;
+                    std::cout << "--- PUBLIC KEY (Base64) ---" << std::endl
+                              << pkBase64 << std::endl;
+                    std::cout << "--- MASTER SECRET KEY (Base64) ---" << std::endl
+                              << mskBase64 << std::endl;
                     freeBuffer(pk);
                     freeBuffer(msk);
                 }
@@ -357,21 +432,27 @@ int main(int argc, char *argv[])
                 return 1;
             }
             std::ifstream mskFile(args[2], std::ios::binary);
-            if (!mskFile) { std::cerr << "Cannot open MSK file." << std::endl; return 1; }
+            if (!mskFile)
+            {
+                std::cerr << "Cannot open MSK file." << std::endl;
+                return 1;
+            }
             std::string mskStr((std::istreambuf_iterator<char>(mskFile)), std::istreambuf_iterator<char>());
             mskFile.close();
-            
+
             std::string decodedMskStr;
             CryptoPP::StringSource(mskStr, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedMskStr)));
-            
-            unsigned char* sk = nullptr;
+
+            unsigned char *sk = nullptr;
             size_t skLen = 0;
-            
-            result = hybrid_cpabe_genkeyBuffer_with_scheme((const unsigned char*)decodedMskStr.data(), decodedMskStr.size(), args[3].c_str(), &sk, &skLen, scheme);
-            if (result == HCPABE_SUCCESS) {
+
+            result = hybrid_cpabe_genkeyBuffer_with_scheme((const unsigned char *)decodedMskStr.data(), decodedMskStr.size(), args[3].c_str(), &sk, &skLen, scheme);
+            if (result == HCPABE_SUCCESS)
+            {
                 std::string skBase64;
                 CryptoPP::StringSource(sk, skLen, true, new CryptoPP::Base64Encoder(new CryptoPP::StringSink(skBase64), false));
-                std::cout << "--- SECRET KEY (Base64) ---" << std::endl << skBase64 << std::endl;
+                std::cout << "--- SECRET KEY (Base64) ---" << std::endl
+                          << skBase64 << std::endl;
                 freeBuffer(sk);
             }
         }
@@ -381,7 +462,7 @@ int main(int argc, char *argv[])
             std::cerr << "Use '" << args[0] << " --help' for usage information." << std::endl;
             return 1;
         }
-        
+
         if (result != HCPABE_SUCCESS)
         {
             std::cerr << "Operation failed: " << getErrorMessage(result) << " (code: " << result << ")" << std::endl;
@@ -392,7 +473,6 @@ int main(int argc, char *argv[])
         std::cerr << "Exception: " << ex.what() << std::endl;
         return 1;
     }
-    
+
     return (result == HCPABE_SUCCESS) ? 0 : 1;
 }
-

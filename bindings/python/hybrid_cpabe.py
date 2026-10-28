@@ -96,6 +96,7 @@ abe_lib.freeBuffer.restype = None
 # Scheme enum
 CPABE_SCHEME_AC17 = 0
 CPABE_SCHEME_TKN20 = 1
+CPABE_SCHEME_COVERCRYPT = 2
 
 # --- WITH SCHEME BINDINGS ---
 abe_lib.setup_with_scheme.argtypes = [c_char_p, ctypes.c_int]

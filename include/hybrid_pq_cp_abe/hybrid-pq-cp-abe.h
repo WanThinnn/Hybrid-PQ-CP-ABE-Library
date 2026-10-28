@@ -70,7 +70,7 @@ extern "C"
     
     // Setup with scheme selection
     LIB_API int setup_with_scheme(const char *path, CPABEScheme scheme);
-    
+
     // Setup + PQC (backward compatibility)
     LIB_API int hybrid_cpabe_setup_with_pqc(const char *path);
     
@@ -128,7 +128,7 @@ extern "C"
         unsigned char **pkBuffer, size_t *pkLen,
         unsigned char **mskBuffer, size_t *mskLen,
         CPABEScheme scheme);
-        
+
     // Setup CP-ABE + PQC scheme from buffer
     LIB_API int hybrid_cpabe_setupBuffer_with_pqc_scheme(
         unsigned char **abePkBuffer, size_t *abePkLen,
