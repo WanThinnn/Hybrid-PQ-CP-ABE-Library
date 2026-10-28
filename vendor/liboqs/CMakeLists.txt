@@ -18,7 +18,11 @@ if(POLICY CMP0067)
     cmake_policy(SET CMP0067 NEW)
 endif()
 
-project(liboqs C ASM)
+project(liboqs C)
+# cl.exe cannot assemble generic ASM. The MSVC backends use C/intrinsics.
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    enable_language(ASM)
+endif()
 
 option(OQS_DIST_BUILD "Build distributable library with optimized code for several CPU microarchitectures. Enables run-time CPU feature detection." ON)
 option(OQS_BUILD_ONLY_LIB "Build only liboqs and do not expose build targets for tests, documentation, and pretty-printing available." OFF)

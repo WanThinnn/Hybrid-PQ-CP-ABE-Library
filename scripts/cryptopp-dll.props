@@ -1,0 +1,15 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildThisFileDirectory)cryptopp-msvc.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;CRYPTOPP_EXPORTS;CRYPTOPP_ENABLE_COMPLIANCE_WITH_FIPS_140_2=0;CRYPTOPP_USE_CRT_ALLOCATORS;USE_PRECOMPILED_HEADERS</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <BaseAddress>0x180000000</BaseAddress>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+    </Link>
+    <!-- Build an ordinary DLL without the legacy Win32 FIPS MAC tool. -->
+    <PreBuildEvent><Command></Command></PreBuildEvent>
+    <PostBuildEvent><Command></Command></PostBuildEvent>
+  </ItemDefinitionGroup>
+</Project>

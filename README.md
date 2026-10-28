@@ -11,7 +11,7 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 >
 > The **CP-ABE core (AC17/TKN20) remains classical**, based on pairing/discrete-log problems over elliptic curves — it is **not quantum-resistant**. In other words, this library is a **hybrid**: the attribute-based encryption (ABE) layer is still "classical," while only the signing/authentication layer is "post-quantum."
 >
-> The stable v5.2.0 core remains AC17/TKN20 + ML-DSA-87. A separate CoverCrypt post-quantum integration is being developed under `plugins/covercrypt/`; vendored upstream source is kept under `vendor/cover_crypt/` and is not yet part of the stable core API.
+> The stable v5.2.1 core remains AC17/TKN20 + ML-DSA-87. A separate CoverCrypt post-quantum integration is being developed under `plugins/covercrypt/`; vendored upstream source is kept under `vendor/cover_crypt/` and is not yet part of the stable core API.
 
 ## Performance & Benchmarks
 
@@ -164,6 +164,8 @@ Build order from a fresh clone:
 
 On Windows, run these commands from an **x64 Native Tools Command Prompt for VS 2022**. Windows uses the MSVC x64 ABI; `librabe-ffi` is forced to `x86_64-pc-windows-msvc`, while TKN20 uses Go/MinGW only behind a C ABI DLL plus an MSVC import `.lib`.
 
+The native C++ library, Crypto++, and liboqs use the dynamic MSVC runtime (`/MD`). Crypto++ still links as a static `.lib`. The dependency builder removes byte-identical duplicate archive members from the Rust static library while preserving its symbols and COFF linker indexes.
+
 After `make`, the build prints the exact include, dependency-library, native-library, shared-library, runtime-DLL, and CLI output paths. `include/` and `lib/` at the repository root are project-only: `include/hybrid_pq_cp_abe/` contains the public Hybrid-CP-ABE API, while `lib/` contains the project static and shared libraries side by side. All third-party headers/libraries stay exclusively under `build/deps/<platform>/`.
 
 Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make deps-clean` to remove the complete dependency output for the current platform.
@@ -176,10 +178,16 @@ Normal core builds are incremental. Use `make clean` only to remove the project 
 - `make shared`: Build only the project shared library.
 - `make executable`: Build only the CLI executable.
 - `make test -j8`: Incrementally build and run the tests.
+- `make tests -j8`: Alias for `make test -j8`.
 - `make abi-info`: Show the platform ABI/toolchain policy.
 - `make clean`: Remove only project core/object output.
 
 If installed, `sccache` is used automatically where supported. liboqs prefers Ninja when available.
+
+On Windows, `make deps` builds Crypto++ as both a static library and an ordinary,
+non-FIPS DLL with the upstream DLL API. `build/deps/windows/lib/cryptopp/` contains
+`libcryptopp.lib` (static), `cryptopp.dll`, and `cryptopp.lib` (DLL import library).
+DLL consumers include `cryptopp/dll.h` first and link `cryptopp.lib`.
 
 ## Usage
 
@@ -223,9 +231,25 @@ See [`plugins/vault/README.md`](plugins/vault/README.md) and [`plugins/vault/TES
 
 ## Acknowledgements
 Special thanks to [Aya0wind](https://github.com/Aya0wind) for Rabe-ffi, [Cloudflare](https://github.com/cloudflare/circl) for CIRCL TKN20, [Open Quantum Safe](https://github.com/open-quantum-safe) for `liboqs`, [CryptoPP](https://github.com/weidai11/cryptopp), and [Cosmian](https://github.com/Cosmian/cover_crypt) for CoverCrypt. CoverCrypt attribution and its BUSL-1.1 license are retained in `vendor/cover_crypt/`.
+## GitHub releases
+
+Pushing a `v*` tag or publishing a GitHub Release builds and tests Windows x64
+(MSVC), Linux x86_64, macOS Intel, and macOS Apple Silicon on native runners.
+All four ZIP packages and `SHA256SUMS.txt` are attached only after every build
+and package check succeeds. Running the workflow manually builds downloadable
+Actions artifacts without publishing a release. Packages include the CLI,
+static/shared libraries, headers, dependency libraries, and license notices.
+
+The workflow must be committed before creating the tag/release. Historical
+prebuilt files tracked by Git LFS are not used. The platform flags in the legacy
+`scripts/release.sh` helper do not select CI jobs; release builds cover all four
+targets.
+
 ## License
 
-This project is open-source and available for anyone to use, modify, and distribute. We encourage you to clone, fork, and contribute to this project to help improve and expand its capabilities.
-By contributing to this project, you agree that your contributions will be available under the same open terms.
+Original project code is licensed under the [Apache License, Version 2.0](LICENSE).
+Copyright 2026 Thien Lai. See [NOTICE](NOTICE) for attribution and license scope.
+
+Unless explicitly stated otherwise, contributions intentionally submitted for inclusion in the original project code are provided under the Apache License, Version 2.0.
 
 Third-party code under `vendor/` retains its original license. In particular, `vendor/cover_crypt/` is governed by its bundled BUSL-1.1 license; see `vendor/cover_crypt/LICENSE.md` and `vendor/cover_crypt/UPSTREAM.md`.

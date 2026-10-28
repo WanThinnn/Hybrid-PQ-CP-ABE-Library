@@ -61,10 +61,12 @@ extern "C" {
 
 #else
 
+#if !defined(_MSC_VER) || !defined(OQS_MSVC_OPTIMIZATION_WARNING_REPORTED)
 #pragma message("WARNING: non-GNUC/Clang toolchain detected. liboqs cannot     \
                  guarantee optimization barrier on unsupported platforms.      \
                  Compiler may introduce non-constant-time behaviors. Please    \
                  verify generated assembly and proceed with caution.")
+#endif
 /**
  * @def OQS_MEM_BLACK_BOX
  *

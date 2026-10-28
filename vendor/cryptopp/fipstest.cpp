@@ -618,7 +618,7 @@ done:
 
 void DoDllPowerUpSelfTest()
 {
-	CryptoPP::DoPowerUpSelfTest(NULLPTR, s_moduleMac);
+	CryptoPP::DoPowerUpSelfTest(NULLPTR, FIPS_140_2_ComplianceEnabled() ? s_moduleMac : NULLPTR);
 }
 
 #else

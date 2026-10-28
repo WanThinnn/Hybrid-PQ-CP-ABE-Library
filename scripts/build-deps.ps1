@@ -37,6 +37,8 @@ Remove-Item Env:MAKELEVEL -ErrorAction SilentlyContinue
 
 $InnerJobs = $TotalJobs
 
+Write-Host "Dependency build starting: windows (total jobs=$TotalJobs)"
+
 New-Item -ItemType Directory -Force -Path $WorkDir, $IncludeDir, $LibDir | Out-Null
 
 $Required = @("cmake", "msbuild", "cargo", "go", "gcc", "lib.exe", "cl.exe")
@@ -94,9 +96,16 @@ function Get-Sccache {
 }
 
 function Build-CryptoPP {
+    Build-CryptoPPStatic
+    Build-CryptoPPDll
+}
+
+function Build-CryptoPPStatic {
     $Upstream = Get-FileDigest "vendor\cryptopp\UPSTREAM.md"
     $Toolchain = (Get-Command cl.exe).Source
-    $Fingerprint = Get-TextHash "cryptopp|$BuildVersion|windows|$Upstream|$Toolchain|Release|x64|MSVC|out-of-source"
+    $RuntimeProps = Join-Path $PSScriptRoot "cryptopp-msvc.props"
+    $RuntimePropsHash = Get-FileDigest $RuntimeProps
+    $Fingerprint = Get-TextHash "cryptopp|$BuildVersion|windows|$Upstream|$Toolchain|Release|x64|MSVC|out-of-source|$RuntimePropsHash"
 
     $DepLibDir = Join-Path $LibDir "cryptopp"
     $DepIncludeDir = Join-Path $IncludeDir "cryptopp"
@@ -118,7 +127,7 @@ function Build-CryptoPP {
     $MsbuildOut = $OutDir.TrimEnd('\') + "\"
     $MsbuildObj = $ObjDir.TrimEnd('\') + "\"
 
-    & msbuild "vendor\cryptopp\cryptlib.vcxproj" "/m:$InnerJobs" /p:Configuration=Release /p:Platform=x64 "/p:OutDir=$MsbuildOut" "/p:IntDir=$MsbuildObj"
+    & msbuild "vendor\cryptopp\cryptlib.vcxproj" "/m:$InnerJobs" /p:Configuration=Release /p:Platform=x64 "/p:OutDir=$MsbuildOut" "/p:IntDir=$MsbuildObj" "/p:ForceImportBeforeCppTargets=$RuntimeProps"
     if ($LASTEXITCODE -ne 0) { throw "Crypto++ build failed" }
 
     $Built = Join-Path $OutDir "cryptlib.lib"
@@ -131,12 +140,49 @@ function Build-CryptoPP {
     Remove-Item $Work -Recurse -Force
 }
 
+function Build-CryptoPPDll {
+    $DllProps = Join-Path $PSScriptRoot "cryptopp-dll.props"
+    $RuntimePropsHash = Get-FileDigest (Join-Path $PSScriptRoot "cryptopp-msvc.props")
+    $DllPropsHash = Get-FileDigest $DllProps
+    $SelfTestHash = Get-FileDigest "vendor\cryptopp\fipstest.cpp"
+    $DllSourceHash = Get-FileDigest "vendor\cryptopp\dll.cpp"
+    $Upstream = Get-FileDigest "vendor\cryptopp\UPSTREAM.md"
+    $Toolchain = (Get-Command cl.exe).Source
+    $Fingerprint = Get-TextHash "cryptopp-dll|$BuildVersion|$Upstream|$Toolchain|x64|Release|MD|$RuntimePropsHash|$DllPropsHash|$SelfTestHash|$DllSourceHash"
+    $DepLibDir = Join-Path $LibDir "cryptopp"
+    $Dll = Join-Path $DepLibDir "cryptopp.dll"
+    $ImportLib = Join-Path $DepLibDir "cryptopp.lib"
+    $FingerprintPath = Join-Path $DepLibDir ".dll-fingerprint"
+    if ((Test-Path $Dll) -and (Test-Path $ImportLib) -and (Test-Path $FingerprintPath)) {
+        if (Select-String -Path $FingerprintPath -SimpleMatch "fingerprint=$Fingerprint" -Quiet) {
+            Write-Host "==> Crypto++ DLL: cached"
+            return
+        }
+    }
+    $Work = Join-Path $WorkDir "cryptopp-dll"
+    $OutDir = Join-Path $Work "out"
+    $ObjDir = Join-Path $Work "obj"
+    New-Item -ItemType Directory -Force -Path $OutDir, $ObjDir | Out-Null
+    Write-Host "==> Crypto++ DLL ($InnerJobs jobs, MSVC x64, /MD)"
+    & msbuild "vendor\cryptopp\cryptdll.vcxproj" "/m:$InnerJobs" /p:Configuration=Release /p:Platform=x64 "/p:OutDir=$OutDir\" "/p:IntDir=$ObjDir\" "/p:ForceImportBeforeCppTargets=$DllProps"
+    if ($LASTEXITCODE -ne 0) { throw "Crypto++ DLL build failed" }
+    Copy-Item (Join-Path $OutDir "cryptopp.dll") $Dll -Force
+    Copy-Item (Join-Path $OutDir "cryptopp.lib") $ImportLib -Force
+    "fingerprint=$Fingerprint" | Set-Content $FingerprintPath
+    Remove-Item $Work -Recurse -Force
+    Write-Host "Crypto++ DLL: $Dll"
+    Write-Host "Import library: $ImportLib"
+}
+
 function Build-LibOqs {
     $Upstream = Get-FileDigest "vendor\liboqs\UPSTREAM.md"
     $Toolchain = (Get-Command cl.exe).Source
     $Ninja = Get-Command ninja -ErrorAction SilentlyContinue
     $Generator = if ($Ninja) { "Ninja" } else { "Visual Studio 17 2022" }
-    $Fingerprint = Get-TextHash "liboqs|$BuildVersion|windows|$Upstream|$Toolchain|$Generator|ML-KEM+ML-DSA|minimal|static+shared|PIC|no-openssl"
+    $CompilerOptsHash = Get-FileDigest "vendor\liboqs\.CMake\compiler_opts.cmake"
+    $CMakeHash = Get-FileDigest "vendor\liboqs\CMakeLists.txt"
+    $CommonHeaderHash = Get-FileDigest "vendor\liboqs\src\common\common.h"
+    $Fingerprint = Get-TextHash "liboqs|$BuildVersion|windows|$Upstream|$Toolchain|$Generator|ML-KEM+ML-DSA|minimal|static+shared|PIC|no-openssl|MD|$CompilerOptsHash|$CMakeHash|$CommonHeaderHash"
 
     $DepLibDir = Join-Path $LibDir "liboqs"
     $DepIncludeDir = Join-Path $IncludeDir "liboqs"
@@ -162,6 +208,7 @@ function Build-LibOqs {
         "-S", "vendor\liboqs",
         "-G", $Generator,
         "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL",
         "-DOQS_BUILD_ONLY_LIB=ON",
         "-DOQS_USE_OPENSSL=OFF",
         "-DOQS_MINIMAL_BUILD=KEM_ml_kem_512;KEM_ml_kem_768;KEM_ml_kem_1024;SIG_ml_dsa_44;SIG_ml_dsa_65;SIG_ml_dsa_87"
@@ -234,7 +281,9 @@ function Build-Rabe {
         $RustVersion = (& rustc -vV) -join [Environment]::NewLine
     }
 
-    $Fingerprint = Get-TextHash "rabe|$BuildVersion|windows|$Upstream|$Lock|$Header|$RustVersion|$RustTarget|$RustToolchain|release"
+    $NormalizeScript = Join-Path $PSScriptRoot "normalize-msvc-library.ps1"
+    $NormalizeHash = Get-FileDigest $NormalizeScript
+    $Fingerprint = Get-TextHash "rabe|$BuildVersion|windows|$Upstream|$Lock|$Header|$RustVersion|$RustTarget|$RustToolchain|release|$NormalizeHash"
 
     $DepLibDir = Join-Path $LibDir "rabe"
     $DepIncludeDir = Join-Path $IncludeDir "rabe"
@@ -273,7 +322,7 @@ function Build-Rabe {
     $BuiltLib = Join-Path $Release "rabe_ffi.lib"
     if (-not (Test-Path $BuiltLib)) { throw "MSVC rabe_ffi.lib not found after Cargo build" }
 
-    Copy-Item $BuiltLib $OutLib -Force
+    & $NormalizeScript -InputLib $BuiltLib -OutputLib $OutLib
     $BuiltDll = Join-Path $Release "rabe_ffi.dll"
     if (Test-Path $BuiltDll) { Copy-Item $BuiltDll $DepLibDir -Force }
 
@@ -347,16 +396,28 @@ function Start-DependencyProcess([string]$Name, [int]$JobCount) {
         "-Dependency", $Name,
         "-Jobs", $JobCount
     )
-    return Start-Process -FilePath "powershell.exe" -ArgumentList $Args -NoNewWindow -PassThru
+    $Process = Start-Process -FilePath "powershell.exe" -ArgumentList $Args -NoNewWindow -PassThru
+    # Windows PowerShell can lose ExitCode after waiting unless the handle is retained.
+    $null = $Process.Handle
+    return [PSCustomObject]@{ Name = $Name; Process = $Process }
 }
 
 function Wait-DependencyProcesses([System.Collections.ArrayList]$Processes) {
-    $Failed = $false
-    foreach ($Process in $Processes) {
-        $Process.WaitForExit()
-        if ($Process.ExitCode -ne 0) { $Failed = $true }
+    $Failures = @()
+    foreach ($Worker in $Processes) {
+        try {
+            $Worker.Process.WaitForExit()
+            $ExitCode = $Worker.Process.ExitCode
+            if ($null -eq $ExitCode) {
+                $Failures += "$($Worker.Name) (exit code unavailable)"
+            } elseif ($ExitCode -ne 0) {
+                $Failures += "$($Worker.Name) (exit code $ExitCode)"
+            }
+        } finally {
+            $Worker.Process.Dispose()
+        }
     }
-    if ($Failed) { throw "One or more dependency builds failed" }
+    if ($Failures.Count -gt 0) { throw "Dependency builds failed: $($Failures -join ', ')" }
 }
 
 function Show-Outputs {
@@ -373,7 +434,7 @@ function Show-Outputs {
         Write-Host "   lib    : build/deps/windows/lib/$Name/"
         $Dir = Join-Path $LibDir $Name
         if (Test-Path $Dir) {
-            Get-ChildItem $Dir -File | Where-Object { $_.Name -ne ".fingerprint" } |
+            Get-ChildItem $Dir -File | Where-Object { $_.Name -notin @(".fingerprint", ".dll-fingerprint") } |
                 ForEach-Object { Write-Host ("            " + $_.Name) }
         }
     }
@@ -386,6 +447,7 @@ function Write-ReadyMarker {
         "platform=windows",
         "build_version=$BuildVersion",
         "cryptopp=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'cryptopp')).Hash.ToLowerInvariant())",
+        "cryptopp_dll=$((Get-FileHash -Algorithm SHA256 (Join-Path $LibDir 'cryptopp\.dll-fingerprint')).Hash.ToLowerInvariant())",
         "liboqs=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'liboqs')).Hash.ToLowerInvariant())",
         "rabe=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'rabe')).Hash.ToLowerInvariant())",
         "tkn20=$((Get-FileHash -Algorithm SHA256 (Get-FingerprintPath 'tkn20')).Hash.ToLowerInvariant())"
