@@ -241,9 +241,12 @@ Actions artifacts without publishing a release. Packages include the CLI,
 static/shared libraries, headers, dependency libraries, and license notices.
 
 The workflow must be committed before creating the tag/release. Historical
-prebuilt files tracked by Git LFS are not used. The platform flags in the legacy
-`scripts/release.sh` helper do not select CI jobs; release builds cover all four
-targets.
+prebuilt files tracked by Git LFS are not used. Use
+`./scripts/release.sh 5.2.1 --dry-run` to preview the four platform packages.
+After committing the release changes, `./scripts/release.sh 5.2.1` checks version
+metadata and release notes, asks before pushing, then pushes the branch and tag.
+It refuses to replace an existing tag. The helper always releases all four
+targets and does not accept per-platform flags.
 
 ## License
 

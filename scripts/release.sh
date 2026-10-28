@@ -1,157 +1,97 @@
-#!/bin/bash
-# =============================================================================
-# Hybrid CP-ABE Library Release Script
-# Usage: ./scripts/release.sh <version> [--win] [--linux]
-# Example: ./scripts/release.sh 3.0.0
-#          ./scripts/release.sh 3.0.0 --win
-#          ./scripts/release.sh 3.0.0 --linux
-#          ./scripts/release.sh 3.0.0 --win --linux
-# =============================================================================
+#!/usr/bin/env bash
+# Tag a committed release; GitHub Actions builds all native platform packages.
+set -euo pipefail
 
-set -e
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+usage() {
+    echo "Usage: ./scripts/release.sh <version> [--dry-run]"
+    echo "Example: ./scripts/release.sh 5.2.1"
+    echo "GitHub Actions builds Windows, Linux, macOS Intel and macOS Apple Silicon."
+}
 
-# Default: build both platforms
-BUILD_WIN=false
-BUILD_LINUX=false
-
-# Parse arguments
 VERSION=""
+DRY_RUN=false
 for arg in "$@"; do
-    case $arg in
-        --win)
-            BUILD_WIN=true
-            ;;
-        --linux)
-            BUILD_LINUX=true
-            ;;
-        -*)
-            echo -e "${RED}Error: Unknown option ${arg}${NC}"
-            echo "Usage: ./scripts/release.sh <version> [--win] [--linux]"
-            exit 1
-            ;;
+    case "$arg" in
+        --dry-run) DRY_RUN=true ;;
+        --help|-h) usage; exit 0 ;;
+        --*) echo "Unknown option: $arg. Releases always build all platforms." >&2; usage; exit 2 ;;
         *)
-            if [ -z "$VERSION" ]; then
-                VERSION="$arg"
-            fi
+            if [[ -n "$VERSION" ]]; then usage; exit 2; fi
+            VERSION="${arg#v}"
             ;;
     esac
 done
-
-# If no platform specified, build both
-if [ "$BUILD_WIN" = false ] && [ "$BUILD_LINUX" = false ]; then
-    BUILD_WIN=true
-    BUILD_LINUX=true
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+    echo "A version such as 5.2.1 or 5.2.1-rc1 is required." >&2
+    usage
+    exit 2
 fi
+TAG="v$VERSION"
 
-# Check if version is provided
-if [ -z "$VERSION" ]; then
-    echo -e "${RED}Error: Version argument required${NC}"
-    echo "Usage: ./scripts/release.sh <version> [--win] [--linux]"
-    echo "Examples:"
-    echo "  ./scripts/release.sh 3.0.0           # Build both platforms"
-    echo "  ./scripts/release.sh 3.0.0 --win     # Build Windows only"
-    echo "  ./scripts/release.sh 3.0.0 --linux   # Build Linux only"
-    exit 1
-fi
-
-TAG="v${VERSION}"
-
-# Normalize version format (remove 'v' prefix if provided)
-VERSION="${VERSION#v}"
-TAG="v${VERSION}"
-
-echo -e "${BLUE}=== Hybrid CP-ABE Library Release Script ===${NC}"
-echo -e "Version: ${GREEN}${VERSION}${NC}"
-echo -e "Tag: ${GREEN}${TAG}${NC}"
-echo -e "Platforms:"
-[ "$BUILD_WIN" = true ] && echo -e "  - ${GREEN}Windows (x86_64)${NC}"
-[ "$BUILD_LINUX" = true ] && echo -e "  - ${GREEN}Linux (x86_64)${NC}"
-echo ""
-
-# Confirm with user
-read -p "Proceed with release ${TAG}? (y/n): " -n 1 -r
+echo "=== Hybrid CP-ABE Library Release Script ==="
+echo "Version: $VERSION"
+echo "Tag: $TAG"
+echo "Platforms:"
+echo "  - Windows (x86_64, MSVC)"
+echo "  - Linux (x86_64)"
+echo "  - macOS Intel (x86_64)"
+echo "  - macOS Apple Silicon (arm64)"
 echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${YELLOW}Release cancelled${NC}"
+echo "Release assets (after every CI build and test passes):"
+for platform in win_x86_64 linux_x86_64 macos_x86_64 macos_arm64; do
+    echo "  - libhybrid-pq-cp-abe_${platform}_${TAG}.zip"
+done
+echo "  - SHA256SUMS.txt"
+echo
+if [[ "$DRY_RUN" == true ]]; then
+    echo "Dry run: no files, commits, tags, or remotes were changed."
     exit 0
 fi
 
-# Step 1: Check if tag exists locally
-if git tag -l | grep -q "^${TAG}$"; then
-    echo -e "${YELLOW}[1/6] Deleting existing local tag ${TAG}...${NC}"
-    git tag -d "${TAG}"
-else
-    echo -e "${GREEN}[1/6] No existing local tag to delete${NC}"
+# Release the committed tree, including the workflow and its supporting scripts.
+if [[ -n "$(git status --porcelain)" ]]; then
+    echo "Commit or stash working-tree changes before releasing." >&2
+    exit 1
+fi
+FILE_VERSION="$(tr -d '\r\n' < VERSION)"
+API_VERSION="$(sed -n 's/.*LIB_VERSION = "\([^"]*\)";.*/\1/p' include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h)"
+if [[ "$FILE_VERSION" != "$VERSION" || "$API_VERSION" != "$VERSION" ]]; then
+    echo "Update and commit VERSION and LIB_VERSION to $VERSION before releasing." >&2
+    exit 1
+fi
+if [[ ! -f "release_notes/$TAG.md" ]]; then
+    echo "Missing release notes: release_notes/$TAG.md" >&2
+    exit 1
+fi
+if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+    echo "Local tag $TAG already exists; refusing to replace it." >&2
+    exit 1
+fi
+if ! REMOTE_TAG="$(git ls-remote --tags origin "refs/tags/$TAG")"; then
+    echo "Could not check origin for an existing release tag." >&2
+    exit 1
+fi
+if [[ -n "$REMOTE_TAG" ]]; then
+    echo "Remote tag $TAG already exists; refusing to replace it." >&2
+    exit 1
+fi
+if ! CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD)"; then
+    echo "Check out a branch before running the release helper." >&2
+    exit 1
 fi
 
-# Step 2: Check if tag exists on remote
-if git ls-remote --tags origin | grep -q "refs/tags/${TAG}"; then
-    echo -e "${YELLOW}[2/6] Deleting existing remote tag ${TAG}...${NC}"
-    git push origin ":refs/tags/${TAG}"
-else
-    echo -e "${GREEN}[2/6] No existing remote tag to delete${NC}"
+read -r -p "Push branch $CURRENT_BRANCH and release tag $TAG? (y/n): " -n 1 REPLY
+echo
+if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+    echo "Release cancelled."
+    exit 0
 fi
 
-# Step 3: Update VERSION file
-echo -e "${BLUE}[3/6] Updating VERSION file...${NC}"
-echo "${VERSION}" > VERSION
-
-# Step 4: Update README badge (optional - only if badge exists)
-if grep -q "version-.*-blue" README.md; then
-    echo -e "${BLUE}[4/6] Updating README badge...${NC}"
-    # Update version badge: version-X.X.X-blue or version-X.X.X--RC-blue
-    sed -i "s/version-[0-9.]*\(-\{0,2\}[A-Za-z0-9]*\)\{0,1\}-blue/version-${VERSION//-/--}-blue/g" README.md
-else
-    echo -e "${GREEN}[4/6] No README badge to update${NC}"
-fi
-
-# Step 5: Commit and push changes
-echo -e "${BLUE}[5/6] Committing and pushing changes...${NC}"
-git add VERSION README.md 2>/dev/null || true
-if git diff --cached --quiet; then
-    echo -e "${GREEN}No changes to commit${NC}"
-else
-    git commit -m "chore: bump version to ${VERSION}"
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    git push origin "$CURRENT_BRANCH"
-fi
-
-# Step 6: Create and push new tag
-echo -e "${BLUE}[6/6] Creating and pushing tag ${TAG}...${NC}"
-git tag "${TAG}"
-git push origin "${TAG}"
-
-# Export build flags for GitHub Actions workflow
-echo "BUILD_WIN=${BUILD_WIN}" >> "$GITHUB_ENV" 2>/dev/null || true
-echo "BUILD_LINUX=${BUILD_LINUX}" >> "$GITHUB_ENV" 2>/dev/null || true
-
-echo ""
-echo -e "${GREEN}=== Release ${TAG} completed! ===${NC}"
-echo -e "GitHub Actions will now:"
-echo -e "  - Build library packages for:"
-[ "$BUILD_WIN" = true ] && echo -e "    ${GREEN}✓ Windows (x86_64)${NC}"
-[ "$BUILD_LINUX" = true ] && echo -e "    ${GREEN}✓ Linux (x86_64)${NC}"
-echo ""
-echo -e "Package contents:"
-echo -e "  ${YELLOW}lib/${NC}"
-[ "$BUILD_WIN" = true ] && echo -e "    - libhybrid-pq-cp-abe.dll  (dynamic library)"
-[ "$BUILD_WIN" = true ] && echo -e "    - libhybrid-pq-cp-abe.lib  (static library)"
-[ "$BUILD_LINUX" = true ] && echo -e "    - libhybrid-pq-cp-abe.so   (shared library)"
-[ "$BUILD_LINUX" = true ] && echo -e "    - libhybrid-pq-cp-abe.a    (static library)"
-echo -e "  ${YELLOW}include/${NC}"
-echo -e "    - hybrid-pq-cp-abe.h"
-echo -e "    - rabe/"
-echo -e "      - rabe.h"
-echo ""
-echo -e "Release artifacts:"
-[ "$BUILD_WIN" = true ] && echo -e "  - libhybrid-pq-cp-abe_win_x86_64_v${VERSION}.zip"
-[ "$BUILD_LINUX" = true ] && echo -e "  - libhybrid-pq-cp-abe_linux_x86_64_v${VERSION}.zip"
-echo ""
-echo -e "Check progress at: ${BLUE}https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/actions${NC}"
+git push origin "$CURRENT_BRANCH"
+git tag -a "$TAG" -m "Release $TAG"
+git push origin "refs/tags/$TAG"
+echo "Tag $TAG pushed. Follow the Release Library workflow in GitHub Actions."
+echo "The release assets will be attached after all four native jobs succeed."
