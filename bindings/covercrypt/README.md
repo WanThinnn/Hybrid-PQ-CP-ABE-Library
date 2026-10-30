@@ -16,7 +16,10 @@ syntax (`Department::FIN && Security::TOP`) and ASCII identifiers.
 The low-level `cc_genkey` bridge returns an updated MSK for callers that retain
 CoverCrypt's user registry. The v5.2 library file interface persists that state;
 its stateless buffer interface generates usable keys without retaining tracing
-registration. No tracing interface is exported by this library.
+registration. The `cc_genkey_ephemeral` entry point implements this existing
+Buffer behavior without serializing an updated MSK that would be discarded.
+File/authority callers must use `cc_genkey` and persist the returned MSK.
+No tracing interface is exported by this library.
 
 Keys and KEM encapsulations are opaque upstream serializations. The C++ adapter
 exposes the same integer status/buffer operations as AC17/TKN20. It uses the KEM
@@ -25,9 +28,25 @@ handles the payload and optional ML-DSA-87 signing. No cryptographic primitives
 are reimplemented. Rust panics are caught at the C bridge; Rust-owned buffers
 are zeroized and freed with `cc_buffer_free`.
 
-`make deps` stages the static library and C header. `make test-covercrypt` runs
-the native C++ integration tests; `make test-covercrypt-rust` runs the vendored
-upstream library tests. `make test` includes the native integration tests.
+`make deps -j8` builds/checks all five native dependencies and stages both static
+and shared CoverCrypt libraries and the C header:
+
+| Platform | Shared library under `build/deps/<platform>/lib/covercrypt/` |
+| --- | --- |
+| Windows (MSVC x64) | `covercrypt_ffi.dll` and import library `covercrypt_ffi.dll.lib` |
+| Linux | `libcovercrypt_ffi.so` |
+| macOS | `libcovercrypt_ffi.dylib` |
+
+The existing static linkage of the main hybrid library is retained. Applications
+that load the standalone shared library must use its `cc_*` API and release
+its allocations through that same library's `cc_buffer_free`.
+
+`make test -j8` (or its alias `make tests -j8`) runs the native C++ integration
+tests together with the project tests. Vendored Rust unit tests can also be run
+with `cargo test --locked --release --manifest-path vendor/cover_crypt/Cargo.toml --lib`.
+After `make deps -j8`, run
+`python -m unittest discover -s tests -p test_covercrypt_shared.py -v` from the
+repository root to check the standalone library through its dynamic C ABI.
 CoverCrypt is selected with `CPABE_SCHEME_COVERCRYPT` through the existing
 library functions. Setup reads `HCPABE_COVERCRYPT_CONFIG` (JSON file path) and
 `HCPABE_COVERCRYPT_MODE` (`hybridized`, `post_quantum`, or `classic`). The CLI's

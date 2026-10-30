@@ -43,6 +43,11 @@ extern "C"
     /* Persist updated_msk on success: key generation updates upstream authority state. */
     int cc_genkey(const uint8_t *msk, size_t msk_len, const char *policy,
                   cc_buffer *updated_msk, cc_buffer *usk);
+    /* Stateless key generation for the existing Buffer API only. The input MSK
+     * is unchanged and the updated tracing registration is discarded. File and
+     * authority-state callers must use cc_genkey and persist updated_msk. */
+    int cc_genkey_ephemeral(const uint8_t *msk, size_t msk_len, const char *policy,
+                            cc_buffer *usk);
     int cc_encaps(const uint8_t *mpk, size_t mpk_len, const char *policy,
                   cc_buffer *secret, cc_buffer *encapsulation);
     int cc_decaps(const uint8_t *usk, size_t usk_len,

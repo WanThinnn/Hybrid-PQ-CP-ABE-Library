@@ -329,18 +329,27 @@ fn combine(
         )]
     } else {
         let (_, current_dimension) = &dimensions[0];
-        let partial_combinations = combine(&dimensions[1..]);
-        let mut res = vec![];
+        // Keep the unextended combinations in place and append each extension.
+        // Cloning the whole partial vector for every attribute (and concatenating
+        // it again at the end) needlessly duplicates all point allocations.
+        let mut res = combine(&dimensions[1..]);
+        let partial_len = res.len();
         for component in current_dimension.attributes() {
-            for (ids, security_mode, encryption_status) in partial_combinations.clone() {
+            for index in 0..partial_len {
+                let (ids, security_mode, encryption_status) = &res[index];
+                let mut point = Vec::with_capacity(ids.len() + 1);
+                point.push(component.get_id());
+                point.extend_from_slice(ids);
+                let mode = (*security_mode).max(component.get_security_mode());
+                let status = *encryption_status | component.get_encryption_status();
                 res.push((
-                    [vec![component.get_id()], ids].concat(),
-                    security_mode.max(component.get_security_mode()),
-                    encryption_status | component.get_encryption_status(),
+                    point,
+                    mode,
+                    status,
                 ));
             }
         }
-        [partial_combinations, res].concat()
+        res
     }
 }
 
@@ -392,6 +401,37 @@ mod serialization {
 mod tests {
     use super::*;
     use crate::abe::gen_structure;
+
+    #[test]
+    fn test_combine_matches_original_points_modes_and_statuses() {
+        fn original(dimensions: &[(&String, &Dimension)])
+            -> Vec<(Vec<usize>, EncryptionHint, EncryptionStatus)>
+        {
+            if dimensions.is_empty() {
+                return vec![(vec![], EncryptionHint::Classic, EncryptionStatus::EncryptDecrypt)];
+            }
+            let partial = original(&dimensions[1..]);
+            let mut result = vec![];
+            for component in dimensions[0].1.attributes() {
+                for (ids, mode, status) in partial.clone() {
+                    result.push((
+                        [vec![component.get_id()], ids].concat(),
+                        mode.max(component.get_security_mode()),
+                        status | component.get_encryption_status(),
+                    ));
+                }
+            }
+            [partial, result].concat()
+        }
+        for hierarchical in [false, true] {
+            let mut structure = AccessStructure::new();
+            gen_structure(&mut structure, hierarchical).unwrap();
+            let dimensions = structure.dimensions.iter().collect::<Vec<_>>();
+            for count in 0..=dimensions.len() {
+                assert_eq!(combine(&dimensions[..count]), original(&dimensions[..count]));
+            }
+        }
+    }
 
     #[test]
     fn test_combine() {

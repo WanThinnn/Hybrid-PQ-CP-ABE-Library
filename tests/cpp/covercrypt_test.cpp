@@ -56,6 +56,47 @@ bool equal(const CoverCryptBuffer &left, const CoverCryptBuffer &right)
     return left.value.len == right.value.len &&
            (left.value.len == 0 || std::memcmp(left.value.data, right.value.data, left.value.len) == 0);
 }
+void check_ephemeral_genkey()
+{
+    const char *config = R"({"dimensions":[{"name":"DPT","attributes":["FIN","HR"]}]})";
+    for (int mode : {CC_CLASSIC, CC_POST_QUANTUM, CC_HYBRIDIZED})
+    {
+        CoverCryptBuffer msk, mpk, updated, persisted_user, ephemeral_user, denied_user;
+        require(cc_setup(config, mode, &msk.value, &mpk.value) == CC_OK, "ephemeral setup failed");
+        const Bytes original(msk.value.data, msk.value.data + msk.value.len);
+        require(cc_genkey(msk.value.data, msk.value.len, "DPT::FIN", &updated.value,
+                          &persisted_user.value) == CC_OK, "persisted genkey failed");
+        require(cc_genkey_ephemeral(msk.value.data, msk.value.len, "DPT::FIN",
+                                    &ephemeral_user.value) == CC_OK, "ephemeral genkey failed");
+        require(cc_genkey_ephemeral(msk.value.data, msk.value.len, "DPT::HR",
+                                    &denied_user.value) == CC_OK, "denied-user genkey failed");
+        require(msk.value.len == original.size() &&
+                    std::memcmp(msk.value.data, original.data(), original.size()) == 0,
+                "ephemeral genkey changed its input master key");
+        CoverCryptBuffer secret, encapsulation;
+        require(cc_encaps(mpk.value.data, mpk.value.len, "DPT::FIN", &secret.value,
+                          &encapsulation.value) == CC_OK, "ephemeral encaps failed");
+        for (const auto *user : {&persisted_user, &ephemeral_user})
+        {
+            CoverCryptBuffer recovered;
+            require(cc_decaps(user->value.data, user->value.len, encapsulation.value.data,
+                              encapsulation.value.len, &recovered.value) == CC_OK && equal(secret, recovered),
+                    "persisted/ephemeral user permissions differ");
+        }
+        CoverCryptBuffer denied;
+        require(cc_decaps(denied_user.value.data, denied_user.value.len, encapsulation.value.data,
+                          encapsulation.value.len, &denied.value) == CC_ACCESS_DENIED && !denied.value.data,
+                "ephemeral genkey widened access rights");
+        require(cc_genkey_ephemeral(msk.value.data, msk.value.len, "DPT::FIN", nullptr) == CC_INVALID_INPUT,
+                "ephemeral genkey accepted null output");
+        require(cc_genkey_ephemeral(msk.value.data, msk.value.len, "DPT::FIN",
+                                    &ephemeral_user.value) == CC_INVALID_INPUT,
+                "ephemeral genkey overwrote a nonempty output");
+        require(cc_genkey_ephemeral(nullptr, 0, "DPT::FIN", &denied.value) == CC_INVALID_INPUT,
+                "ephemeral genkey accepted null master key");
+    }
+    std::cout << "PASS: ephemeral genkey preserves permissions and ownership in all modes\n";
+}
 void check_attribute_growth()
 {
     const char *initial_config =
@@ -254,6 +295,7 @@ int main()
         for (const char *mode : {"classic", "post_quantum", "hybridized"})
             check_mode(mode);
         check_attribute_growth();
+        check_ephemeral_genkey();
         check_files(prefix);
         cc_buffer first{nullptr, 0}, second{nullptr, 0};
         require(cc_setup(nullptr, CC_HYBRIDIZED, &first, &second) == CC_INVALID_INPUT, "null input accepted");

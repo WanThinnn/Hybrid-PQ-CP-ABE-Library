@@ -17,7 +17,7 @@ Existing default functions continue to select AC17. Keys are specific to a schem
 changing the selection does not convert existing keys or ciphertexts.
 
 ```text
-src/core/hybrid-pq-cp-abe.cpp  Public interface and forwarding
+src/hybrid-pq-cp-abe.cpp       Public interface and forwarding
 src/core/abe-setup.cpp         Setup and optional signing-key generation
 src/core/abe-genkey.cpp        User-key generation
 src/core/abe-encrypt.cpp       Encryption and optional signing
@@ -209,6 +209,10 @@ The native C++ library, Crypto++, and liboqs use the dynamic MSVC runtime (`/MD`
 After `make`, the build prints the exact include, dependency-library, native-library, shared-library, runtime-DLL, and CLI output paths. `include/` and `lib/` at the repository root are project-only: `include/hybrid_pq_cp_abe/` contains the public Hybrid-CP-ABE API, while `lib/` contains the project static and shared libraries side by side. All third-party headers/libraries stay exclusively under `build/deps/<platform>/`.
 
 Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make deps-clean` to remove the complete dependency output for the current platform.
+
+See [build/README.md](build/README.md) for the output layout. Keep logs under
+`build/logs/`, local reports under `build/reports/`, and temporary fixtures under
+`build/tmp/`. Reusable diagnostic scripts live in `scripts/diagnostics/`.
 
 **Available Make Commands:**
 - `make deps -j8`: Build/check the five native dependencies and print their final include/library layout.

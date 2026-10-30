@@ -116,10 +116,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & make tests -j4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & cl.exe /nologo /MD /EHsc /utf-8 /Ibuild/deps/windows/include tests/cpp/cryptopp_dll_smoke.cpp /Fobuild/cryptopp_dll_smoke.obj /Febuild/cryptopp_dll_smoke.exe /link /LIBPATH:build/deps/windows/lib/cryptopp
+          New-Item -ItemType Directory -Force -Path build/windows/tests | Out-Null
+          & cl.exe /nologo /MD /EHsc /utf-8 /Ibuild/deps/windows/include tests/cpp/cryptopp_dll_smoke.cpp /Fobuild/windows/tests/cryptopp_dll_smoke.obj /Febuild/windows/tests/cryptopp_dll_smoke.exe /link /LIBPATH:build/deps/windows/lib/cryptopp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:PATH = "$PWD\build\deps\windows\lib\cryptopp;" + $env:PATH
-          & ./build/cryptopp_dll_smoke.exe
+          & ./build/windows/tests/cryptopp_dll_smoke.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Package and verify release archive

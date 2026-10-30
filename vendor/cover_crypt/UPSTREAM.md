@@ -19,5 +19,9 @@ The original README, changelog, license, Cargo metadata, and CoverCrypt paper ar
 
 Local integration patch: the manifest omits example/benchmark targets whose
 source directories are not included in this snapshot. Library source and its
-cryptographic implementation are unchanged. Use `cargo test --lib` for the
+cryptographic primitives are unchanged. `combine` in
+`src/abe/policy/access_structure.rs` appends combinations without cloning
+the complete intermediate vector; a differential test checks that the points,
+security modes, activation statuses, and ordering match the original algorithm.
+Use `cargo test --lib` for the
 vendored upstream unit tests.

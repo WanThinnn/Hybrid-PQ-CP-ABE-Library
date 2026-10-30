@@ -1,5 +1,5 @@
 #include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
-#include "abe-internal.h"
+#include "core/abe-internal.h"
 
 #ifdef _MSC_VER
 #include <malloc.h>

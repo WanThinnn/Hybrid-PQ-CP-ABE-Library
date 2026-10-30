@@ -15,7 +15,7 @@ foreach ($FunctionName in @('Get-FileDigest', 'Get-FingerprintPath', 'Write-Read
 # Fail even if Get-FileHash happens to be installed on the test host.
 function Get-FileHash { throw 'The dependency script must not call Get-FileHash' }
 $OriginalLocation = (Get-Location).Path
-$TestPrefix = Join-Path $Root 'build\test-dependency-hashes-'
+$TestPrefix = Join-Path $Root 'build\tmp\test-dependency-hashes-'
 $TestDirectory = $TestPrefix + [Guid]::NewGuid().ToString('N')
 [void][IO.Directory]::CreateDirectory($TestDirectory)
 try {

@@ -239,9 +239,9 @@ int covercrypt_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const
     if (!mskBuffer || !mskLen || !attrs)
         return HCPABE_ERR_INVALID_PARAM;
     return run([&] {
-        Buffer updated, user;
+        Buffer user;
         auto policy = normalize_policy(attrs, true);
-        check(cc_genkey(mskBuffer, mskLen, policy.c_str(), &updated.value, &user.value));
+        check(cc_genkey_ephemeral(mskBuffer, mskLen, policy.c_str(), &user.value));
         // As in v5.2, the buffer interface is stateless. Tracing registration is
         // retained by file-based genkey; no tracing operations are exposed by this API.
         output(user.value.data, user.value.len, skBuffer, skLen);

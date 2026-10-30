@@ -377,6 +377,8 @@ function Build-CoverCrypt([bool]$RunTests = $false) {
     $DepLibDir = Join-Path $LibDir "covercrypt"
     $DepIncludeDir = Join-Path $IncludeDir "covercrypt"
     $OutLib = Join-Path $DepLibDir "libcovercrypt_ffi.lib"
+    $OutDll = Join-Path $DepLibDir "covercrypt_ffi.dll"
+    $OutImportLib = Join-Path $DepLibDir "covercrypt_ffi.dll.lib"
     $Header = Join-Path $DepIncludeDir "covercrypt_ffi.h"
     $Work = Join-Path $WorkDir "covercrypt-target"
     if ($RunTests) {
@@ -385,11 +387,11 @@ function Build-CoverCrypt([bool]$RunTests = $false) {
         if ($LASTEXITCODE -ne 0) { throw "CoverCrypt upstream tests failed" }
         return
     }
-    if (Test-DependencyCache "covercrypt" $Fingerprint @($OutLib, $Header)) {
+    if (Test-DependencyCache "covercrypt" $Fingerprint @($OutLib, $OutDll, $OutImportLib, $Header)) {
         Write-Host "==> CoverCrypt: cached"
         return
     }
-    Write-Host "==> CoverCrypt ($InnerJobs jobs, MSVC, Curve25519 + ML-KEM-768, static C ABI)"
+    Write-Host "==> CoverCrypt ($InnerJobs jobs, MSVC, Curve25519 + ML-KEM-768, static + shared C ABI)"
     New-Item -ItemType Directory -Force -Path $DepLibDir, $DepIncludeDir | Out-Null
     $env:CARGO_TARGET_DIR = $Work
     $Sccache = Get-Sccache
@@ -397,6 +399,8 @@ function Build-CoverCrypt([bool]$RunTests = $false) {
     & cargo "+$Toolchain" build --locked --release --jobs $InnerJobs --target $Target --manifest-path "bindings\covercrypt\Cargo.toml"
     if ($LASTEXITCODE -ne 0) { throw "CoverCrypt native bridge build failed" }
     & (Join-Path $PSScriptRoot "normalize-msvc-library.ps1") -InputLib (Join-Path $Work "$Target\release\covercrypt_ffi.lib") -OutputLib $OutLib
+    Copy-Item (Join-Path $Work "$Target\release\covercrypt_ffi.dll") $OutDll -Force
+    Copy-Item (Join-Path $Work "$Target\release\covercrypt_ffi.dll.lib") $OutImportLib -Force
     Copy-Item "bindings\covercrypt\include\covercrypt_ffi.h" $Header -Force
     Write-DependencyFingerprint "covercrypt" $Fingerprint @("rust_target=$Target", "rust_toolchain=$Toolchain", "features=curve25519,mlkem-768")
 }

@@ -62,7 +62,7 @@ TEST_CASE_DIR = $(TEST_DIR)/cases
 SRCS = $(SCHEMES_DIR)/ac17.cpp \
        $(SCHEMES_DIR)/tkn20.cpp \
        $(SCHEMES_DIR)/covercrypt.cpp \
-       $(CORE_DIR)/hybrid-pq-cp-abe.cpp \
+       src/hybrid-pq-cp-abe.cpp \
        $(CORE_DIR)/abe-setup.cpp \
        $(CORE_DIR)/abe-genkey.cpp \
        $(CORE_DIR)/abe-encrypt.cpp \
@@ -79,15 +79,15 @@ OQS_HEADER = $(OQS_INC_DIR)/oqs/oqs.h
 TKN20_HEADER = $(TKN20_INC_DIR)/cpabe_tkn20.h
 COVERCRYPT_HEADER = $(DEPS_INC_DIR)/covercrypt/covercrypt_ffi.h
 COVERCRYPT_TEST_SRC = tests/cpp/covercrypt_test.cpp
-COVERCRYPT_INPUTS = bindings/covercrypt/Cargo.toml bindings/covercrypt/Cargo.lock bindings/covercrypt/src/lib.rs bindings/covercrypt/include/covercrypt_ffi.h vendor/cover_crypt/Cargo.toml
-$(DEPS_READY): $(COVERCRYPT_INPUTS) scripts/build-deps.ps1 scripts/build-deps.sh
+# Core builds reuse staged dependencies. Only a missing ready marker triggers
+# automatic dependency setup; changed dependency sources require make deps.
 CRYPTOPP_HEADERS = $(DEPS_INC_DIR)/cryptopp/aes.h $(DEPS_INC_DIR)/cryptopp/gcm.h $(DEPS_INC_DIR)/cryptopp/filters.h \
                    $(DEPS_INC_DIR)/cryptopp/osrng.h $(DEPS_INC_DIR)/cryptopp/sha.h $(DEPS_INC_DIR)/cryptopp/sha3.h \
                    $(DEPS_INC_DIR)/cryptopp/base64.h
 GENERATED_HEADERS = $(RABE_HEADER) $(OQS_HEADER) $(TKN20_HEADER) $(CRYPTOPP_HEADERS) $(COVERCRYPT_HEADER)
 COMMON_HEADERS = $(PROJECT_HEADERS) $(GENERATED_HEADERS)
 
-vpath %.cpp $(SCHEMES_DIR) $(CORE_DIR) $(CRYPTO_DIR)
+vpath %.cpp src $(SCHEMES_DIR) $(CORE_DIR) $(CRYPTO_DIR)
 
 # Optional compiler cache.
 # Avoid $(shell ...) discovery on Windows: GNU Make for Windows captures shell
@@ -167,7 +167,7 @@ else
 endif
 
 .DEFAULT_GOAL := all
-.PHONY: all clean deps deps-clean executable shared static help test tests abi-info test-covercrypt test-covercrypt-rust
+.PHONY: all clean deps deps-clean executable shared static help test tests abi-info
 
 all: static shared executable
 	@echo "================================================================"
@@ -200,13 +200,12 @@ help:
 	@echo "================================================================"
 	@echo "  make -j8             Incremental parallel build"
 	@echo "  make deps -j8        Build/check 5 native dependencies in parallel"
-	@echo "  make test-covercrypt Native CoverCrypt C++ and C ABI tests"
-	@echo "  make test-covercrypt-rust  CoverCrypt upstream Rust unit tests"
 	@echo "  make deps-clean      Remove dependency build cache"
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the CLI"
 	@echo "  make test -j8        Build incrementally and run tests"
+	@echo "  make tests -j8       Alias for make test -j8"
 	@echo "  make abi-info        Show platform ABI policy"
 	@echo "  make clean           Remove core build outputs only"
 	@echo ""
@@ -228,11 +227,6 @@ endif
 # by GNU Make's jobserver. This avoids stale jobserver pipe/file descriptors
 # leaking into Cargo/sub-make/CMake/Go while still honoring make -jN.
 ifeq ($(PLATFORM),windows)
-test-covercrypt-rust: SHELL = sh.exe
-test-covercrypt-rust: .SHELLFLAGS = -c
-test-covercrypt-rust:
-	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-deps.ps1 -Dependency covercrypt-test
-
 deps: SHELL = sh.exe
 deps: .SHELLFLAGS = -c
 deps:
@@ -250,9 +244,6 @@ deps-clean:
 	@rm -rf build/deps/windows
 	@echo Done! Dependency cache cleared.
 else
-test-covercrypt-rust:
-	@bash scripts/build-deps.sh $(PLATFORM) covercrypt-test
-
 deps:
 	@bash scripts/build-deps.sh $(PLATFORM) all
 
@@ -338,7 +329,8 @@ clean:
 	@if exist "$(subst /,\,$(TEST_CASE_DIR))" rmdir /S /Q "$(subst /,\,$(TEST_CASE_DIR))"
 	@echo Done! Core build outputs cleared.
 
-test: $(EXEC)
+test: $(EXEC) $(COVERCRYPT_TEST)
+	@"$(COVERCRYPT_TEST)"
 	@echo ================================================================
 	@echo  Running Tests...
 	@if not exist "$(subst /,\,$(TEST_CASE_DIR))" mkdir "$(subst /,\,$(TEST_CASE_DIR))"
@@ -412,7 +404,8 @@ clean:
 	@rm -rf $(TEST_CASE_DIR)
 	@echo "Done! Core build outputs cleared."
 
-test: $(EXEC)
+test: $(EXEC) $(COVERCRYPT_TEST)
+	@"$(COVERCRYPT_TEST)"
 	@echo "================================================================"
 	@echo " Running Tests..."
 	@mkdir -p $(TEST_CASE_DIR)
@@ -423,8 +416,3 @@ test: $(EXEC)
 -include $(DEPFILES)
 
 endif
-
-test-covercrypt: $(COVERCRYPT_TEST)
-	@"$(COVERCRYPT_TEST)"
-
-test: test-covercrypt

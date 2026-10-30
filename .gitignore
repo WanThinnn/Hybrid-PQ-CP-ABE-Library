@@ -361,6 +361,7 @@ benchmark/results/
 # Keep the root build directory in fresh clones without tracking build outputs.
 /build/*
 !/build/.gitkeep
+!/build/README.md
 vendor/cover_crypt/target/
 tmp/
 release_notes/pre-*

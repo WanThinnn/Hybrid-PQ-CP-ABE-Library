@@ -276,19 +276,26 @@ build_rabe() {
 }
 
 build_covercrypt() {
-  local digest fingerprint work outlib
+  local digest fingerprint work outlib shared_name outshared
   digest="$( { find vendor/cover_crypt/src bindings/covercrypt/src -type f; printf '%s\n' vendor/cover_crypt/Cargo.toml vendor/cover_crypt/Cargo.lock vendor/cover_crypt/UPSTREAM.md bindings/covercrypt/Cargo.toml bindings/covercrypt/Cargo.lock bindings/covercrypt/include/covercrypt_ffi.h; } | LC_ALL=C sort | while IFS= read -r input; do hash_file "$input"; done )"
   fingerprint="$(hash_text "covercrypt|$BUILD_VERSION|$PLATFORM|$(rustc -vV)|$digest|curve25519|mlkem-768")"
   outlib="$LIB_DIR/covercrypt/libcovercrypt_ffi.a"
-  if cache_matches covercrypt "$fingerprint" "$outlib" "$INCLUDE_DIR/covercrypt/covercrypt_ffi.h"; then
+  if [[ "$PLATFORM" == macos ]]; then
+    shared_name="libcovercrypt_ffi.dylib"
+  else
+    shared_name="libcovercrypt_ffi.so"
+  fi
+  outshared="$LIB_DIR/covercrypt/$shared_name"
+  if cache_matches covercrypt "$fingerprint" "$outlib" "$outshared" "$INCLUDE_DIR/covercrypt/covercrypt_ffi.h"; then
     echo "==> CoverCrypt: cached"
     return
   fi
-  echo "==> CoverCrypt ($INNER_JOBS jobs, Curve25519 + ML-KEM-768, static C ABI)"
+  echo "==> CoverCrypt ($INNER_JOBS jobs, Curve25519 + ML-KEM-768, static + shared C ABI)"
   work="$WORK_DIR/covercrypt-target"
   mkdir -p "$LIB_DIR/covercrypt" "$INCLUDE_DIR/covercrypt"
   CARGO_TARGET_DIR="$work" cargo build --locked --release --jobs "$INNER_JOBS" --manifest-path bindings/covercrypt/Cargo.toml
   cp "$work/release/libcovercrypt_ffi.a" "$outlib"
+  cp "$work/release/$shared_name" "$outshared"
   cp bindings/covercrypt/include/covercrypt_ffi.h "$INCLUDE_DIR/covercrypt/"
   write_fingerprint covercrypt "$fingerprint"
 }

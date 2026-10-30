@@ -145,6 +145,21 @@ pub unsafe extern "C" fn cc_genkey(msk: *const u8, len: usize, ap: *const c_char
     })
 }
 
+/// Stateless Buffer API: register the user in a temporary authority as usual,
+/// but do not serialize the updated master key that the caller will discard.
+/// File-based callers must keep using cc_genkey and persist its updated MSK.
+#[no_mangle]
+pub unsafe extern "C" fn cc_genkey_ephemeral(msk: *const u8, len: usize, ap: *const c_char,
+    usk_out: *mut Buffer) -> i32 {
+    operation(|| {
+        output(usk_out)?;
+        let mut msk = MasterSecretKey::deserialize(bytes(msk, len)?).map_err(failure)?;
+        let usk = Covercrypt::default().generate_user_secret_key(&mut msk, &policy(text(ap)?)?).map_err(failure)?;
+        store(usk_out, serialize(&usk)?);
+        Ok(())
+    })
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn cc_encaps(mpk: *const u8, len: usize, ap: *const c_char,
     secret_out: *mut Buffer, enc_out: *mut Buffer) -> i32 {

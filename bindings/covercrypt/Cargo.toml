@@ -7,7 +7,7 @@ publish = false
 
 [lib]
 name = "covercrypt_ffi"
-crate-type = ["staticlib", "rlib"]
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
 cosmian_cover_crypt = { path = "../../vendor/cover_crypt", default-features = false, features = ["curve25519", "mlkem-768"] }
