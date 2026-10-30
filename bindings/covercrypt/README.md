@@ -21,6 +21,17 @@ Buffer behavior without serializing an updated MSK that would be discarded.
 File/authority callers must use `cc_genkey` and persist the returned MSK.
 No tracing interface is exported by this library.
 
+Authority growth uses `cc_add_attribute` or `cc_add_dimension`, followed by
+upstream `Covercrypt::update_msk`. Both return an updated MSK/MPK pair while
+preserving existing right secrets. A dimension is a single JSON object such as
+`{"name":"E","attributes":["present","absent"],"hierarchical":false}`.
+Existing user keys retain their existing rights and gain no new attributes.
+The public hybrid library exposes both File and Buffer growth functions;
+the CLI exposes `add_attribute` and `add_dimension`. File operations require
+unused output names and leave the input authority unchanged. Keep both returned
+keys together and issue new user keys using the updated MSK.
+See [upstream update_msk](https://docs.rs/cosmian_cover_crypt/latest/cosmian_cover_crypt/struct.Covercrypt.html#method.update_msk).
+
 Both `cc_genkey` and `cc_genkey_ephemeral` use restricted user-key generation:
 dimensions omitted from a user policy grant no attributes. For example, a user
 key for `Department::IT` cannot decrypt `Department::IT && Level::ADMIN`, but can

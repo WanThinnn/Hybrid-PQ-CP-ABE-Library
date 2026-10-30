@@ -15,6 +15,60 @@ CLI = ROOT / 'build/artifacts' / TARGET / ('main.exe' if SYSTEM == 'Windows' els
 
 @unittest.skipUnless(CLI.is_file(), 'Build the CLI first')
 class CovercryptGrowthTests(unittest.TestCase):
+    def test_public_buffer_growth_in_all_modes(self):
+        import ctypes as c
+        import sys
+        sys.path.insert(0, str(ROOT / 'benchmark'))
+        from benchmark_full import COVERCRYPT, Native, find_lib
+
+        native = Native(find_lib(ROOT, None))
+        out = [c.POINTER(native.P8), c.POINTER(c.c_size_t)] * 2
+        dimension = native.lib.hybrid_cpabe_covercrypt_add_dimensionBuffer
+        attribute = native.lib.hybrid_cpabe_covercrypt_add_attributeBuffer
+        dimension.argtypes = [native.P8, c.c_size_t, c.c_char_p, *out]
+        attribute.argtypes = [native.P8, c.c_size_t, c.c_char_p, c.c_char_p, c.c_char_p, *out]
+        dimension.restype = attribute.restype = c.c_int
+
+        def grow(function, master, *args):
+            pk, msk = native.P8(), native.P8()
+            pkl, mskl = c.c_size_t(), c.c_size_t()
+            status = function(native.arr(master), len(master), *args,
+                              c.byref(pk), c.byref(pkl), c.byref(msk), c.byref(mskl))
+            public, secret = native.take(pk, pkl.value), native.take(msk, mskl.value)
+            native.check(status, 'grow authority buffer')
+            return public, secret
+
+        names = ('HCPABE_COVERCRYPT_CONFIG', 'HCPABE_COVERCRYPT_MODE')
+        original = {name: os.environ.get(name) for name in names}
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                config = Path(directory) / 'config.json'
+                config.write_text('{"dimensions":[{"name":"A","attributes":["present"]}]}')
+                os.environ[names[0]] = str(config)
+                for mode in ('classic', 'post_quantum', 'hybridized'):
+                    with self.subTest(mode=mode):
+                        os.environ[names[1]] = mode
+                        pk, msk = native.setup_buffer(COVERCRYPT)
+                        user = native.genkey_buffer(msk, 'A::present', COVERCRYPT)
+                        before = native.encrypt_buffer(pk, b'old data', 'A::present', COVERCRYPT)
+                        pk, msk = grow(dimension, msk, b'{"name":"E","attributes":["present"]}')
+                        pk, msk = grow(attribute, msk, b'E', b'added', None)
+                        after = native.encrypt_buffer(pk, b'new data', 'A::present && E::added', COVERCRYPT)
+                        with self.assertRaisesRegex(RuntimeError, r'\(-3\)'):
+                            native.decrypt_buffer(user, after)
+                        updated = native.genkey_buffer(msk, 'A::present && E::added', COVERCRYPT)
+                        self.assertEqual(native.decrypt_buffer(updated, after), b'new data')
+                        self.assertEqual(native.decrypt_buffer(updated, before), b'old data')
+                        self.assertEqual(native.decrypt_buffer(user, before), b'old data')
+                        old_policy = native.encrypt_buffer(pk, b'same rights', 'A::present', COVERCRYPT)
+                        self.assertEqual(native.decrypt_buffer(user, old_policy), b'same rights')
+        finally:
+            for name, value in original.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+
     def call(self, *args, env, allowed=True):
         output = Path(args[-1]) if args[0] == 'decrypt' else None
         if output is not None:
