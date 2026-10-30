@@ -84,6 +84,14 @@ class CovercryptDemoTests(unittest.TestCase):
                     self.assertEqual(result.returncode == 0, allowed, result.stdout + result.stderr)
                     if allowed:
                         self.assertEqual(recovered.read_bytes(), plain.read_bytes())
+            result = self.call('encrypt', '--scheme', 'covercrypt', str(prefix) + '_pk.key', plain,
+                               'Department::IT || Level::ADMIN', cipher, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            for index, (attributes, _) in enumerate(cases):
+                with self.subTest(or_policy=True, attributes=attributes):
+                    result = self.call('decrypt', root / f'user-{index}.key', cipher,
+                                       root / f'or-out-{index}.txt', env=env)
+                    self.assertEqual(result.returncode == 0, index in (0, 1, 3), result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

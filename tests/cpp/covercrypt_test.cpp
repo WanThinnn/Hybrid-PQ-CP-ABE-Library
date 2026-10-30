@@ -175,6 +175,10 @@ void check_mode(const char *mode)
     require(hybrid_cpabe_genkeyBuffer_with_scheme(msk.data, msk.length, "DPT::HR && SEC::TOP", &bob.data, &bob.length,
                                                   CPABE_SCHEME_COVERCRYPT) == HCPABE_SUCCESS,
             "second buffer genkey failed");
+    Buffer partial;
+    require(hybrid_cpabe_genkeyBuffer_with_scheme(msk.data, msk.length, "DPT::FIN", &partial.data,
+                                                  &partial.length, CPABE_SCHEME_COVERCRYPT) == HCPABE_SUCCESS,
+            "partial-attribute key generation failed");
     for (const Bytes &message : {Bytes{}, Bytes{0, 1, 2, 0, 255}})
     {
         Buffer ct, recovered, denied;
@@ -190,6 +194,9 @@ void check_mode(const char *mode)
                         HCPABE_ERR_POLICY_MISMATCH &&
                     !denied.data,
                 "unauthorized key accepted");
+        require(hybrid_cpabe_decryptBuffer(partial.data, partial.length, ct.data, ct.length,
+                                           &denied.data, &denied.length) == HCPABE_ERR_POLICY_MISMATCH && !denied.data,
+                "omitting SEC granted a wildcard user key");
         ct.data[ct.length - 1] ^= 1;
         require(hybrid_cpabe_decryptBuffer(alice.data, alice.length, ct.data, ct.length, &denied.data,
                                            &denied.length) != HCPABE_SUCCESS &&
@@ -211,6 +218,11 @@ void check_mode(const char *mode)
                                                       &verified.length) == HCPABE_SUCCESS &&
                     equal(verified, message),
                 "v5.2 verify API failed");
+        require(hybrid_cpabe_decryptBuffer_and_verify(partial.data, partial.length, sign_pk.data,
+                                                      sign_pk.length, signed_ct.data, signed_ct.length,
+                                                      &denied.data, &denied.length) == HCPABE_ERR_POLICY_MISMATCH &&
+                    !denied.data,
+                "signed ciphertext accepted a key missing SEC");
         require(hybrid_cpabe_decryptBuffer_and_verify(alice.data, alice.length, sign_pk.data, 1, signed_ct.data,
                                                       signed_ct.length, &denied.data,
                                                       &denied.length) != HCPABE_SUCCESS &&

@@ -28,6 +28,7 @@ void printCovercryptHelp(const char *programName)
               << "  Linux/macOS: export HCPABE_COVERCRYPT_CONFIG=\"$PWD/scripts/covercrypt-demo.json\"\n"
               << "  Optional HCPABE_COVERCRYPT_MODE: hybridized (default), post_quantum, classic.\n"
               << "  Hybridized includes ML-KEM; --pqc separately adds ML-DSA-87 signatures.\n"
+              << "  User keys grant explicitly named attributes only; omitted dimensions grant no rights.\n"
               << "  Create an output directory first (e.g. mkdir keys), then run:\n"
               << "  " << programName << " setup --scheme covercrypt ./keys/demo\n"
               << "  Outputs: ./keys/demo_pk.key and ./keys/demo_msk.key\n"

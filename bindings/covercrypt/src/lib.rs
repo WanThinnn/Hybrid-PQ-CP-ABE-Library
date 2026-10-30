@@ -136,7 +136,7 @@ pub unsafe extern "C" fn cc_genkey(msk: *const u8, len: usize, ap: *const c_char
     operation(|| {
         outputs(updated, usk_out)?;
         let mut msk = MasterSecretKey::deserialize(bytes(msk, len)?).map_err(failure)?;
-        let usk = Covercrypt::default().generate_user_secret_key(&mut msk, &policy(text(ap)?)?).map_err(failure)?;
+        let usk = Covercrypt::default().generate_user_secret_key_restricted(&mut msk, &policy(text(ap)?)?).map_err(failure)?;
         let msk_bytes = serialize(&msk)?;
         let usk_bytes = serialize(&usk)?;
         store(updated, msk_bytes);
@@ -154,7 +154,7 @@ pub unsafe extern "C" fn cc_genkey_ephemeral(msk: *const u8, len: usize, ap: *co
     operation(|| {
         output(usk_out)?;
         let mut msk = MasterSecretKey::deserialize(bytes(msk, len)?).map_err(failure)?;
-        let usk = Covercrypt::default().generate_user_secret_key(&mut msk, &policy(text(ap)?)?).map_err(failure)?;
+        let usk = Covercrypt::default().generate_user_secret_key_restricted(&mut msk, &policy(text(ap)?)?).map_err(failure)?;
         store(usk_out, serialize(&usk)?);
         Ok(())
     })

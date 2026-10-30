@@ -21,6 +21,19 @@ Buffer behavior without serializing an updated MSK that would be discarded.
 File/authority callers must use `cc_genkey` and persist the returned MSK.
 No tracing interface is exported by this library.
 
+Both `cc_genkey` and `cc_genkey_ephemeral` use restricted user-key generation:
+dimensions omitted from a user policy grant no attributes. For example, a user
+key for `Department::IT` cannot decrypt `Department::IT && Level::ADMIN`, but can
+decrypt `Department::IT`. Hierarchy inheritance is retained. This differs from
+upstream's native key-policy API, where omitted dimensions are unconstrained;
+that native Rust API is left unchanged. Conflicting values of one dimension in
+the same AND clause are rejected; use OR for alternatives.
+
+Keys already issued using the previous unrestricted bridge retain their old
+rights. To revoke those rights, replace the affected authority and user keys
+and re-encrypt affected data under the new public key. Rebuilding the library
+alone cannot revoke cryptographic key material already issued.
+
 Keys and KEM encapsulations are opaque upstream serializations. The C++ adapter
 exposes the same integer status/buffer operations as AC17/TKN20. It uses the KEM
 secret with AES-GCM to protect the supplied key buffer, then the shared core

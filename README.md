@@ -57,6 +57,14 @@ PowerShell and Linux/macOS environment commands and a setup/keygen/encrypt/decry
 example. The demo contains only attribute definitions, not keys. Setup requires
 `HCPABE_COVERCRYPT_CONFIG`; the CLI does not automatically read `.env` files.
 
+User keys grant only the named dimensions and their hierarchy inheritance. A
+`Department::IT` key can decrypt that department's policy, but cannot decrypt
+`Department::IT && Level::ADMIN`. The bridge uses restricted user-key generation
+instead of upstream's native wildcard behavior for omitted dimensions.
+Keys issued by an older bridge retain their existing rights: revoking those
+rights requires a new authority, new user keys and re-encryption under the new
+public key. Rebuilding the program alone does not revoke old key material.
+
 The file-based CoverCrypt key-generation function persists the updated MSK.
 The v5.2 buffer function remains stateless and does not retain the user registry
 used by CoverCrypt tracing; this library does not expose tracing operations.

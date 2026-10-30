@@ -124,6 +124,21 @@ impl Covercrypt {
         )
     }
 
+    /// Generate a user key without wildcard rights for omitted dimensions.
+    /// This is an additive integration API for the project's CP-ABE adapter;
+    /// native generate_user_secret_key semantics and key formats are unchanged.
+    pub fn generate_user_secret_key_restricted(
+        &self,
+        msk: &mut MasterSecretKey,
+        ap: &AccessPolicy,
+    ) -> Result<UserSecretKey, Error> {
+        usk_keygen(
+            &mut *self.rng.lock().expect("Mutex lock failed!"),
+            msk,
+            msk.access_structure.ap_to_usk_rights_restricted(ap)?,
+        )
+    }
+
     /// Refreshes the USK with respect to the given MSK.
     ///
     /// The USK is given all missing secrets since the first secret hold by the

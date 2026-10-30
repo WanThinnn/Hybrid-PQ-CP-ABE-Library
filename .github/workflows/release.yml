@@ -135,6 +135,7 @@ jobs:
         # Both platform build steps above have completed before these CLI checks.
         run: |
           python -m unittest discover -s tests -p test_cli_covercrypt_demo.py -v
+          python -m unittest discover -s tests -p test_covercrypt_boolean.py -v
           python -m unittest discover -s tests -p test_version_header.py -v
           python scripts/package-release.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
 

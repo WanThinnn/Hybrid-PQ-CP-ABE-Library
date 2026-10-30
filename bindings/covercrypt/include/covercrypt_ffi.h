@@ -40,7 +40,9 @@ extern "C"
     int cc_add_attribute(const uint8_t *msk, size_t msk_len,
                          const char *dimension, const char *attribute, int mode,
                          const char *after_or_null, cc_buffer *updated_msk, cc_buffer *updated_mpk);
-    /* Persist updated_msk on success: key generation updates upstream authority state. */
+    /* User policies grant only explicitly named dimensions (including hierarchy
+     * inheritance). Omitted dimensions grant no attributes, never a wildcard.
+     * Persist updated_msk on success: generation updates authority state. */
     int cc_genkey(const uint8_t *msk, size_t msk_len, const char *policy,
                   cc_buffer *updated_msk, cc_buffer *usk);
     /* Stateless key generation for the existing Buffer API only. The input MSK

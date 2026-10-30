@@ -1,5 +1,6 @@
 """Exercise the standalone CoverCrypt shared library through its public C ABI."""
 import ctypes as c
+from itertools import product
 from pathlib import Path
 import platform
 import unittest
@@ -72,6 +73,85 @@ class SharedCovercryptTests(unittest.TestCase):
                 finally:
                     for buffer in buffers:
                         self.lib.cc_buffer_free(c.byref(buffer))
+
+    def test_omitted_dimension_is_not_a_wildcard_in_user_keys(self):
+        config = b'{"dimensions":[{"name":"Department","attributes":["IT","HR"]},{"name":"Level","attributes":["USER","ADMIN"]}]}'
+        for mode, grant in product((0, 1, 2), (b'Department::IT', b'Level::ADMIN', b'Department::HR')):
+            for ephemeral in (False, True):
+                with self.subTest(mode=mode, ephemeral=ephemeral, grant=grant):
+                    buffers = [Buffer() for _ in range(7)]
+                    msk, mpk, updated, user, secret, enc, recovered = buffers
+                    try:
+                        self.assertEqual(self.lib.cc_setup(config, mode, c.byref(msk), c.byref(mpk)), 0)
+                        if ephemeral:
+                            status = self.lib.cc_genkey_ephemeral(msk.data, msk.len, grant, c.byref(user))
+                        else:
+                            status = self.lib.cc_genkey(msk.data, msk.len, grant, c.byref(updated), c.byref(user))
+                        self.assertEqual(status, 0)
+                        self.assertEqual(self.lib.cc_encaps(mpk.data, mpk.len, b'Department::IT && Level::ADMIN',
+                                                           c.byref(secret), c.byref(enc)), 0)
+                        self.assertEqual(self.lib.cc_decaps(user.data, user.len, enc.data, enc.len,
+                                                           c.byref(recovered)), -3)
+                        self.assertFalse(recovered.data)
+                        # A partial key remains useful for the dimension it
+                        # actually holds; the fix must not merely reject it.
+                        self.lib.cc_buffer_free(c.byref(secret))
+                        self.lib.cc_buffer_free(c.byref(enc))
+                        self.assertEqual(self.lib.cc_encaps(mpk.data, mpk.len, grant,
+                                                           c.byref(secret), c.byref(enc)), 0)
+                        self.assertEqual(self.lib.cc_decaps(user.data, user.len, enc.data, enc.len,
+                                                           c.byref(recovered)), 0)
+                        self.assertEqual(recovered.read(), secret.read())
+                    finally:
+                        for buffer in buffers:
+                            self.lib.cc_buffer_free(c.byref(buffer))
+
+    def test_boolean_policy_matrix_with_partial_attribute_sets(self):
+        config = b'{"dimensions":[{"name":"Department","attributes":["IT","HR"]},{"name":"Level","attributes":["USER","ADMIN"]}]}'
+        departments, levels = ('Department::IT', 'Department::HR'), ('Level::USER', 'Level::ADMIN')
+        policies = [((attribute,),) for attribute in departments + levels]
+        policies += [((department, level),) for department, level in product(departments, levels)]
+        policies += [((department,), (level,)) for department, level in product(departments, levels)]
+        for mode, ephemeral in product((0, 1, 2), (False, True)):
+            msk, mpk = Buffer(), Buffer()
+            try:
+                self.assertEqual(self.lib.cc_setup(config, mode, c.byref(msk), c.byref(mpk)), 0)
+                for department, level in product((None,) + departments, (None,) + levels):
+                    attributes = {value for value in (department, level) if value}
+                    if not attributes:
+                        continue
+                    grant = ' && '.join(sorted(attributes)).encode()
+                    updated, user = Buffer(), Buffer()
+                    try:
+                        if ephemeral:
+                            code = self.lib.cc_genkey_ephemeral(msk.data, msk.len, grant, c.byref(user))
+                        else:
+                            code = self.lib.cc_genkey(msk.data, msk.len, grant, c.byref(updated), c.byref(user))
+                        self.assertEqual(code, 0)
+                        for clauses in policies:
+                            # Independent boolean oracle, not CoverCrypt rights.
+                            allowed = any(all(term in attributes for term in clause) for clause in clauses)
+                            policy = ' || '.join(' && '.join(clause) for clause in clauses).encode()
+                            with self.subTest(mode=mode, ephemeral=ephemeral, user=grant, policy=policy):
+                                secret, enc, recovered = Buffer(), Buffer(), Buffer()
+                                try:
+                                    self.assertEqual(self.lib.cc_encaps(mpk.data, mpk.len, policy,
+                                                                       c.byref(secret), c.byref(enc)), 0)
+                                    code = self.lib.cc_decaps(user.data, user.len, enc.data, enc.len, c.byref(recovered))
+                                    self.assertEqual(code, 0 if allowed else -3)
+                                    if allowed:
+                                        self.assertEqual(recovered.read(), secret.read())
+                                    else:
+                                        self.assertFalse(recovered.data)
+                                finally:
+                                    for buffer in (secret, enc, recovered):
+                                        self.lib.cc_buffer_free(c.byref(buffer))
+                    finally:
+                        self.lib.cc_buffer_free(c.byref(updated))
+                        self.lib.cc_buffer_free(c.byref(user))
+            finally:
+                self.lib.cc_buffer_free(c.byref(msk))
+                self.lib.cc_buffer_free(c.byref(mpk))
 
 
 if __name__ == "__main__":

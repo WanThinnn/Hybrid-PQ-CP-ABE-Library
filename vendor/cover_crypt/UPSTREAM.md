@@ -25,3 +25,9 @@ the complete intermediate vector; a differential test checks that the points,
 security modes, activation statuses, and ordering match the original algorithm.
 Use `cargo test --lib` for the
 vendored upstream unit tests.
+
+Local integration API: `generate_user_secret_key_restricted` generates signed
+user keys only for the projections and hierarchy inheritance of explicitly
+granted dimensions. The C bridge uses this API so a missing user attribute does
+not become a wildcard. The original upstream key-policy API, primitives and
+serialization formats are retained unchanged.

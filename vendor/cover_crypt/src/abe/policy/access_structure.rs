@@ -29,6 +29,31 @@ impl AccessStructure {
         self.generate_complementary_rights(ap)
     }
 
+    /// Generate user rights only within explicitly granted dimensions.
+    /// Unlike native key-policy semantics, omitted dimensions grant no rights.
+    /// Used by the project's CP-ABE adapter; hierarchy inheritance is retained.
+    pub fn ap_to_usk_rights_restricted(&self, ap: &AccessPolicy) -> Result<HashSet<Right>, Error> {
+        let mut rights = HashSet::new();
+        for clause in ap.to_dnf() {
+            let mut dimensions = HashMap::new();
+            for attribute in &clause {
+                self.get_attribute(attribute)?;
+                if let Some(previous) = dimensions.insert(&attribute.dimension, &attribute.name) {
+                    if previous != &attribute.name {
+                        return Err(Error::OperationNotPermitted(
+                            "a user-policy conjunction cannot contain different values of one dimension; use OR".into(),
+                        ));
+                    }
+                }
+            }
+            let space = self.generate_semantic_space(&clause)?;
+            for (ids, _, _) in combine(&space.iter().collect::<Vec<_>>()) {
+                rights.insert(Right::from_point(ids)?);
+            }
+        }
+        Ok(rights)
+    }
+
     /// Generate the set of ciphertext rights described by the given access policy.
     pub fn ap_to_enc_rights(&self, ap: &AccessPolicy) -> Result<HashSet<Right>, Error> {
         self.generate_associated_rights(ap)
@@ -401,6 +426,42 @@ mod serialization {
 mod tests {
     use super::*;
     use crate::abe::gen_structure;
+
+    #[test]
+    fn test_restricted_user_rights_do_not_expand_omitted_dimensions() {
+        let mut structure = AccessStructure::new();
+        structure.add_anarchy("Department".into()).unwrap();
+        structure.add_hierarchy("Level".into()).unwrap();
+        for (dimension, attribute, after) in [
+            ("Department", "IT", None), ("Department", "HR", None),
+            ("Level", "USER", None), ("Level", "ADMIN", Some("USER")),
+        ] {
+            structure.add_attribute(QualifiedAttribute::new(dimension, attribute),
+                                    EncryptionHint::Hybridized, after).unwrap();
+        }
+        let parse = |text| AccessPolicy::parse(text).unwrap();
+        let it = structure.ap_to_usk_rights_restricted(&parse("Department::IT")).unwrap();
+        let admin = structure.ap_to_usk_rights_restricted(&parse("Department::IT && Level::ADMIN")).unwrap();
+        let alternatives = structure.ap_to_usk_rights_restricted(&parse("Department::IT || Level::ADMIN")).unwrap();
+        for (policy, it_allowed, admin_allowed, or_allowed) in [
+            ("Department::IT", true, true, true),
+            ("Level::ADMIN", false, true, true),
+            ("Department::IT && Level::ADMIN", false, true, false),
+            ("Department::IT && Level::USER", false, true, false),
+            ("Department::HR && Level::ADMIN", false, false, false),
+        ] {
+            let required = structure.ap_to_enc_rights(&parse(policy)).unwrap();
+            assert_eq!(!it.is_disjoint(&required), it_allowed, "{policy}");
+            assert_eq!(!admin.is_disjoint(&required), admin_allowed, "{policy}");
+            assert_eq!(!alternatives.is_disjoint(&required), or_allowed, "{policy}");
+        }
+        assert!(structure.ap_to_usk_rights_restricted(&parse("Department::IT && Department::HR")).is_err());
+        assert!(structure.ap_to_usk_rights_restricted(&parse("Department::UNKNOWN")).is_err());
+        // Preserve upstream's original key-policy API for its native callers.
+        let native = structure.ap_to_usk_rights(&parse("Department::IT")).unwrap();
+        let required = structure.ap_to_enc_rights(&parse("Department::IT && Level::ADMIN")).unwrap();
+        assert!(!native.is_disjoint(&required));
+    }
 
     #[test]
     fn test_combine_matches_original_points_modes_and_statuses() {
