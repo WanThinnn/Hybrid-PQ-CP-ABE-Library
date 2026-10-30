@@ -77,4 +77,13 @@ int covercrypt_decapsulate_key(const unsigned char *skData, size_t skLen, const 
 int covercrypt_load_pk(const char *file, unsigned char **pkData, size_t *pkLen);
 int covercrypt_load_sk(const char *file, unsigned char **skData, size_t *skLen);
 
+int covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen, const char *dimension,
+                                  const char *attribute, const char *after, unsigned char **pkOut,
+                                  size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
+int covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen, const char *dimensionJson,
+                                  unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
+int covercrypt_add_attribute(const char *mskFile, const char *dimension, const char *attribute,
+                            const char *after, const char *outPrefix);
+int covercrypt_add_dimension(const char *mskFile, const char *dimensionJson, const char *outPrefix);
+
 #endif // CPABE_SCHEME_H

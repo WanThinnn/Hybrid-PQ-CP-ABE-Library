@@ -164,6 +164,86 @@ int load_key(const char *file, unsigned char **data, size_t *length)
         output(reinterpret_cast<const unsigned char *>(raw.data()), raw.size(), data, length);
     });
 }
+
+int configured_mode()
+{
+    const char *value = std::getenv("HCPABE_COVERCRYPT_MODE");
+    if (!value)
+        return CC_HYBRIDIZED;
+    const std::string choice = toLowerCase(value);
+    if (choice == "hybridized") return CC_HYBRIDIZED;
+    if (choice == "classic") return CC_CLASSIC;
+    if (choice == "post_quantum") return CC_POST_QUANTUM;
+    throw Error{HCPABE_ERR_INVALID_PARAM};
+}
+
+template <class Operation>
+int grow_buffer(const unsigned char *msk, size_t mskLen, unsigned char **pkOut, size_t *pkLen,
+                unsigned char **mskOut, size_t *mskOutLen, Operation operation)
+{
+    if (!pkOut || !pkLen || !mskOut || !mskOutLen || pkOut == mskOut || pkLen == mskOutLen)
+        return HCPABE_ERR_INVALID_PARAM;
+    *pkOut = nullptr; *pkLen = 0; *mskOut = nullptr; *mskOutLen = 0;
+    if (!msk || !mskLen)
+        return HCPABE_ERR_INVALID_PARAM;
+    return run([&] {
+        Buffer secret, public_key;
+        check(operation(&secret.value, &public_key.value));
+        auto pk = copy(public_key.value.data, public_key.value.len);
+        auto master = copy(secret.value.data, secret.value.len);
+        *pkLen = public_key.value.len; *mskOutLen = secret.value.len;
+        *pkOut = pk.release(); *mskOut = master.release();
+    });
+}
+
+struct SensitiveAllocation
+{
+    unsigned char *data = nullptr;
+    size_t length = 0;
+    ~SensitiveAllocation()
+    {
+        if (data) secureWipe(data, length);
+        std::free(data);
+    }
+};
+
+template <class Operation>
+int grow_file(const char *mskFile, const char *outPrefix, Operation operation)
+{
+    if (!mskFile || !outPrefix || !*outPrefix)
+        return HCPABE_ERR_INVALID_PARAM;
+    return run([&] {
+        std::string prefix(outPrefix);
+        struct stat info;
+        bool directory = (stat(outPrefix, &info) == 0 && (info.st_mode & S_IFDIR)) ||
+                         prefix.back() == '/' || prefix.back() == '\\';
+        if (directory && prefix.back() != '/' && prefix.back() != '\\') prefix += '/';
+        const std::string pkFile = prefix + (directory ? "cpabe_pk.key" : "_pk.key");
+        const std::string masterFile = prefix + (directory ? "cpabe_msk.key" : "_msk.key");
+        // Publish a separate updated pair, never overwrite the input authority.
+        if (stat(pkFile.c_str(), &info) == 0 || stat(masterFile.c_str(), &info) == 0)
+            throw Error{HCPABE_ERR_INVALID_PARAM};
+        std::string raw;
+        Wipe wipe{raw};
+        if (!LoadFile(mskFile, raw, "Base64")) throw Error{HCPABE_ERR_FILE_NOT_FOUND};
+        unsigned char *publicData = nullptr;
+        size_t publicLen = 0;
+        SensitiveAllocation master;
+        int status = operation(reinterpret_cast<const unsigned char *>(raw.data()), raw.size(),
+                               &publicData, &publicLen, &master.data, &master.length);
+        Allocation pk(publicData, &std::free);
+        if (status != HCPABE_SUCCESS) throw Error{status};
+        if (!SaveBinaryAsBase64(masterFile, master.data, master.length)) {
+            std::remove(masterFile.c_str());
+            throw Error{HCPABE_ERR_FILE_NOT_FOUND};
+        }
+        if (!SaveBinaryAsBase64(pkFile, publicData, publicLen)) {
+            std::remove(masterFile.c_str());
+            std::remove(pkFile.c_str());
+            throw Error{HCPABE_ERR_FILE_NOT_FOUND};
+        }
+    });
+}
 } // namespace
 
 int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
@@ -181,17 +261,7 @@ int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned cha
         std::string json;
         if (!LoadFile(configuration, json, "Original"))
             throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-        int mode = CC_HYBRIDIZED;
-        if (const char *value = std::getenv("HCPABE_COVERCRYPT_MODE"))
-        {
-            std::string choice = toLowerCase(value);
-            if (choice == "classic")
-                mode = CC_CLASSIC;
-            else if (choice == "post_quantum")
-                mode = CC_POST_QUANTUM;
-            else if (choice != "hybridized")
-                throw Error{HCPABE_ERR_INVALID_PARAM};
-        }
+        int mode = configured_mode();
         Buffer secret, public_key;
         check(cc_setup(json.c_str(), mode, &secret.value, &public_key.value));
         auto pk = copy(public_key.value.data, public_key.value.len);
@@ -370,4 +440,38 @@ int covercrypt_load_pk(const char *file, unsigned char **pkData, size_t *pkLen)
 int covercrypt_load_sk(const char *file, unsigned char **skData, size_t *skLen)
 {
     return load_key(file, skData, skLen);
+}
+
+int covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen, const char *dimension,
+    const char *attribute, const char *after, unsigned char **pkOut, size_t *pkLen,
+    unsigned char **mskOut, size_t *mskOutLen)
+{
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
+        return cc_add_attribute(msk, mskLen, dimension, attribute, configured_mode(), after, secret, pub);
+    });
+}
+
+int covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen, const char *json,
+    unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
+        return cc_add_dimension(msk, mskLen, json, configured_mode(), secret, pub);
+    });
+}
+
+int covercrypt_add_attribute(const char *mskFile, const char *dimension, const char *attribute,
+    const char *after, const char *outPrefix)
+{
+    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len,
+        unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen) {
+        return covercrypt_add_attributeBuffer(msk, len, dimension, attribute, after, pk, pkLen, master, masterLen);
+    });
+}
+
+int covercrypt_add_dimension(const char *mskFile, const char *json, const char *outPrefix)
+{
+    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len,
+        unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen) {
+        return covercrypt_add_dimensionBuffer(msk, len, json, pk, pkLen, master, masterLen);
+    });
 }

@@ -33,6 +33,30 @@ const char *getVersion(void)
     return HybridCPABE::LIB_VERSION;
 }
 
+int hybrid_cpabe_covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen,
+    const char *dimension, const char *attribute, const char *after, unsigned char **pkOut,
+    size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return covercrypt_add_attributeBuffer(msk, mskLen, dimension, attribute, after, pkOut, pkLen, mskOut, mskOutLen);
+}
+
+int hybrid_cpabe_covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen,
+    const char *json, unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return covercrypt_add_dimensionBuffer(msk, mskLen, json, pkOut, pkLen, mskOut, mskOutLen);
+}
+
+int hybrid_cpabe_covercrypt_add_attribute(const char *mskFile, const char *dimension,
+    const char *attribute, const char *after, const char *outPrefix)
+{
+    return covercrypt_add_attribute(mskFile, dimension, attribute, after, outPrefix);
+}
+
+int hybrid_cpabe_covercrypt_add_dimension(const char *mskFile, const char *json, const char *outPrefix)
+{
+    return covercrypt_add_dimension(mskFile, json, outPrefix);
+}
+
 const char *getErrorMessage(int errorCode)
 {
     switch (errorCode)

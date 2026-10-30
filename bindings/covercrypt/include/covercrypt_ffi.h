@@ -35,6 +35,12 @@ extern "C"
      * Build configuration: Curve25519 provider + ML-KEM-768.
      */
     int cc_setup(const char *dimensions_json, int mode, cc_buffer *msk, cc_buffer *mpk);
+    /* Add a new dimension to the same authority. JSON is a single dimension:
+     * {"name":"E","attributes":["present","absent"],"hierarchical":false}.
+     * Persist both returned master keys. Existing USKs retain old rights;
+     * issue a new authorized USK to grant access to new attributes. */
+    int cc_add_dimension(const uint8_t *msk, size_t msk_len, const char *dimension_json,
+                         int mode, cc_buffer *updated_msk, cc_buffer *updated_mpk);
     /* Adds one attribute to an existing authority and returns the updated MSK/MPK.
      * after_or_null is only relevant for hierarchical dimensions; pass NULL otherwise. */
     int cc_add_attribute(const uint8_t *msk, size_t msk_len,

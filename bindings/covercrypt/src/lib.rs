@@ -105,6 +105,48 @@ pub unsafe extern "C" fn cc_setup(config: *const c_char, mode: i32, msk_out: *mu
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cc_add_dimension(msk: *const u8, len: usize,
+    config: *const c_char, mode: i32, updated_msk: *mut Buffer, updated_mpk: *mut Buffer) -> i32 {
+    operation(|| {
+        outputs(updated_msk, updated_mpk)?;
+        let hint = match mode {
+            0 => EncryptionHint::Classic,
+            1 => EncryptionHint::PostQuantum,
+            2 => EncryptionHint::Hybridized,
+            _ => return Err((INVALID, "unknown encryption mode".into())),
+        };
+        let dimension: Dimension = serde_json::from_str(text(config)?)
+            .map_err(|error| (INVALID, error.to_string()))?;
+        if dimension.name.is_empty() || !dimension.name.is_ascii() || dimension.attributes.is_empty() {
+            return Err((INVALID, "dimension requires an ASCII name and attributes".into()));
+        }
+        let mut msk = MasterSecretKey::deserialize(bytes(msk, len)?).map_err(failure)?;
+        if dimension.hierarchical {
+            msk.access_structure.add_hierarchy(dimension.name.clone()).map_err(failure)?;
+        } else {
+            msk.access_structure.add_anarchy(dimension.name.clone()).map_err(failure)?;
+        }
+        let mut previous: Option<String> = None;
+        for attribute in dimension.attributes {
+            if attribute.is_empty() || !attribute.is_ascii() {
+                return Err((INVALID, "attribute must be nonempty ASCII".into()));
+            }
+            msk.access_structure.add_attribute(QualifiedAttribute::new(&dimension.name, &attribute),
+                hint, if dimension.hierarchical { previous.as_deref() } else { None }).map_err(failure)?;
+            previous = Some(attribute);
+        }
+        // update_msk retains existing right secrets and creates only missing
+        // ones. setup/rekey would have different authority/rotation semantics.
+        let mpk = Covercrypt::default().update_msk(&mut msk).map_err(failure)?;
+        let secret = serialize(&msk)?;
+        let public = serialize(&mpk)?;
+        store(updated_msk, secret);
+        store(updated_mpk, public);
+        Ok(())
+    })
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cc_add_attribute(msk: *const u8, len: usize,
     dimension: *const c_char, attribute: *const c_char, mode: i32, after: *const c_char,
     updated_msk: *mut Buffer, updated_mpk: *mut Buffer) -> i32 {

@@ -34,7 +34,11 @@ void printCovercryptHelp(const char *programName)
               << "  Outputs: ./keys/demo_pk.key and ./keys/demo_msk.key\n"
               << "  " << programName << " genkey --scheme covercrypt ./keys/demo_msk.key \"Department::IT && Level::ADMIN\" ./keys/user.key\n"
               << "  " << programName << " encrypt --scheme covercrypt ./keys/demo_pk.key data.txt \"Department::IT && Level::ADMIN\" data.enc\n"
-              << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt\n";
+              << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt\n"
+              << "  Add E without replacing the authority:\n"
+              << "  " << programName << " add_dimension --scheme covercrypt ./keys/demo_msk.key scripts/covercrypt-add-e.json ./keys/demo-v2\n"
+              << "  Use demo-v2_pk.key and demo-v2_msk.key for subsequent encryption/key generation.\n"
+              << "  Old user keys retain old rights; issue an authorized new key to grant E.\n";
 }
 
 void printUsage(const char *programName)
@@ -55,6 +59,9 @@ void printUsage(const char *programName)
     std::cout << "  genkey_buffer <master_key_file> <attrs>               - GenKey and print SK to stdout" << std::endl;
     std::cout << "  encrypt_buffer <pub_key> [pqc_priv_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
     std::cout << "  decrypt_buffer <priv_key> [pqc_pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
+    std::cout << "  add_dimension --scheme covercrypt <msk> <dimension_json_file> <new_prefix>" << std::endl;
+    std::cout << "  add_attribute --scheme covercrypt <msk> <dimension> <attribute> <new_prefix> [after_attribute]" << std::endl;
+    std::cout << "    Growth preserves the authority; outputs must not already exist. --pqc is not used." << std::endl;
     std::cout << std::endl;
     std::cout << "Examples:" << std::endl;
     std::cout << "  " << programName << " setup --scheme tkn20 ./keys/mykey" << std::endl;
@@ -126,7 +133,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "setup_buffer", "genkey_buffer", "encrypt_buffer", "decrypt_buffer"};
+    std::vector<std::string> reserved_commands = {"setup", "genkey", "encrypt", "decrypt", "setup_buffer", "genkey_buffer", "encrypt_buffer", "decrypt_buffer", "add_dimension", "add_attribute"};
     for (size_t i = 2; i < args.size(); ++i)
     {
         if (std::find(reserved_commands.begin(), reserved_commands.end(), args[i]) != reserved_commands.end())
@@ -170,6 +177,41 @@ int main(int argc, char *argv[])
             else
             {
                 result = setup_with_scheme(args[2].c_str(), scheme);
+            }
+        }
+        else if (mode == "add_dimension" || mode == "add_attribute")
+        {
+            if (scheme != CPABE_SCHEME_COVERCRYPT || use_pqc)
+            {
+                std::cerr << "Authority growth requires --scheme covercrypt; signing keys remain unchanged (omit --pqc)." << std::endl;
+                return 1;
+            }
+            if (mode == "add_dimension")
+            {
+                if (args.size() != 5)
+                {
+                    std::cerr << "Usage: " << args[0] << " add_dimension --scheme covercrypt <msk> <dimension_json_file> <new_prefix>" << std::endl;
+                    return 1;
+                }
+                std::ifstream file(args[3], std::ios::binary);
+                if (!file)
+                {
+                    std::cerr << "Cannot read dimension JSON: " << args[3] << std::endl;
+                    return 1;
+                }
+                std::ostringstream json;
+                json << file.rdbuf();
+                result = hybrid_cpabe_covercrypt_add_dimension(args[2].c_str(), json.str().c_str(), args[4].c_str());
+            }
+            else
+            {
+                if (args.size() != 6 && args.size() != 7)
+                {
+                    std::cerr << "Usage: " << args[0] << " add_attribute --scheme covercrypt <msk> <dimension> <attribute> <new_prefix> [after_attribute]" << std::endl;
+                    return 1;
+                }
+                result = hybrid_cpabe_covercrypt_add_attribute(args[2].c_str(), args[3].c_str(), args[4].c_str(),
+                                                               args.size() == 7 ? args[6].c_str() : nullptr, args[5].c_str());
             }
         }
         else if (mode == "genkey")

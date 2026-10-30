@@ -210,6 +210,28 @@ extern "C"
     LIB_API int ml_dsa_87_generate_keypair(unsigned char **pk, size_t *pk_len, unsigned char **sk, size_t *sk_len);
     LIB_API int ml_dsa_87_sign(const unsigned char *msg, size_t msg_len, const unsigned char *sk, unsigned char **sig, size_t *sig_len);
     LIB_API int ml_dsa_87_verify(const unsigned char *msg, size_t msg_len, const unsigned char *sig, size_t sig_len, const unsigned char *pk);
+
+    // ========================================================================
+    // CoverCrypt Authority Growth
+    // ========================================================================
+    // Grow a CoverCrypt authority without running setup again. Input MSK is
+    // unchanged. Both updated PK and MSK must be retained. New user rights
+    // require a newly issued authorized user key; old keys keep old rights.
+    // HCPABE_COVERCRYPT_MODE selects the mode for new attributes only.
+    LIB_API int hybrid_cpabe_covercrypt_add_attributeBuffer(
+        const unsigned char *msk, size_t mskLen, const char *dimension, const char *attribute,
+        const char *afterOrNull, unsigned char **pkOut, size_t *pkLen,
+        unsigned char **mskOut, size_t *mskOutLen);
+    LIB_API int hybrid_cpabe_covercrypt_add_dimensionBuffer(
+        const unsigned char *msk, size_t mskLen, const char *dimensionJson,
+        unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
+    // File variants write a new pair using setup's path/prefix naming. They
+    // reject pre-existing output files. dimensionJson is JSON text, not a path.
+    LIB_API int hybrid_cpabe_covercrypt_add_attribute(
+        const char *mskFile, const char *dimension, const char *attribute,
+        const char *afterOrNull, const char *outPrefix);
+    LIB_API int hybrid_cpabe_covercrypt_add_dimension(
+        const char *mskFile, const char *dimensionJson, const char *outPrefix);
     
     // ========================================================================
     // Utility Functions

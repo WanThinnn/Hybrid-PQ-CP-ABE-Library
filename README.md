@@ -71,6 +71,52 @@ used by CoverCrypt tracing; this library does not expose tracing operations.
 Serialize access to authority files when issuing keys from multiple processes.
 See `bindings/covercrypt/README.md` for the native bridge and its upstream license.
 
+### Extend a CoverCrypt authority
+
+`add_dimension` and `add_attribute` use the existing MSK and upstream
+`AccessStructure` operations followed by `Covercrypt::update_msk`. They retain
+existing secrets rather than running `setup` again. The commands return a new
+MSK/PK pair under an unused output prefix; the input keys are left unchanged.
+
+Add a new E dimension to the demo authority:
+
+```sh
+build/artifacts/windows/main.exe add_dimension --scheme covercrypt ./keys/demo_msk.key scripts/covercrypt-add-e.json ./keys/demo-v2
+```
+
+On Linux/macOS, use `build/artifacts/linux/main` or
+`build/artifacts/macos/main` respectively. `scripts/covercrypt-add-e.json` is one
+dimension object, whereas the setup JSON contains a `dimensions` array.
+
+For a new value in an existing dimension:
+
+```sh
+build/artifacts/windows/main.exe add_attribute --scheme covercrypt ./keys/demo-v2_msk.key Department SALES ./keys/demo-v3
+```
+
+For hierarchical dimensions, the optional final argument is the existing
+attribute after which the new value is inserted; without it, upstream assigns
+the lowest rank. `HCPABE_COVERCRYPT_MODE` controls only the new attributes.
+
+Retain **both** updated master keys and use the updated MSK for subsequent
+`genkey` operations. Old user keys retain their previous rights on old and new
+ciphertexts using those rights. They do not automatically gain E. Grant E by
+issuing a new authorized key from the updated MSK, for example:
+
+```sh
+build/artifacts/windows/main.exe genkey --scheme covercrypt ./keys/demo-v2_msk.key "Department::IT && Level::ADMIN && E::present" ./keys/user-e.key
+```
+
+Signing keys are unchanged and can be reused. Omit `--pqc` on growth commands.
+Serialize authority-management operations and review the new pair before
+switching applications to it. Output files must not already exist.
+
+This follows upstream's [update_msk](https://docs.rs/cosmian_cover_crypt/latest/cosmian_cover_crypt/struct.Covercrypt.html#method.update_msk)
+and [AccessStructure](https://docs.rs/cosmian_cover_crypt/latest/cosmian_cover_crypt/struct.AccessStructure.html)
+APIs. Adding rights differs from `rekey` (rotate secrets), `refresh_usk` (refresh
+an existing key's revisions), or `prune_master_secret_key` (irreversibly remove
+old revisions). Growth does not revoke previously issued keys.
+
 ## Performance & Benchmarks
 
 The library uses a **hybrid KEM/DEM-style architecture**: CP-ABE protects a randomly generated secret under the access policy, SHA3-256 derives the AES-256 key, and AES-GCM handles the bulk payload. The optional post-quantum path adds **ML-DSA-87 Sign-then-Encrypt** before the payload enters the hybrid encryption pipeline.
