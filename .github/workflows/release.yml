@@ -102,6 +102,9 @@ jobs:
       - name: Test release packaging checks
         run: python -m unittest discover -s tests -p test_release_package.py
 
+      - name: Test configure without installing host packages
+        run: python -m unittest discover -s tests -p test_configure.py -v
+
       - name: Build and test MSVC libraries
         if: runner.os == 'Windows'
         shell: pwsh

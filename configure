@@ -1,0 +1,278 @@
+#!/bin/sh
+# Check the host toolchain. Nothing is installed unless --install is supplied.
+set -eu
+INSTALL=0
+case "${1:-}" in
+    '') ;;
+    --install) INSTALL=1 ;;
+    --help|-h)
+        printf '%s\n' 'Usage: ./configure [--install]' \
+            'Default: check only. --install: install missing host build tools.' \
+            'Windows without Bash: see the PowerShell invocation in README.md.'
+        exit 0 ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+esac
+[ "$#" -le 1 ] || { echo 'Too many arguments' >&2; exit 2; }
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+OS=$(uname -s)
+case "$OS" in
+    MINGW*|MSYS*|CYGWIN*)
+        HCPABE_CONFIGURE_FILE=$(cygpath -w "$ROOT/configure")
+        HCPABE_CONFIGURE_INSTALL=$INSTALL
+        export HCPABE_CONFIGURE_FILE HCPABE_CONFIGURE_INSTALL
+        exec powershell.exe -NoProfile -Command \
+            '$c=Get-Content -LiteralPath $env:HCPABE_CONFIGURE_FILE -Raw; & ([scriptblock]::Create(($c -split "(?m)^# WINDOWS CONFIGURE\r?$",2)[1]))'
+        ;;
+    Linux|Darwin) ;;
+    *) echo "Unsupported operating system: $OS" >&2; exit 1 ;;
+esac
+
+have() { command -v "$1" >/dev/null 2>&1; }
+fail() { echo "configure: $*" >&2; exit 1; }
+root_run() {
+    if [ "$(id -u)" = 0 ]; then "$@";
+    elif have sudo; then sudo "$@";
+    else fail 'sudo/root access is required to install system packages'; fi
+}
+download() { curl --fail --location --proto '=https' --tlsv1.2 "$1" -o "$2"; }
+go_ok() {
+    have go || return 1
+    version=$(go version 2>/dev/null) || return 1
+    printf '%s\n' "$version" | awk '{sub(/^go/, "", $3); split($3,v,"."); exit !(v[1]>1 || (v[1]==1 && v[2]>=24))}'
+}
+make_ok() {
+    have make || return 1
+    version=$(make --version 2>/dev/null) || return 1
+    printf '%s\n' "$version" | awk 'NR==1 {exit !($1=="GNU" && $2=="Make" && $3+0>=4)}'
+}
+refresh_path() {
+    PATH="$ROOT/build/tools/go/bin:${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+    if have brew; then PATH="$(brew --prefix)/opt/make/libexec/gnubin:$PATH"; fi
+    export PATH
+}
+refresh_path
+
+if [ "$INSTALL" = 1 ]; then
+    mkdir -p "$ROOT/build/tmp/configure" "$ROOT/build/tools"
+    if [ "$OS" = Darwin ]; then
+        if ! xcode-select -p >/dev/null 2>&1; then
+            xcode-select --install
+            fail 'Finish the Apple Command Line Tools installer, then rerun ./configure --install'
+        fi
+        if ! have brew; then
+            download https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh "$ROOT/build/tmp/configure/homebrew.sh"
+            /bin/bash "$ROOT/build/tmp/configure/homebrew.sh"
+            refresh_path
+        fi
+        packages=''
+        for pair in 'cmake:cmake' 'make:make' 'git:git' 'python3:python'; do
+            tool=${pair%%:*}; package=${pair#*:}
+            if ! have "$tool"; then packages="$packages $package"; fi
+        done
+        # Apple's make is old; use GNU Make from Homebrew for the project.
+        if ! make_ok; then
+            packages="$packages make"
+        fi
+        if ! go_ok; then packages="$packages go"; fi
+        if [ -n "$packages" ]; then brew install $packages; fi
+        refresh_path
+    else
+        missing=0
+        for tool in make cmake gcc g++ git curl python3 tar; do
+            have "$tool" || missing=1
+        done
+        if [ "$missing" = 1 ]; then
+            if have apt-get; then
+                root_run apt-get update
+                root_run apt-get install -y build-essential cmake git curl python3 tar gzip pkg-config
+            elif have dnf; then
+                root_run dnf install -y gcc gcc-c++ make cmake git curl python3 tar gzip pkgconf-pkg-config
+            elif have pacman; then
+                root_run pacman -S --needed --noconfirm base-devel cmake git curl python tar gzip pkgconf
+            elif have zypper; then
+                root_run zypper --non-interactive install gcc gcc-c++ make cmake git curl python3 tar gzip pkg-config
+            else
+                fail 'Supported Linux installers: apt-get, dnf, pacman, zypper. Install the missing tools manually, then rerun configure.'
+            fi
+        fi
+        if ! go_ok; then
+            # Avoid old distribution Go packages. Verify the official archive
+            # against the SHA256 published in Go's release metadata.
+            case "$(uname -m)" in
+                x86_64) arch=amd64 ;;
+                aarch64|arm64) arch=arm64 ;;
+                *) fail 'Automatic Go installation supports Linux amd64/arm64' ;;
+            esac
+            download 'https://go.dev/dl/?mode=json' "$ROOT/build/tmp/configure/go-releases.json"
+            python3 - "$ROOT" "$arch" <<'PY'
+import hashlib, json, pathlib, shutil, sys, tarfile, urllib.request
+root, arch = pathlib.Path(sys.argv[1]), sys.argv[2]
+releases = json.loads((root / 'build/tmp/configure/go-releases.json').read_text())
+file = next(f for release in releases if release['stable'] for f in release['files']
+            if f['os'] == 'linux' and f['arch'] == arch and f['kind'] == 'archive')
+archive = root / 'build/tmp/configure' / file['filename']
+urllib.request.urlretrieve('https://go.dev/dl/' + file['filename'], archive)
+with archive.open('rb') as stream:
+    digest = hashlib.sha256()
+    for block in iter(lambda: stream.read(1024 * 1024), b''):
+        digest.update(block)
+if digest.hexdigest() != file['sha256']:
+    raise SystemExit('Go archive SHA256 mismatch')
+with tarfile.open(archive) as tar:
+    destination = (root / 'build/tools').resolve()
+    for member in tar.getmembers():
+        target = (destination / member.name).resolve()
+        if not str(target).startswith(str(destination) + '/') or member.issym() or member.islnk():
+            raise SystemExit('Unexpected Go archive member')
+    existing = destination / 'go'
+    if existing.is_symlink() or (existing.exists() and existing.resolve().parent != destination):
+        raise SystemExit('Refusing to replace Go outside build/tools')
+    if existing.exists():
+        shutil.rmtree(existing)
+    tar.extractall(destination)
+PY
+            refresh_path
+        fi
+    fi
+    if ! have rustup; then
+        download https://sh.rustup.rs "$ROOT/build/tmp/configure/rustup.sh"
+        sh "$ROOT/build/tmp/configure/rustup.sh" -y --profile minimal --default-toolchain stable
+        refresh_path
+    elif ! rustc --version >/dev/null 2>&1 || ! cargo --version >/dev/null 2>&1; then
+        rustup default stable
+    fi
+    # Persist only an opt-in activation script, not changes to the user's shell.
+    python3 - "$ROOT" <<'PY'
+import pathlib, shlex, sys
+root = pathlib.Path(sys.argv[1])
+paths = [str(root / 'build/tools/go/bin'), str(pathlib.Path.home() / '.cargo/bin'),
+         '/opt/homebrew/opt/make/libexec/gnubin', '/usr/local/opt/make/libexec/gnubin',
+         '/opt/homebrew/bin', '/usr/local/bin']
+(root / 'build/tools/activate.sh').write_text('export PATH=' + ':'.join(map(shlex.quote, paths)) + ':"$PATH"\n')
+PY
+fi
+
+missing=0
+echo "Toolchain check: $OS"
+tools='make cmake git curl python3 cargo rustc rustup'
+if [ "$OS" = Darwin ]; then tools="$tools clang++"; else tools="$tools gcc g++"; fi
+for tool in $tools; do
+    if have "$tool" && "$tool" --version >/dev/null 2>&1; then
+        echo "[OK] $tool: $(command -v "$tool")"
+    else echo "[MISSING] $tool"; missing=1; fi
+done
+if ! make_ok; then
+    echo '[MISSING] GNU Make >= 4'; missing=1
+fi
+if go_ok; then echo "[OK] $(go version)";
+else echo '[MISSING] Go >= 1.24'; missing=1; fi
+if [ "$missing" = 1 ]; then
+    echo 'Run ./configure --install to install missing tools.'
+    exit 1
+fi
+if [ "$INSTALL" = 1 ]; then echo 'Next: . ./build/tools/activate.sh'; fi
+echo 'Ready: make deps -j8 && make -j8 && make test -j8'
+exit 0
+
+# Windows PowerShell is embedded so a fresh Windows host needs no Bash/Python.
+: <<'# END WINDOWS CONFIGURE'
+# WINDOWS CONFIGURE
+param([switch]$Install, [switch]$Help)
+$ErrorActionPreference = 'Stop'
+if ($Help) { Write-Host 'configure: check only by default; -Install installs missing tools.'; return }
+if ($env:HCPABE_CONFIGURE_INSTALL -eq '1') { $Install = $true }
+if ($env:HCPABE_CONFIGURE_FILE) { $Root = Split-Path -Parent $env:HCPABE_CONFIGURE_FILE }
+else { $Root = (Get-Location).Path }
+if (-not (Test-Path -LiteralPath (Join-Path $Root 'Makefile'))) { throw 'Run configure from the repository root.' }
+$Msys = if ($env:MSYS2_ROOT) { $env:MSYS2_ROOT } else { 'C:\msys64' }
+function Refresh-Path {
+    $env:Path = "$Msys\usr\bin;$Msys\mingw64\bin;$env:USERPROFILE\.cargo\bin;$env:ProgramFiles\Go\bin;" +
+        [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +
+        [Environment]::GetEnvironmentVariable('Path','User') + ';' + $env:Path
+}
+function Find-VisualStudio {
+    $Vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (Test-Path -LiteralPath $Vswhere) {
+        return (& $Vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath)
+    }
+}
+function Has-Tool([string]$Name) { return $null -ne (Get-Command $Name -ErrorAction SilentlyContinue) }
+function Go-Ready {
+    if (-not (Has-Tool 'go')) { return $false }
+    $Version = & go version
+    return $LASTEXITCODE -eq 0 -and $Version -match 'go(\d+)\.(\d+)' -and
+        ([int]$Matches[1] -gt 1 -or ([int]$Matches[1] -eq 1 -and [int]$Matches[2] -ge 24))
+}
+function Install-Package([string]$Id, [string[]]$Extra = @()) {
+    if (-not (Has-Tool 'winget')) {
+        throw 'Install Microsoft App Installer (winget) from https://aka.ms/getwinget then rerun configure -Install.'
+    }
+    & winget install --exact --id $Id --source winget --accept-source-agreements --accept-package-agreements @Extra
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) { throw "winget failed for $Id ($LASTEXITCODE)" }
+    Refresh-Path
+}
+Refresh-Path
+if ($Install) {
+    if (-not (Find-VisualStudio)) {
+        Install-Package 'Microsoft.VisualStudio.2022.BuildTools' @('--override', '--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended')
+    }
+    if (-not (Test-Path -LiteralPath "$Msys\usr\bin\bash.exe")) { Install-Package 'MSYS2.MSYS2' }
+    if (-not (Test-Path -LiteralPath "$Msys\usr\bin\bash.exe")) { throw "MSYS2 not found at $Msys. Set MSYS2_ROOT to its installation directory." }
+    $NeedMsysPackages = -not ((Test-Path "$Msys\usr\bin\make.exe") -and
+        (Test-Path "$Msys\mingw64\bin\gcc.exe") -and
+        (Test-Path "$Msys\mingw64\bin\cmake.exe") -and (Has-Tool 'git'))
+    if ($NeedMsysPackages) {
+        $env:MSYSTEM = 'MINGW64'
+        # Separate shells let MSYS2 restart after updating its runtime. Never
+        # install packages after only refreshing the database (partial upgrade).
+        foreach ($Pass in 1..2) {
+            & "$Msys\usr\bin\bash.exe" --login -c 'pacman -Syu --noconfirm'
+            if ($LASTEXITCODE -ne 0) { throw 'Complete the MSYS2 update, then rerun configure -Install.' }
+        }
+        & "$Msys\usr\bin\bash.exe" --login -c 'pacman -S --needed --noconfirm make mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake git'
+        if ($LASTEXITCODE -ne 0) { throw 'MSYS2 package installation failed' }
+    }
+    Refresh-Path
+    if (-not (Go-Ready)) { Install-Package 'GoLang.Go' }
+    if (-not (Has-Tool 'rustup')) { Install-Package 'Rustlang.Rustup' }
+    if (((& rustup toolchain list) -join ' ') -notmatch 'x86_64-pc-windows-msvc') {
+        & rustup toolchain install stable-x86_64-pc-windows-msvc --profile minimal
+        if ($LASTEXITCODE -ne 0) { throw 'MSVC Rust toolchain installation failed' }
+    }
+}
+$Missing = $false
+Write-Host 'Toolchain check: Windows x64/MSVC'
+foreach ($Tool in @('make','sh','cmake','gcc','git','cargo','rustc','rustup')) {
+    if (Has-Tool $Tool) { Write-Host "[OK] $Tool : $((Get-Command $Tool).Source)" }
+    else { Write-Host "[MISSING] $Tool"; $Missing = $true }
+}
+if (Has-Tool 'make') {
+    $MakeVersion = (& make --version | Select-Object -First 1)
+    if ($MakeVersion -notmatch '^GNU Make ([4-9]|[1-9][0-9])\.') {
+        Write-Host '[MISSING] GNU Make >= 4'; $Missing = $true
+    }
+}
+if (Go-Ready) { Write-Host "[OK] $(& go version)" }
+else { Write-Host '[MISSING] Go >= 1.24'; $Missing = $true }
+$Vs = Find-VisualStudio
+if ($Vs) { Write-Host "[OK] MSVC/MSBuild: $Vs" }
+else { Write-Host '[MISSING] Visual Studio C++ Build Tools'; $Missing = $true }
+$Toolchains = if (Has-Tool 'rustup') { (& rustup toolchain list) -join ' ' } else { '' }
+if ($Toolchains -notmatch 'x86_64-pc-windows-msvc') {
+    Write-Host '[MISSING] x86_64-pc-windows-msvc Rust toolchain'; $Missing = $true
+}
+if ($Missing) { throw 'Toolchain incomplete. Rerun the PowerShell configure command with -Install.' }
+if ($Install) {
+    $Tools = Join-Path $Root 'build\tools'
+    [void][IO.Directory]::CreateDirectory($Tools)
+    $Lines = @('@echo off',
+        ('set "PATH=' + $Msys + '\usr\bin;' + $Msys + '\mingw64\bin;%USERPROFILE%\.cargo\bin;%ProgramFiles%\Go\bin;%PATH%"'),
+        ('call "' + $Vs + '\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64'),
+        'if errorlevel 1 exit /b 1')
+    [IO.File]::WriteAllLines((Join-Path $Tools 'activate.cmd'), $Lines, [Text.Encoding]::ASCII)
+    Write-Host 'Next: cmd /k build\tools\activate.cmd'
+} else {
+    Write-Host "Use an x64 Native Tools prompt; add $Msys\usr\bin and $Msys\mingw64\bin to PATH."
+}
+Write-Host 'Ready: make deps -j8 && make -j8 && make test -j8'
+# END WINDOWS CONFIGURE

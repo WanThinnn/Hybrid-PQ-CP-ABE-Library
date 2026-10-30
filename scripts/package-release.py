@@ -116,6 +116,7 @@ def collect_notices(root, package):
 
 
 def stage_package(root, package, target):
+    require_file(root / 'include/hybrid_pq_cp_abe/version.h')
     core, dependencies = required_outputs(target)
     build = root / "build/artifacts" / target
     deps = root / "build/deps" / target

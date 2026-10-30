@@ -1,0 +1,12 @@
+{
+  "dimensions": [
+    {
+      "name": "Department",
+      "attributes": ["IT", "HR"]
+    },
+    {
+      "name": "Level",
+      "attributes": ["USER", "ADMIN"]
+    }
+  ]
+}

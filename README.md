@@ -51,6 +51,12 @@ corresponding `<name>::present` attribute. For native dimensions/hierarchies,
 use qualified policies such as `Department::FIN && Security::TOP`. CoverCrypt
 does not translate the TKN20 `NOT` syntax; unsupported policies fail explicitly.
 
+For a quick CLI smoke test, use the checked-in [scripts/covercrypt-demo.json](scripts/covercrypt-demo.json)
+with `Department::{IT,HR}` and `Level::{USER,ADMIN}`. Run `main --help` for CMD,
+PowerShell and Linux/macOS environment commands and a setup/keygen/encrypt/decrypt
+example. The demo contains only attribute definitions, not keys. Setup requires
+`HCPABE_COVERCRYPT_CONFIG`; the CLI does not automatically read `.env` files.
+
 The file-based CoverCrypt key-generation function persists the updated MSK.
 The v5.2 buffer function remains stateless and does not retain the user registry
 used by CoverCrypt tracing; this library does not expose tracing operations.
@@ -168,6 +174,47 @@ build/artifacts/        Core build output grouped by platform
     ```
 
 Required toolchains: CMake, Rust/Cargo, Go 1.24+, GNU Make, and a native C/C++ compiler. Windows additionally requires Visual Studio 2022/MSVC and MinGW-w64 `gcc` for Go CGO/TKN20.
+
+### Configure a new machine
+
+The single `configure` file checks the host toolchain without installing or
+downloading anything. Missing tools produce a nonzero exit status. Use
+`--install` explicitly to install missing tools; OS installers may request
+administrator access or interactive completion.
+
+Linux/macOS (no Make or Python needed to start the check):
+
+```sh
+chmod +x configure
+./configure
+./configure --install
+. ./build/tools/activate.sh
+```
+
+Linux installation supports apt, dnf, pacman and zypper. Go is downloaded from
+the official Go release metadata with SHA256 verification when needed. macOS
+uses Apple Command Line Tools and Homebrew; finish any Apple installer dialog
+and rerun `configure --install` if prompted. Rust uses the official rustup
+installer. Activation adds local tools to this shell's PATH.
+
+On a fresh Windows machine, PowerShell is already available; Bash is not
+required. Run from the repository root to execute the Windows section embedded
+in the same file:
+
+```powershell
+$text = Get-Content .\configure -Raw
+$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1])
+& $setup                 # Check only
+& $setup -Install        # Install missing tools
+cmd /k build\tools\activate.cmd
+```
+
+The Windows installer uses WinGet for Visual Studio C++ Build Tools, MSYS2, Go
+and rustup, then MSYS2's package manager for Make/CMake/MinGW. If WinGet is
+missing, install Microsoft's App Installer from <https://aka.ms/getwinget> first.
+Use the activated x64 command prompt for subsequent `make` commands; it keeps
+MSVC's linker ahead of the unrelated MSYS `link.exe`. No `make prepare` or
+library-specific Make targets are needed.
 
 Build order from a fresh clone:
 

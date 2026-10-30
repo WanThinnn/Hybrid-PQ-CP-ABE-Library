@@ -21,7 +21,8 @@ class ReleasePackageTests(unittest.TestCase):
         names += [f"build/deps/{target}/lib/{name}" for name in dependencies]
         names += [f"build/deps/{target}/include/{name}" for name in (
             "cryptopp/aes.h", "rabe/rabe.h", "liboqs/oqs/oqs.h", "tkn20/cpabe_tkn20.h", "covercrypt/covercrypt_ffi.h")]
-        names += ["include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h", "LICENSE", "NOTICE", "README.md", "VERSION"]
+        names += ["include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h", "include/hybrid_pq_cp_abe/version.h",
+                  "LICENSE", "NOTICE", "README.md", "VERSION"]
         for name in names:
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)

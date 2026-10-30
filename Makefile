@@ -8,6 +8,7 @@
 #   make test -j8
 
 BUILD_ROOT = build
+VERSION_HEADER = include/hybrid_pq_cp_abe/version.h
 
 ifeq ($(OS),Windows_NT)
     PLATFORM = windows
@@ -42,6 +43,15 @@ ifeq ($(PLATFORM),windows)
     endif
 endif
 
+ifeq ($(PLATFORM),windows)
+    LIB_VERSION := $(strip $(shell cmd.exe /d /c type VERSION))
+else
+    LIB_VERSION := $(strip $(shell cat VERSION))
+endif
+ifeq ($(LIB_VERSION),)
+    $(error VERSION must contain the library version)
+endif
+
 BUILD_DIR = $(BUILD_ROOT)/artifacts/$(PLATFORM)
 DEPS_DIR = $(BUILD_ROOT)/deps/$(PLATFORM)
 DEPS_LIB_DIR = $(DEPS_DIR)/lib
@@ -73,7 +83,7 @@ SRCS = $(SCHEMES_DIR)/ac17.cpp \
 MAIN_SRC = src/main.cpp
 SOURCE_NAMES = $(notdir $(SRCS:.cpp=))
 
-PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) $(CORE_DIR)/abe-internal.h
+PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) $(VERSION_HEADER) $(CORE_DIR)/abe-internal.h
 RABE_HEADER = $(DEPS_INC_DIR)/rabe/rabe.h
 OQS_HEADER = $(OQS_INC_DIR)/oqs/oqs.h
 TKN20_HEADER = $(TKN20_INC_DIR)/cpabe_tkn20.h
@@ -168,6 +178,19 @@ else
 endif
 
 .DEFAULT_GOAL := all
+
+# Generated SDK header: bake VERSION into binaries without a runtime file lookup.
+$(VERSION_HEADER): VERSION Makefile
+ifeq ($(PLATFORM),windows)
+	@> "$(subst /,\,$@)" echo // Generated from VERSION; do not edit.
+	@>> "$(subst /,\,$@)" echo #ifndef HYBRID_CP_ABE_VERSION_H
+	@>> "$(subst /,\,$@)" echo #define HYBRID_CP_ABE_VERSION_H
+	@>> "$(subst /,\,$@)" echo #define HCPABE_LIB_VERSION "$(LIB_VERSION)"
+	@>> "$(subst /,\,$@)" echo #endif
+else
+	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(LIB_VERSION)"' '#endif' > "$@"
+endif
+
 .PHONY: all clean deps deps-clean executable shared static help test tests abi-info
 
 all: static shared executable

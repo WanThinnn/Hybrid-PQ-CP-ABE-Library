@@ -362,6 +362,7 @@ benchmark/results/
 /build/*
 !/build/.gitkeep
 !/build/README.md
+/include/hybrid_pq_cp_abe/version.h
 vendor/cover_crypt/target/
 tmp/
 release_notes/pre-*
@@ -370,3 +371,4 @@ env/
 venv/
 graphify-out/
 bindings/python/test*
+!bindings/python/test_api.py

@@ -17,13 +17,32 @@
 
 #include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
 
+void printCovercryptHelp(const char *programName)
+{
+    std::cout << "Covercrypt setup (required configuration):\n"
+              << "  Set HCPABE_COVERCRYPT_CONFIG to a dimensions JSON file before setup.\n"
+              << "  The CLI does not automatically load .env files.\n"
+              << "  Demo file: scripts/covercrypt-demo.json (paths below assume the repository root).\n"
+              << "  CMD:        set \"HCPABE_COVERCRYPT_CONFIG=%CD%\\scripts\\covercrypt-demo.json\"\n"
+              << "  PowerShell: $env:HCPABE_COVERCRYPT_CONFIG = (Resolve-Path .\\scripts\\covercrypt-demo.json).Path\n"
+              << "  Linux/macOS: export HCPABE_COVERCRYPT_CONFIG=\"$PWD/scripts/covercrypt-demo.json\"\n"
+              << "  Optional HCPABE_COVERCRYPT_MODE: hybridized (default), post_quantum, classic.\n"
+              << "  Hybridized includes ML-KEM; --pqc separately adds ML-DSA-87 signatures.\n"
+              << "  Create an output directory first (e.g. mkdir keys), then run:\n"
+              << "  " << programName << " setup --scheme covercrypt ./keys/demo\n"
+              << "  Outputs: ./keys/demo_pk.key and ./keys/demo_msk.key\n"
+              << "  " << programName << " genkey --scheme covercrypt ./keys/demo_msk.key \"Department::IT && Level::ADMIN\" ./keys/user.key\n"
+              << "  " << programName << " encrypt --scheme covercrypt ./keys/demo_pk.key data.txt \"Department::IT && Level::ADMIN\" data.enc\n"
+              << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt\n";
+}
+
 void printUsage(const char *programName)
 {
     std::cout << "Hybrid PQ-CP-ABE Library v" << getVersion() << std::endl;
     std::cout << "Usage: " << programName << " [command] [options] <args>" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --pqc               - Use PQC signature" << std::endl;
+    std::cout << "  --pqc               - Add ML-DSA-87 signatures (separate from Covercrypt's KEM mode)" << std::endl;
     std::cout << "  --scheme <name>     - Specify scheme: 'ac17' (default), 'tkn20' or 'covercrypt'" << std::endl;
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
@@ -41,6 +60,8 @@ void printUsage(const char *programName)
     std::cout << "  " << programName << " genkey --scheme tkn20 ./keys/cpabe_msk.key \"admin it\" ./keys/user.key" << std::endl;
     std::cout << "  " << programName << " encrypt --scheme tkn20 ./keys/cpabe_pk.key data.txt \"admin and it\" data.enc" << std::endl;
     std::cout << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt" << std::endl;
+    std::cout << std::endl;
+    printCovercryptHelp(programName);
 }
 
 int main(int argc, char *argv[])
@@ -137,6 +158,8 @@ int main(int argc, char *argv[])
             if (args.size() != 3)
             {
                 std::cerr << "Usage: " << args[0] << " setup [--scheme <name>] [--pqc] <path_or_prefix>" << std::endl;
+                if (scheme == CPABE_SCHEME_COVERCRYPT)
+                    printCovercryptHelp(args[0].c_str());
                 return 1;
             }
             if (use_pqc)
@@ -466,6 +489,12 @@ int main(int argc, char *argv[])
         if (result != HCPABE_SUCCESS)
         {
             std::cerr << "Operation failed: " << getErrorMessage(result) << " (code: " << result << ")" << std::endl;
+            if (scheme == CPABE_SCHEME_COVERCRYPT && (mode == "setup" || mode == "setup_buffer"))
+            {
+                std::cerr << "Covercrypt setup requires HCPABE_COVERCRYPT_CONFIG (dimensions JSON); "
+                          << "check HCPABE_COVERCRYPT_MODE as well. Use --help for scripts/covercrypt-demo.json examples."
+                          << std::endl;
+            }
         }
     }
     catch (const std::exception &ex)
