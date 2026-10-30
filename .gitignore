@@ -363,3 +363,8 @@ benchmark/results/
 !/build/.gitkeep
 vendor/cover_crypt/target/
 tmp/
+release_notes/pre-*
+.env
+env/
+venv/
+graphify-out/

@@ -26,11 +26,13 @@ import math
 import os
 import platform
 import random
+import re
 import shutil
 import statistics
 import subprocess
 import sys
 import time
+import threading
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -131,15 +133,39 @@ def attrs_for(n: int) -> str:
     return " ".join(attrs)
 
 
+def covercrypt_policy_attrs(n: int) -> tuple[str, str]:
+    """Map N logical policy terms onto two CoverCrypt-native dimensions.
+
+    CoverCrypt dimensions are policy axes, not independent boolean attributes.
+    Modeling every AC17/TKN20 attribute as its own {present,absent} dimension
+    makes CoverCrypt's rights universe grow as 3^N. Split the N terms across
+    two axes instead: OR within each axis, AND between axes.
+    """
+    n = max(1, n)
+    left_count = (n + 1) // 2
+    right_count = n // 2
+
+    left_terms = [f"BENCH_A::A{i}" for i in range(1, left_count + 1)]
+    left_policy = left_terms[0] if len(left_terms) == 1 else "(" + " || ".join(left_terms) + ")"
+
+    if right_count == 0:
+        return left_policy, "BENCH_A::A1"
+
+    right_terms = [f"BENCH_B::B{i}" for i in range(1, right_count + 1)]
+    right_policy = right_terms[0] if len(right_terms) == 1 else "(" + " || ".join(right_terms) + ")"
+    return f"{left_policy} && {right_policy}", "BENCH_A::A1 BENCH_B::B1"
+
+
 def configure_covercrypt(tmp: Path, max_policy_attributes: int) -> Path:
+    left_count = max(1, (max_policy_attributes + 1) // 2)
+    right_count = max_policy_attributes // 2
     dimensions = [
-        {"name": f"attr{i}", "attributes": ["present", "absent"]}
-        for i in range(1, max_policy_attributes + 1)
+        {"name": "BENCH_A", "attributes": [f"A{i}" for i in range(1, left_count + 1)]}
     ]
-    dimensions += [
-        {"name": f"extra{i}", "attributes": ["present", "absent"]}
-        for i in range(1, 5)
-    ]
+    if right_count:
+        dimensions.append(
+            {"name": "BENCH_B", "attributes": [f"B{i}" for i in range(1, right_count + 1)]}
+        )
     config_path = tmp / "covercrypt.json"
     config_path.write_text(
         json.dumps({"dimensions": dimensions}, separators=(",", ":")),
@@ -191,25 +217,103 @@ def measure(
     iterations: int,
     warmup: int,
     quiet: bool,
+    label: Optional[str] = None,
 ) -> tuple[list[float], Any]:
     last = None
-    with silence_native(quiet):
-        for _ in range(warmup):
-            last = fn()
+    progress_step = max(1, iterations // 20)
+    progress_fd = None
+    if label:
+        try:
+            progress_fd = os.dup(sys.stdout.fileno())
+        except Exception:
+            progress_fd = None
+
+    def emit(message: str, end: str = "\n"):
+        data = (message + end).encode("utf-8", errors="replace")
+        if progress_fd is not None:
+            try:
+                os.write(progress_fd, data)
+                return
+            except Exception:
+                pass
+        print(message, end=end, flush=True)
+
+    def call_with_heartbeat(stage: str, current: int, total: int):
+        if not label:
+            with silence_native(quiet):
+                return fn()
+        done = threading.Event()
+        call_started = time.perf_counter()
+
+        def heartbeat():
+            while not done.wait(1.0):
+                elapsed = time.perf_counter() - call_started
+                emit(
+                    f"       {stage} {current}/{total} running | current call {elapsed:6.1f}s",
+                    end="\r",
+                )
+
+        worker = threading.Thread(target=heartbeat, daemon=True)
+        worker.start()
+        try:
+            with silence_native(quiet):
+                return fn()
+        finally:
+            done.set()
+            worker.join(timeout=0.2)
+
+    try:
+        if label:
+            emit(f"    -> {label}")
+
+        for i in range(warmup):
+            if label:
+                emit(f"       warmup {i + 1}/{warmup} starting", end="\r")
+            last = call_with_heartbeat("warmup", i + 1, warmup)
+            if label:
+                pct = (i + 1) / warmup * 100.0
+                emit(f"       warmup {i + 1}/{warmup} ({pct:5.1f}%)", end="\r")
+        if label and warmup:
+            emit(" " * 88, end="\r")
+
         gc.collect()
         gc_on = gc.isenabled()
         if gc_on:
             gc.disable()
         samples = []
+        started = time.perf_counter()
         try:
-            for _ in range(iterations):
+            for i in range(iterations):
+                current = i + 1
+                if label and (current == 1 or current % progress_step == 0):
+                    emit(f"       timed {current}/{iterations} starting", end="\r")
                 t0 = time.perf_counter_ns()
-                last = fn()
-                samples.append((time.perf_counter_ns() - t0) / 1_000_000.0)
+                last = call_with_heartbeat("timed", current, iterations)
+                elapsed_ms = (time.perf_counter_ns() - t0) / 1_000_000.0
+                samples.append(elapsed_ms)
+                if label and (current == iterations or current % progress_step == 0):
+                    elapsed = time.perf_counter() - started
+                    eta = (elapsed / current) * (iterations - current) if current else 0.0
+                    pct = current / iterations * 100.0
+                    emit(
+                        f"       {current}/{iterations} ({pct:5.1f}%)"
+                        f" | elapsed {elapsed:6.1f}s | ETA {eta:6.1f}s",
+                        end="\r",
+                    )
         finally:
             if gc_on:
                 gc.enable()
-    return samples, last
+
+        if label:
+            elapsed = time.perf_counter() - started
+            emit(
+                f"       {iterations}/{iterations} (100.0%) | elapsed {elapsed:6.1f}s | done"
+                + " " * 12
+            )
+        return samples, last
+    finally:
+        if progress_fd is not None:
+            os.close(progress_fd)
 
 
 @dataclass
@@ -575,17 +679,17 @@ def add(rec, samples, suite, scheme, mode, variant, op, case, payload, attrs, ex
 
 def run_core_buffer(native, rec, scheme, payload, policy, attrs, policy_count, n, warm, quiet):
     name = SCHEMES[scheme]
-    samples, pair = measure(lambda: native.setup_buffer(scheme), n, warm, quiet)
+    samples, pair = measure(lambda: native.setup_buffer(scheme), n, warm, quiet, f"{name} / Buffer / Setup")
     add(rec, samples, "core", name, "buffer", "standard", "setup", "baseline", len(payload), policy_count)
     pk, msk = pair
 
-    samples, sk = measure(lambda: native.genkey_buffer(msk, attrs, scheme), n, warm, quiet)
+    samples, sk = measure(lambda: native.genkey_buffer(msk, attrs, scheme), n, warm, quiet, f"{name} / Buffer / KeyGen")
     add(rec, samples, "core", name, "buffer", "standard", "keygen", "baseline", len(payload), policy_count)
 
-    samples, ct = measure(lambda: native.encrypt_buffer(pk, payload, policy, scheme), n, warm, quiet)
+    samples, ct = measure(lambda: native.encrypt_buffer(pk, payload, policy, scheme), n, warm, quiet, f"{name} / Buffer / Encrypt")
     add(rec, samples, "core", name, "buffer", "standard", "encrypt", "baseline", len(payload), policy_count, {"ciphertext_bytes": len(ct)})
 
-    samples, pt = measure(lambda: native.decrypt_buffer(sk, ct), n, warm, quiet)
+    samples, pt = measure(lambda: native.decrypt_buffer(sk, ct), n, warm, quiet, f"{name} / Buffer / Decrypt")
     if pt != payload:
         raise RuntimeError(f"{name} buffer correctness failed")
     add(rec, samples, "core", name, "buffer", "standard", "decrypt", "baseline", len(payload), policy_count)
@@ -598,17 +702,17 @@ def run_core_file(native, rec, scheme, payload, policy, attrs, policy_count, n, 
     pt, sk, ct, out = d / "input.bin", d / "user.key", d / "ct.bin", d / "out.bin"
     pt.write_bytes(payload)
 
-    samples, _ = measure(lambda: native.setup_file(d, scheme), n, warm, quiet)
+    samples, _ = measure(lambda: native.setup_file(d, scheme), n, warm, quiet, f"{name} / File / Setup")
     add(rec, samples, "core", name, "file", "standard", "setup", "baseline", len(payload), policy_count)
 
     msk, pk = d / "cpabe_msk.key", d / "cpabe_pk.key"
-    samples, _ = measure(lambda: native.genkey_file(msk, attrs, sk, scheme), n, warm, quiet)
+    samples, _ = measure(lambda: native.genkey_file(msk, attrs, sk, scheme), n, warm, quiet, f"{name} / File / KeyGen")
     add(rec, samples, "core", name, "file", "standard", "keygen", "baseline", len(payload), policy_count)
 
-    samples, _ = measure(lambda: native.encrypt_file(pk, pt, policy, ct, scheme), n, warm, quiet)
+    samples, _ = measure(lambda: native.encrypt_file(pk, pt, policy, ct, scheme), n, warm, quiet, f"{name} / File / Encrypt")
     add(rec, samples, "core", name, "file", "standard", "encrypt", "baseline", len(payload), policy_count, {"ciphertext_bytes": ct.stat().st_size})
 
-    samples, _ = measure(lambda: native.decrypt_file(sk, ct, out), n, warm, quiet)
+    samples, _ = measure(lambda: native.decrypt_file(sk, ct, out), n, warm, quiet, f"{name} / File / Decrypt")
     if out.read_bytes() != payload:
         raise RuntimeError(f"{name} file correctness failed")
     add(rec, samples, "core", name, "file", "standard", "decrypt", "baseline", len(payload), policy_count)
@@ -616,31 +720,31 @@ def run_core_file(native, rec, scheme, payload, policy, attrs, policy_count, n, 
 
 def run_pqc_buffer(native, rec, scheme, payload, policy, attrs, policy_count, n, warm, quiet):
     name = SCHEMES[scheme]
-    samples, setup = measure(lambda: native.setup_pqc_buffer(scheme), n, warm, quiet)
+    samples, setup = measure(lambda: native.setup_pqc_buffer(scheme), n, warm, quiet, f"{name} / PQC / Setup")
     add(rec, samples, "pqc", name, "buffer", "pqc", "setup_pqc", "baseline", len(payload), policy_count)
     pk, msk, pq_pk, pq_sk = setup
     user_sk = native.genkey_buffer(msk, attrs, scheme)
 
-    samples, ct = measure(lambda: native.encrypt_pqc_buffer(pk, pq_sk, payload, policy, scheme), n, warm, quiet)
+    samples, ct = measure(lambda: native.encrypt_pqc_buffer(pk, pq_sk, payload, policy, scheme), n, warm, quiet, f"{name} / PQC / Encrypt+Sign")
     add(rec, samples, "pqc", name, "buffer", "pqc", "encrypt_sign", "baseline", len(payload), policy_count, {"ciphertext_bytes": len(ct)})
 
-    samples, pt = measure(lambda: native.decrypt_pqc_buffer(user_sk, pq_pk, ct), n, warm, quiet)
+    samples, pt = measure(lambda: native.decrypt_pqc_buffer(user_sk, pq_pk, ct), n, warm, quiet, f"{name} / PQC / Decrypt+Verify")
     if pt != payload:
         raise RuntimeError(f"{name} PQC correctness failed")
     add(rec, samples, "pqc", name, "buffer", "pqc", "decrypt_verify", "baseline", len(payload), policy_count)
 
 
 def run_mldsa(native, rec, sizes, base, warm, quiet):
-    samples, pair = measure(native.ml_dsa_keypair, base, warm, quiet)
+    samples, pair = measure(native.ml_dsa_keypair, base, warm, quiet, "ML-DSA-87 / KeyGen")
     pk, sk = pair
     add(rec, samples, "mldsa", "ML-DSA-87", "native", "primitive", "keygen", "keypair", 0, 0, {"pk_bytes": len(pk), "sk_bytes": len(sk)})
     for size in sizes:
         n = adaptive_iterations(base, size)
         msg = os.urandom(size)
-        samples, sig = measure(lambda: native.ml_dsa_sign(msg, sk), n, warm, quiet)
+        samples, sig = measure(lambda: native.ml_dsa_sign(msg, sk), n, warm, quiet, f"ML-DSA-87 / Sign / {human_bytes(size)}")
         add(rec, samples, "mldsa", "ML-DSA-87", "native", "primitive", "sign", human_bytes(size), size, 0, {"signature_bytes": len(sig)})
         native.ml_dsa_verify(msg, sig, pk)
-        samples, _ = measure(lambda: native.ml_dsa_verify(msg, sig, pk), n, warm, quiet)
+        samples, _ = measure(lambda: native.ml_dsa_verify(msg, sig, pk), n, warm, quiet, f"ML-DSA-87 / Verify / {human_bytes(size)}")
         add(rec, samples, "mldsa", "ML-DSA-87", "native", "primitive", "verify", human_bytes(size), size, 0)
 
 
@@ -649,13 +753,13 @@ def run_aes(native, rec, sizes, base, warm, quiet):
     for size in sizes:
         n = adaptive_iterations(base, size)
         pt = os.urandom(size)
-        samples, ct = measure(lambda: native.aes_encrypt(key, iv, pt, aad), n, warm, quiet)
+        samples, ct = measure(lambda: native.aes_encrypt(key, iv, pt, aad), n, warm, quiet, f"AES-256-GCM / Encrypt / {human_bytes(size)}")
         med = statistics.median(samples)
         thr = (size / 1048576) / (med / 1000) if med else 0
         add(rec, samples, "aes_gcm", "AES-256-GCM", "native", "primitive", "encrypt", human_bytes(size), size, 0, {"median_throughput_mib_s": thr})
         if native.aes_decrypt(key, iv, ct, aad) != pt:
             raise RuntimeError("AES-GCM correctness failed")
-        samples, _ = measure(lambda: native.aes_decrypt(key, iv, ct, aad), n, warm, quiet)
+        samples, _ = measure(lambda: native.aes_decrypt(key, iv, ct, aad), n, warm, quiet, f"AES-256-GCM / Decrypt / {human_bytes(size)}")
         med = statistics.median(samples)
         thr = (size / 1048576) / (med / 1000) if med else 0
         add(rec, samples, "aes_gcm", "AES-256-GCM", "native", "primitive", "decrypt", human_bytes(size), size, 0, {"median_throughput_mib_s": thr})
@@ -667,20 +771,28 @@ def run_policy_scaling(native, rec, sizes, n, warm, quiet):
         name = SCHEMES[scheme]
         pk, msk = native.setup_buffer(scheme)
         for count in sizes:
-            policy, attrs = policy_for(count), attrs_for(count)
+            policy, attrs = (
+                covercrypt_policy_attrs(count)
+                if scheme == COVERCRYPT
+                else (policy_for(count), attrs_for(count))
+            )
             sk = native.genkey_buffer(msk, attrs, scheme)
-            samples, ct = measure(lambda p=policy: native.encrypt_buffer(pk, payload, p, scheme), n, warm, quiet)
+            samples, ct = measure(lambda p=policy: native.encrypt_buffer(pk, payload, p, scheme), n, warm, quiet, f"{name} / Policy {count} attrs / Encrypt")
             add(rec, samples, "policy_scaling", name, "buffer", "standard", "encrypt", f"{count} attrs", len(payload), count)
-            samples, pt = measure(lambda c=ct: native.decrypt_buffer(sk, c), n, warm, quiet)
+            samples, pt = measure(lambda c=ct: native.decrypt_buffer(sk, c), n, warm, quiet, f"{name} / Policy {count} attrs / Decrypt")
             if pt != payload:
                 raise RuntimeError(f"{name} policy scaling failed at {count}")
             add(rec, samples, "policy_scaling", name, "buffer", "standard", "decrypt", f"{count} attrs", len(payload), count)
 
 
 def run_payload_scaling(native, rec, sizes, base, warm, quiet, policy_count, with_pqc):
-    policy, attrs = policy_for(policy_count), attrs_for(policy_count)
     for scheme in NATIVE_SCHEMES:
         name = SCHEMES[scheme]
+        policy, attrs = (
+            covercrypt_policy_attrs(policy_count)
+            if scheme == COVERCRYPT
+            else (policy_for(policy_count), attrs_for(policy_count))
+        )
         pk, msk = native.setup_buffer(scheme)
         sk = native.genkey_buffer(msk, attrs, scheme)
         if with_pqc:
@@ -689,16 +801,16 @@ def run_payload_scaling(native, rec, sizes, base, warm, quiet, policy_count, wit
         for size in sizes:
             n = adaptive_iterations(base, size)
             payload = os.urandom(size)
-            samples, ct = measure(lambda d=payload: native.encrypt_buffer(pk, d, policy, scheme), n, warm, quiet)
+            samples, ct = measure(lambda d=payload: native.encrypt_buffer(pk, d, policy, scheme), n, warm, quiet, f"{name} / Payload {human_bytes(size)} / Encrypt")
             add(rec, samples, "payload_scaling", name, "buffer", "standard", "encrypt", human_bytes(size), size, policy_count)
-            samples, pt = measure(lambda c=ct: native.decrypt_buffer(sk, c), n, warm, quiet)
+            samples, pt = measure(lambda c=ct: native.decrypt_buffer(sk, c), n, warm, quiet, f"{name} / Payload {human_bytes(size)} / Decrypt")
             if pt != payload:
                 raise RuntimeError(f"{name} payload scaling failed")
             add(rec, samples, "payload_scaling", name, "buffer", "standard", "decrypt", human_bytes(size), size, policy_count)
             if with_pqc:
-                samples, pct = measure(lambda d=payload: native.encrypt_pqc_buffer(ppk, pq_sk, d, policy, scheme), n, warm, quiet)
+                samples, pct = measure(lambda d=payload: native.encrypt_pqc_buffer(ppk, pq_sk, d, policy, scheme), n, warm, quiet, f"{name} / Payload {human_bytes(size)} / Encrypt+Sign")
                 add(rec, samples, "payload_scaling", name, "buffer", "pqc", "encrypt_sign", human_bytes(size), size, policy_count)
-                samples, ppt = measure(lambda c=pct: native.decrypt_pqc_buffer(puser, pq_pk, c), n, warm, quiet)
+                samples, ppt = measure(lambda c=pct: native.decrypt_pqc_buffer(puser, pq_pk, c), n, warm, quiet, f"{name} / Payload {human_bytes(size)} / Decrypt+Verify")
                 if ppt != payload:
                     raise RuntimeError(f"{name} PQC payload scaling failed")
                 add(rec, samples, "payload_scaling", name, "buffer", "pqc", "decrypt_verify", human_bytes(size), size, policy_count)
@@ -715,15 +827,15 @@ def run_charm(rec, n, warm, policy, count):
     ac17 = AC17CPABE(group_obj=group, assump_size=2)
     attrs = attrs_for(count).split()
 
-    samples, pair = measure(ac17.setup, n, warm, False)
+    samples, pair = measure(ac17.setup, n, warm, False, "Charm AC17 / Setup")
     add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "setup", "baseline", 0, count)
     pk, msk = pair
-    samples, sk = measure(lambda: ac17.keygen(pk, msk, attrs), n, warm, False)
+    samples, sk = measure(lambda: ac17.keygen(pk, msk, attrs), n, warm, False, "Charm AC17 / KeyGen")
     add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "keygen", "baseline", 0, count)
     msg = group.random(GT)
-    samples, ct = measure(lambda: ac17.encrypt(pk, msg, policy), n, warm, False)
+    samples, ct = measure(lambda: ac17.encrypt(pk, msg, policy), n, warm, False, "Charm AC17 / Encrypt")
     add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "encrypt", "GT element", 0, count)
-    samples, out = measure(lambda: ac17.decrypt(pk, ct, sk), n, warm, False)
+    samples, out = measure(lambda: ac17.decrypt(pk, ct, sk), n, warm, False, "Charm AC17 / Decrypt")
     if out != msg:
         raise RuntimeError("Charm correctness failed")
     add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "decrypt", "GT element", 0, count)
@@ -747,11 +859,9 @@ def git_info(root):
 
 
 def detect_cpu_model():
-    cpu = os.environ.get("PROCESSOR_IDENTIFIER") or platform.processor()
-    if cpu:
-        return cpu.strip()
+    system = platform.system()
 
-    if platform.system() == "Windows":
+    if system == "Windows":
         try:
             proc = subprocess.run(
                 [
@@ -768,7 +878,79 @@ def detect_cpu_model():
         except Exception:
             pass
 
+    elif system == "Darwin":
+        try:
+            proc = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                return proc.stdout.strip()
+        except Exception:
+            pass
+        try:
+            proc = subprocess.run(
+                ["sysctl", "-n", "hw.model"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                return proc.stdout.strip()
+        except Exception:
+            pass
+
+    elif system == "Linux":
+        try:
+            cpuinfo = Path("/proc/cpuinfo")
+            if cpuinfo.is_file():
+                for line in cpuinfo.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    if ":" not in line:
+                        continue
+                    key, value = line.split(":", 1)
+                    if key.strip().lower() in ("model name", "hardware") and value.strip():
+                        return value.strip()
+        except Exception:
+            pass
+        try:
+            proc = subprocess.run(
+                ["lscpu"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+            if proc.returncode == 0:
+                for line in proc.stdout.splitlines():
+                    if ":" not in line:
+                        continue
+                    key, value = line.split(":", 1)
+                    if key.strip().lower() in ("model name", "model") and value.strip():
+                        return value.strip()
+        except Exception:
+            pass
+
+    cpu = os.environ.get("PROCESSOR_IDENTIFIER") or platform.processor()
+    if cpu:
+        return cpu.strip()
+
     return platform.machine() or "Unknown"
+
+def published_cpu_slug(cpu: str) -> str:
+    match = re.search(r"\b(i[3579]-\d+[A-Za-z0-9]*)\b", cpu, re.IGNORECASE)
+    if match:
+        return match.group(1)
+
+    match = re.search(r"\b(Ryzen\s+\d+\s+\d+[A-Za-z0-9]*)\b", cpu, re.IGNORECASE)
+    if match:
+        return re.sub(r"\s+", "-", match.group(1))
+
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", cpu).strip("-")
+    return slug[:48] or "unknown-cpu"
 
 
 def environment(native, root):
@@ -1136,9 +1318,71 @@ must not be inferred directly from this comparison.
     (out / "report.md").write_text(text, encoding="utf-8")
 
 
+def write_snapshot_readme(out, env, config, charm):
+    date = datetime.now().strftime("%Y-%m-%d")
+    showcase = bool(config.get("showcase"))
+    scope = (
+        "AC17, TKN20, and CoverCrypt use the in-memory Buffer API. "
+        "CoverCrypt runs in hybridized mode (Curve25519 + ML-KEM-768)."
+        if showcase else
+        "AC17, TKN20, and CoverCrypt include the configured benchmark suites. "
+        "CoverCrypt runs in hybridized mode (Curve25519 + ML-KEM-768)."
+    )
+    text = f"""# Published Benchmark — {date}
+
+This directory contains a reproducible benchmark snapshot for Hybrid PQ-CP-ABE Library v{env.get('library_version')}.
+
+## Environment
+
+- CPU: {env.get('cpu')}
+- OS: {env.get('os')}
+- Python: {env.get('python')}
+- Native library: v{env.get('library_version')}
+- Git commit: {env.get('git_commit') or 'n/a'}
+- Benchmark profile: {config.get('profile')}
+- Timed iterations: {config.get('iterations')}
+- Warm-up iterations: {config.get('warmup')}
+- Payload: {human_bytes(config.get('payload_bytes', 0))}
+- Policy: {config.get('policy_attributes')} distinct attributes
+- Mode: {'showcase' if showcase else 'comprehensive'}
+
+## Included artifacts
+
+- `report.md` — methodology, environment, summary tables, and interpretation notes.
+- `summary.csv` — aggregated median/mean/p95/p99/CV statistics.
+- `raw_samples.csv` — every recorded timing sample; no outlier removal.
+- `benchmark_results.json` — machine-readable benchmark metadata and aggregate records.
+- `charts/` — generated benchmark figures.
+
+## Scope
+
+{scope}
+
+The PQC measurements cover the end-to-end Sign-then-Encrypt path using ML-DSA-87.
+
+Charm-Crypto AC17 is {'included' if charm else 'not available and therefore skipped'} as an in-memory primitive reference. It is not a strict end-to-end equivalent of the native hybrid pipeline.
+
+## Reproduce
+
+From the repository `benchmark/` directory:
+
+```bash
+python benchmark_full.py --profile {config.get('profile')}{' --showcase' if showcase else ''}
+```
+
+For a broader benchmark including File I/O, scaling tests, AES-GCM, and additional microbenchmarks:
+
+```bash
+python benchmark_full.py --profile full
+```
+"""
+    (out / "README.md").write_text(text, encoding="utf-8")
+
+
 def args():
     p = argparse.ArgumentParser(description="Hybrid PQ-CP-ABE comprehensive benchmark")
     p.add_argument("--profile", choices=PROFILES, default="standard")
+    p.add_argument("--showcase", action="store_true", help="Run focused Buffer/PQC/ML-DSA/Charm showcase only")
     p.add_argument("--repo-root")
     p.add_argument("--lib")
     p.add_argument("--output")
@@ -1169,11 +1413,17 @@ def main():
     script = Path(__file__).resolve()
     root = repo_root(script, a.repo_root)
     path = find_lib(root, a.lib)
-    native = Native(path)
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if a.output:
         out = Path(a.output).expanduser().resolve()
+    elif a.showcase:
+        published_root = (root / "benchmark" if root else script.parent) / "published"
+        published_name = (
+            f"{datetime.now().strftime('%Y-%m-%d')}_"
+            f"{published_cpu_slug(detect_cpu_model())}_{a.profile}"
+        )
+        out = published_root / published_name
     elif root:
         out = root / "benchmark" / "results" / f"run_{stamp}"
     else:
@@ -1183,9 +1433,13 @@ def main():
     tmp.mkdir(exist_ok=True)
 
     max_covercrypt_attributes = max(
-        [a.policy_attributes] + (profile["policy_sizes"] if not a.no_scaling else [])
+        [a.policy_attributes] + (profile["policy_sizes"] if not a.no_scaling and not a.showcase else [])
     )
     covercrypt_config = configure_covercrypt(tmp, max_covercrypt_attributes)
+    covercrypt_dimensions = json.loads(covercrypt_config.read_text(encoding="utf-8"))["dimensions"]
+    # Configure the environment before loading the native library. In particular,
+    # Windows DLLs may initialize their C runtime's environment when loaded.
+    native = Native(path)
 
     policy = policy_for(a.policy_attributes)
     attrs = attrs_for(a.policy_attributes)
@@ -1199,13 +1453,16 @@ def main():
         "policy": policy,
         "attributes": attrs,
         "seed": a.seed,
-        "include_file": not a.no_file,
+        "showcase": a.showcase,
+        "include_file": (not a.no_file) and not a.showcase,
         "include_pqc": not a.no_pqc,
         "include_micro": not a.no_micro,
-        "include_scaling": not a.no_scaling,
+        "include_scaling": (not a.no_scaling) and not a.showcase,
         "include_charm": not a.no_charm,
         "covercrypt_mode": "hybridized",
         "covercrypt_config": str(covercrypt_config),
+        "covercrypt_dimensions": covercrypt_dimensions,
+        "covercrypt_policy_shape": "OR within each dimension, AND between dimensions",
         "covercrypt_max_policy_attributes": max_covercrypt_attributes,
         "library_path": str(path),
         "repo_root": str(root) if root else None,
@@ -1214,12 +1471,17 @@ def main():
     rec = Recorder()
 
     print("=" * 70)
-    print("Hybrid PQ-CP-ABE Comprehensive Benchmark")
+    print("Hybrid PQ-CP-ABE Showcase Benchmark" if a.showcase else "Hybrid PQ-CP-ABE Comprehensive Benchmark")
     print("=" * 70)
     print(f"Library: {path}")
     print(f"Version: {native.version()}")
     print(f"Profile: {a.profile}")
     print(f"Output:  {out}")
+    print(
+        f"CoverCrypt: hybridized, {len(covercrypt_dimensions)} dimension(s), "
+        f"{max_covercrypt_attributes} configured attributes"
+    )
+    print(f"CoverCrypt config: {covercrypt_config}")
 
     schemes = list(NATIVE_SCHEMES)
     random.Random(a.seed).shuffle(schemes)
@@ -1227,23 +1489,35 @@ def main():
     try:
         print("[1/5] Native core")
         for scheme in schemes:
-            run_core_buffer(native, rec, scheme, payload, policy, attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native)
-            if not a.no_file:
-                run_core_file(native, rec, scheme, payload, policy, attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native, tmp)
+            scheme_policy, scheme_attrs = (
+                covercrypt_policy_attrs(a.policy_attributes)
+                if scheme == COVERCRYPT
+                else (policy, attrs)
+            )
+            run_core_buffer(native, rec, scheme, payload, scheme_policy, scheme_attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native)
+            if not a.no_file and not a.showcase:
+                run_core_file(native, rec, scheme, payload, scheme_policy, scheme_attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native, tmp)
 
         print("[2/5] PQC Sign-then-Encrypt")
         if not a.no_pqc:
             for scheme in schemes:
-                run_pqc_buffer(native, rec, scheme, payload, policy, attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native)
+                scheme_policy, scheme_attrs = (
+                    covercrypt_policy_attrs(a.policy_attributes)
+                    if scheme == COVERCRYPT
+                    else (policy, attrs)
+                )
+                run_pqc_buffer(native, rec, scheme, payload, scheme_policy, scheme_attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native)
 
         print("[3/5] Primitive microbenchmarks")
         if not a.no_micro:
             if not a.no_pqc:
-                run_mldsa(native, rec, profile["micro_sizes"], profile["micro_iterations"], profile["warmup"], a.quiet_native)
-            run_aes(native, rec, profile["micro_sizes"], profile["micro_iterations"], profile["warmup"], a.quiet_native)
+                mldsa_sizes = [a.payload_bytes] if a.showcase else profile["micro_sizes"]
+                run_mldsa(native, rec, mldsa_sizes, profile["micro_iterations"], profile["warmup"], a.quiet_native)
+            if not a.showcase:
+                run_aes(native, rec, profile["micro_sizes"], profile["micro_iterations"], profile["warmup"], a.quiet_native)
 
         print("[4/5] Scaling")
-        if not a.no_scaling:
+        if not a.no_scaling and not a.showcase:
             run_policy_scaling(native, rec, profile["policy_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native)
             run_payload_scaling(native, rec, profile["payload_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native, a.policy_attributes, not a.no_pqc)
 
@@ -1253,6 +1527,7 @@ def main():
         write_data(rec, out, env, config)
         make_charts(rec, out)
         report(rec, out, env, config, charm)
+        write_snapshot_readme(out, env, config, charm)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

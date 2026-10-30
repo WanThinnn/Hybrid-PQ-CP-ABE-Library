@@ -4,9 +4,8 @@ This directory is the canonical benchmark location for the project. The old
 `bindings/python/benchmark.py` benchmark has been removed so benchmark logic is
 not duplicated across the repository.
 
-`benchmark_full.py` is the source of truth for measurement methodology.
-`showcase_benchmark.py` is only a presentation-oriented frontend that reuses
-the canonical benchmark engine.
+`benchmark_full.py` is the single benchmark entrypoint and source of truth.
+Use `--showcase` for the focused public/LinkedIn subset.
 
 ## What it measures
 
@@ -66,6 +65,34 @@ python benchmark_full.py --profile quick --no-charm
 Normal benchmark:
 
 python benchmark_full.py --profile standard
+
+Focused showcase benchmark (automatically writes to `published/<date>_<cpu>_<profile>`):
+
+python benchmark_full.py --profile standard --showcase
+
+Use `--output <path>` only when you want to override the automatic published path.
+
+CoverCrypt uses at most two native dimensions: policy terms are ORed within
+each dimension and the dimensions are ANDed together. This is a different
+policy shape from the AC17/TKN20 all-attribute AND policy. Do not interpret
+equal attribute counts as equivalent access policies across these schemes.
+Giving every term its own CoverCrypt dimension causes a combinatorial growth
+in setup work and can make the benchmark appear to hang.
+
+At startup, check the printed CoverCrypt configuration: the default
+12-attribute showcase should report `2 dimension(s)`. Each new run generates
+its own configuration; after updating the script, stop any older benchmark
+process and start a fresh run. The generated dimensions are also saved in
+`benchmark_results.json`, even after the temporary configuration is removed.
+
+Run the configuration and native CoverCrypt showcase regression checks with:
+
+```bash
+python -m unittest discover -s benchmark -p test_benchmark_full.py -v
+```
+
+Run that command from the repository root. Native checks require a built
+library and the plotting dependencies above; each subprocess has a timeout.
 
 Full publication-oriented run:
 

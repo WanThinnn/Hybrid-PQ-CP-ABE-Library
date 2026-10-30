@@ -1,0 +1,3251 @@
+benchmark_id,sample_index,latency_ms
+core|CoverCrypt|buffer|standard|setup|baseline,0,9.9991
+core|CoverCrypt|buffer|standard|setup|baseline,1,10.1513
+core|CoverCrypt|buffer|standard|setup|baseline,2,7.6011
+core|CoverCrypt|buffer|standard|setup|baseline,3,5.851
+core|CoverCrypt|buffer|standard|setup|baseline,4,8.8431
+core|CoverCrypt|buffer|standard|setup|baseline,5,7.8662
+core|CoverCrypt|buffer|standard|setup|baseline,6,10.8101
+core|CoverCrypt|buffer|standard|setup|baseline,7,10.347
+core|CoverCrypt|buffer|standard|setup|baseline,8,9.2798
+core|CoverCrypt|buffer|standard|setup|baseline,9,10.2376
+core|CoverCrypt|buffer|standard|setup|baseline,10,5.8529
+core|CoverCrypt|buffer|standard|setup|baseline,11,9.7593
+core|CoverCrypt|buffer|standard|setup|baseline,12,9.8917
+core|CoverCrypt|buffer|standard|setup|baseline,13,9.6649
+core|CoverCrypt|buffer|standard|setup|baseline,14,9.84
+core|CoverCrypt|buffer|standard|setup|baseline,15,7.2317
+core|CoverCrypt|buffer|standard|setup|baseline,16,5.389
+core|CoverCrypt|buffer|standard|setup|baseline,17,5.2614
+core|CoverCrypt|buffer|standard|setup|baseline,18,5.159
+core|CoverCrypt|buffer|standard|setup|baseline,19,7.7107
+core|CoverCrypt|buffer|standard|setup|baseline,20,5.338
+core|CoverCrypt|buffer|standard|setup|baseline,21,5.5188
+core|CoverCrypt|buffer|standard|setup|baseline,22,5.7315
+core|CoverCrypt|buffer|standard|setup|baseline,23,5.1102
+core|CoverCrypt|buffer|standard|setup|baseline,24,9.7264
+core|CoverCrypt|buffer|standard|setup|baseline,25,6.3281
+core|CoverCrypt|buffer|standard|setup|baseline,26,5.8503
+core|CoverCrypt|buffer|standard|setup|baseline,27,5.1092
+core|CoverCrypt|buffer|standard|setup|baseline,28,5.2854
+core|CoverCrypt|buffer|standard|setup|baseline,29,9.051
+core|CoverCrypt|buffer|standard|setup|baseline,30,5.0182
+core|CoverCrypt|buffer|standard|setup|baseline,31,12.2435
+core|CoverCrypt|buffer|standard|setup|baseline,32,6.6734
+core|CoverCrypt|buffer|standard|setup|baseline,33,9.489
+core|CoverCrypt|buffer|standard|setup|baseline,34,10.644
+core|CoverCrypt|buffer|standard|setup|baseline,35,10.9477
+core|CoverCrypt|buffer|standard|setup|baseline,36,12.1178
+core|CoverCrypt|buffer|standard|setup|baseline,37,11.0618
+core|CoverCrypt|buffer|standard|setup|baseline,38,10.2123
+core|CoverCrypt|buffer|standard|setup|baseline,39,9.406
+core|CoverCrypt|buffer|standard|setup|baseline,40,9.9069
+core|CoverCrypt|buffer|standard|setup|baseline,41,9.8625
+core|CoverCrypt|buffer|standard|setup|baseline,42,8.6168
+core|CoverCrypt|buffer|standard|setup|baseline,43,5.1682
+core|CoverCrypt|buffer|standard|setup|baseline,44,5.3651
+core|CoverCrypt|buffer|standard|setup|baseline,45,8.7544
+core|CoverCrypt|buffer|standard|setup|baseline,46,9.5871
+core|CoverCrypt|buffer|standard|setup|baseline,47,5.6905
+core|CoverCrypt|buffer|standard|setup|baseline,48,10.0125
+core|CoverCrypt|buffer|standard|setup|baseline,49,9.7644
+core|CoverCrypt|buffer|standard|setup|baseline,50,9.3247
+core|CoverCrypt|buffer|standard|setup|baseline,51,5.1115
+core|CoverCrypt|buffer|standard|setup|baseline,52,8.4741
+core|CoverCrypt|buffer|standard|setup|baseline,53,9.5775
+core|CoverCrypt|buffer|standard|setup|baseline,54,9.9364
+core|CoverCrypt|buffer|standard|setup|baseline,55,9.7364
+core|CoverCrypt|buffer|standard|setup|baseline,56,8.2731
+core|CoverCrypt|buffer|standard|setup|baseline,57,4.9874
+core|CoverCrypt|buffer|standard|setup|baseline,58,4.7769
+core|CoverCrypt|buffer|standard|setup|baseline,59,10.281
+core|CoverCrypt|buffer|standard|setup|baseline,60,7.7946
+core|CoverCrypt|buffer|standard|setup|baseline,61,11.7282
+core|CoverCrypt|buffer|standard|setup|baseline,62,10.5535
+core|CoverCrypt|buffer|standard|setup|baseline,63,10.4449
+core|CoverCrypt|buffer|standard|setup|baseline,64,9.0246
+core|CoverCrypt|buffer|standard|setup|baseline,65,9.9392
+core|CoverCrypt|buffer|standard|setup|baseline,66,10.4069
+core|CoverCrypt|buffer|standard|setup|baseline,67,10.6146
+core|CoverCrypt|buffer|standard|setup|baseline,68,10.405
+core|CoverCrypt|buffer|standard|setup|baseline,69,10.2526
+core|CoverCrypt|buffer|standard|setup|baseline,70,5.2457
+core|CoverCrypt|buffer|standard|setup|baseline,71,9.399
+core|CoverCrypt|buffer|standard|setup|baseline,72,7.9211
+core|CoverCrypt|buffer|standard|setup|baseline,73,8.221
+core|CoverCrypt|buffer|standard|setup|baseline,74,8.8381
+core|CoverCrypt|buffer|standard|setup|baseline,75,5.1818
+core|CoverCrypt|buffer|standard|setup|baseline,76,5.4681
+core|CoverCrypt|buffer|standard|setup|baseline,77,5.4691
+core|CoverCrypt|buffer|standard|setup|baseline,78,10.0246
+core|CoverCrypt|buffer|standard|setup|baseline,79,7.0506
+core|CoverCrypt|buffer|standard|setup|baseline,80,7.3032
+core|CoverCrypt|buffer|standard|setup|baseline,81,10.056
+core|CoverCrypt|buffer|standard|setup|baseline,82,9.9148
+core|CoverCrypt|buffer|standard|setup|baseline,83,9.9546
+core|CoverCrypt|buffer|standard|setup|baseline,84,9.8981
+core|CoverCrypt|buffer|standard|setup|baseline,85,8.8614
+core|CoverCrypt|buffer|standard|setup|baseline,86,10.3139
+core|CoverCrypt|buffer|standard|setup|baseline,87,8.5566
+core|CoverCrypt|buffer|standard|setup|baseline,88,7.2417
+core|CoverCrypt|buffer|standard|setup|baseline,89,7.9656
+core|CoverCrypt|buffer|standard|setup|baseline,90,7.0734
+core|CoverCrypt|buffer|standard|setup|baseline,91,10.4706
+core|CoverCrypt|buffer|standard|setup|baseline,92,9.7803
+core|CoverCrypt|buffer|standard|setup|baseline,93,10.0124
+core|CoverCrypt|buffer|standard|setup|baseline,94,10.0546
+core|CoverCrypt|buffer|standard|setup|baseline,95,9.9532
+core|CoverCrypt|buffer|standard|setup|baseline,96,9.8853
+core|CoverCrypt|buffer|standard|setup|baseline,97,9.4502
+core|CoverCrypt|buffer|standard|setup|baseline,98,8.5193
+core|CoverCrypt|buffer|standard|setup|baseline,99,9.8839
+core|CoverCrypt|buffer|standard|keygen|baseline,0,1.8295
+core|CoverCrypt|buffer|standard|keygen|baseline,1,1.5979
+core|CoverCrypt|buffer|standard|keygen|baseline,2,1.5784
+core|CoverCrypt|buffer|standard|keygen|baseline,3,1.617
+core|CoverCrypt|buffer|standard|keygen|baseline,4,1.6753
+core|CoverCrypt|buffer|standard|keygen|baseline,5,1.5331
+core|CoverCrypt|buffer|standard|keygen|baseline,6,1.6376
+core|CoverCrypt|buffer|standard|keygen|baseline,7,1.6145
+core|CoverCrypt|buffer|standard|keygen|baseline,8,1.3446
+core|CoverCrypt|buffer|standard|keygen|baseline,9,1.5985
+core|CoverCrypt|buffer|standard|keygen|baseline,10,1.5863
+core|CoverCrypt|buffer|standard|keygen|baseline,11,1.0504
+core|CoverCrypt|buffer|standard|keygen|baseline,12,1.578
+core|CoverCrypt|buffer|standard|keygen|baseline,13,1.3107
+core|CoverCrypt|buffer|standard|keygen|baseline,14,1.6653
+core|CoverCrypt|buffer|standard|keygen|baseline,15,1.58
+core|CoverCrypt|buffer|standard|keygen|baseline,16,1.5925
+core|CoverCrypt|buffer|standard|keygen|baseline,17,1.6496
+core|CoverCrypt|buffer|standard|keygen|baseline,18,1.677
+core|CoverCrypt|buffer|standard|keygen|baseline,19,0.9224
+core|CoverCrypt|buffer|standard|keygen|baseline,20,1.5176
+core|CoverCrypt|buffer|standard|keygen|baseline,21,1.0675
+core|CoverCrypt|buffer|standard|keygen|baseline,22,1.5981
+core|CoverCrypt|buffer|standard|keygen|baseline,23,1.8227
+core|CoverCrypt|buffer|standard|keygen|baseline,24,0.8998
+core|CoverCrypt|buffer|standard|keygen|baseline,25,1.5485
+core|CoverCrypt|buffer|standard|keygen|baseline,26,1.5845
+core|CoverCrypt|buffer|standard|keygen|baseline,27,1.6576
+core|CoverCrypt|buffer|standard|keygen|baseline,28,1.0172
+core|CoverCrypt|buffer|standard|keygen|baseline,29,0.9935
+core|CoverCrypt|buffer|standard|keygen|baseline,30,0.8997
+core|CoverCrypt|buffer|standard|keygen|baseline,31,1.0503
+core|CoverCrypt|buffer|standard|keygen|baseline,32,1.5998
+core|CoverCrypt|buffer|standard|keygen|baseline,33,1.5805
+core|CoverCrypt|buffer|standard|keygen|baseline,34,1.5323
+core|CoverCrypt|buffer|standard|keygen|baseline,35,1.6696
+core|CoverCrypt|buffer|standard|keygen|baseline,36,1.5629
+core|CoverCrypt|buffer|standard|keygen|baseline,37,1.5404
+core|CoverCrypt|buffer|standard|keygen|baseline,38,1.4251
+core|CoverCrypt|buffer|standard|keygen|baseline,39,1.4585
+core|CoverCrypt|buffer|standard|keygen|baseline,40,1.5429
+core|CoverCrypt|buffer|standard|keygen|baseline,41,1.5098
+core|CoverCrypt|buffer|standard|keygen|baseline,42,1.1848
+core|CoverCrypt|buffer|standard|keygen|baseline,43,1.3598
+core|CoverCrypt|buffer|standard|keygen|baseline,44,1.5215
+core|CoverCrypt|buffer|standard|keygen|baseline,45,1.4824
+core|CoverCrypt|buffer|standard|keygen|baseline,46,1.3192
+core|CoverCrypt|buffer|standard|keygen|baseline,47,1.1346
+core|CoverCrypt|buffer|standard|keygen|baseline,48,0.866
+core|CoverCrypt|buffer|standard|keygen|baseline,49,1.43
+core|CoverCrypt|buffer|standard|keygen|baseline,50,1.7383
+core|CoverCrypt|buffer|standard|keygen|baseline,51,1.1397
+core|CoverCrypt|buffer|standard|keygen|baseline,52,1.3115
+core|CoverCrypt|buffer|standard|keygen|baseline,53,1.651
+core|CoverCrypt|buffer|standard|keygen|baseline,54,1.3485
+core|CoverCrypt|buffer|standard|keygen|baseline,55,1.5991
+core|CoverCrypt|buffer|standard|keygen|baseline,56,1.8732
+core|CoverCrypt|buffer|standard|keygen|baseline,57,1.5971
+core|CoverCrypt|buffer|standard|keygen|baseline,58,1.7918
+core|CoverCrypt|buffer|standard|keygen|baseline,59,1.6675
+core|CoverCrypt|buffer|standard|keygen|baseline,60,1.5928
+core|CoverCrypt|buffer|standard|keygen|baseline,61,1.5128
+core|CoverCrypt|buffer|standard|keygen|baseline,62,1.4895
+core|CoverCrypt|buffer|standard|keygen|baseline,63,1.5089
+core|CoverCrypt|buffer|standard|keygen|baseline,64,1.5896
+core|CoverCrypt|buffer|standard|keygen|baseline,65,1.5652
+core|CoverCrypt|buffer|standard|keygen|baseline,66,1.4668
+core|CoverCrypt|buffer|standard|keygen|baseline,67,1.5377
+core|CoverCrypt|buffer|standard|keygen|baseline,68,1.7613
+core|CoverCrypt|buffer|standard|keygen|baseline,69,1.2103
+core|CoverCrypt|buffer|standard|keygen|baseline,70,1.5765
+core|CoverCrypt|buffer|standard|keygen|baseline,71,1.6313
+core|CoverCrypt|buffer|standard|keygen|baseline,72,1.6161
+core|CoverCrypt|buffer|standard|keygen|baseline,73,1.6858
+core|CoverCrypt|buffer|standard|keygen|baseline,74,1.4743
+core|CoverCrypt|buffer|standard|keygen|baseline,75,1.4398
+core|CoverCrypt|buffer|standard|keygen|baseline,76,1.5389
+core|CoverCrypt|buffer|standard|keygen|baseline,77,1.4885
+core|CoverCrypt|buffer|standard|keygen|baseline,78,1.5077
+core|CoverCrypt|buffer|standard|keygen|baseline,79,1.3775
+core|CoverCrypt|buffer|standard|keygen|baseline,80,1.519
+core|CoverCrypt|buffer|standard|keygen|baseline,81,1.5494
+core|CoverCrypt|buffer|standard|keygen|baseline,82,1.6001
+core|CoverCrypt|buffer|standard|keygen|baseline,83,1.085
+core|CoverCrypt|buffer|standard|keygen|baseline,84,1.4802
+core|CoverCrypt|buffer|standard|keygen|baseline,85,1.0732
+core|CoverCrypt|buffer|standard|keygen|baseline,86,1.5549
+core|CoverCrypt|buffer|standard|keygen|baseline,87,1.6811
+core|CoverCrypt|buffer|standard|keygen|baseline,88,1.5651
+core|CoverCrypt|buffer|standard|keygen|baseline,89,1.5642
+core|CoverCrypt|buffer|standard|keygen|baseline,90,1.507
+core|CoverCrypt|buffer|standard|keygen|baseline,91,1.5858
+core|CoverCrypt|buffer|standard|keygen|baseline,92,1.6072
+core|CoverCrypt|buffer|standard|keygen|baseline,93,1.3647
+core|CoverCrypt|buffer|standard|keygen|baseline,94,1.7058
+core|CoverCrypt|buffer|standard|keygen|baseline,95,1.5471
+core|CoverCrypt|buffer|standard|keygen|baseline,96,1.076
+core|CoverCrypt|buffer|standard|keygen|baseline,97,1.5459
+core|CoverCrypt|buffer|standard|keygen|baseline,98,1.2658
+core|CoverCrypt|buffer|standard|keygen|baseline,99,1.6346
+core|CoverCrypt|buffer|standard|encrypt|baseline,0,8.7367
+core|CoverCrypt|buffer|standard|encrypt|baseline,1,9.9338
+core|CoverCrypt|buffer|standard|encrypt|baseline,2,8.8678
+core|CoverCrypt|buffer|standard|encrypt|baseline,3,8.8871
+core|CoverCrypt|buffer|standard|encrypt|baseline,4,8.4501
+core|CoverCrypt|buffer|standard|encrypt|baseline,5,8.852
+core|CoverCrypt|buffer|standard|encrypt|baseline,6,8.5236
+core|CoverCrypt|buffer|standard|encrypt|baseline,7,8.5825
+core|CoverCrypt|buffer|standard|encrypt|baseline,8,12.3516
+core|CoverCrypt|buffer|standard|encrypt|baseline,9,7.7296
+core|CoverCrypt|buffer|standard|encrypt|baseline,10,8.7204
+core|CoverCrypt|buffer|standard|encrypt|baseline,11,4.3116
+core|CoverCrypt|buffer|standard|encrypt|baseline,12,7.1163
+core|CoverCrypt|buffer|standard|encrypt|baseline,13,8.7592
+core|CoverCrypt|buffer|standard|encrypt|baseline,14,8.8905
+core|CoverCrypt|buffer|standard|encrypt|baseline,15,8.5625
+core|CoverCrypt|buffer|standard|encrypt|baseline,16,6.7478
+core|CoverCrypt|buffer|standard|encrypt|baseline,17,10.5807
+core|CoverCrypt|buffer|standard|encrypt|baseline,18,8.7375
+core|CoverCrypt|buffer|standard|encrypt|baseline,19,7.6343
+core|CoverCrypt|buffer|standard|encrypt|baseline,20,8.6579
+core|CoverCrypt|buffer|standard|encrypt|baseline,21,8.8075
+core|CoverCrypt|buffer|standard|encrypt|baseline,22,8.8891
+core|CoverCrypt|buffer|standard|encrypt|baseline,23,11.9637
+core|CoverCrypt|buffer|standard|encrypt|baseline,24,8.7028
+core|CoverCrypt|buffer|standard|encrypt|baseline,25,7.2614
+core|CoverCrypt|buffer|standard|encrypt|baseline,26,8.6479
+core|CoverCrypt|buffer|standard|encrypt|baseline,27,8.5984
+core|CoverCrypt|buffer|standard|encrypt|baseline,28,9.1617
+core|CoverCrypt|buffer|standard|encrypt|baseline,29,8.4332
+core|CoverCrypt|buffer|standard|encrypt|baseline,30,8.7296
+core|CoverCrypt|buffer|standard|encrypt|baseline,31,7.8773
+core|CoverCrypt|buffer|standard|encrypt|baseline,32,8.6171
+core|CoverCrypt|buffer|standard|encrypt|baseline,33,9.3512
+core|CoverCrypt|buffer|standard|encrypt|baseline,34,9.3388
+core|CoverCrypt|buffer|standard|encrypt|baseline,35,8.6023
+core|CoverCrypt|buffer|standard|encrypt|baseline,36,7.5952
+core|CoverCrypt|buffer|standard|encrypt|baseline,37,8.9132
+core|CoverCrypt|buffer|standard|encrypt|baseline,38,7.694
+core|CoverCrypt|buffer|standard|encrypt|baseline,39,8.6277
+core|CoverCrypt|buffer|standard|encrypt|baseline,40,8.5704
+core|CoverCrypt|buffer|standard|encrypt|baseline,41,8.8126
+core|CoverCrypt|buffer|standard|encrypt|baseline,42,8.5803
+core|CoverCrypt|buffer|standard|encrypt|baseline,43,8.6033
+core|CoverCrypt|buffer|standard|encrypt|baseline,44,7.7866
+core|CoverCrypt|buffer|standard|encrypt|baseline,45,8.555
+core|CoverCrypt|buffer|standard|encrypt|baseline,46,8.7381
+core|CoverCrypt|buffer|standard|encrypt|baseline,47,8.7127
+core|CoverCrypt|buffer|standard|encrypt|baseline,48,7.3988
+core|CoverCrypt|buffer|standard|encrypt|baseline,49,8.4584
+core|CoverCrypt|buffer|standard|encrypt|baseline,50,8.2683
+core|CoverCrypt|buffer|standard|encrypt|baseline,51,8.8423
+core|CoverCrypt|buffer|standard|encrypt|baseline,52,6.4022
+core|CoverCrypt|buffer|standard|encrypt|baseline,53,8.8289
+core|CoverCrypt|buffer|standard|encrypt|baseline,54,6.9593
+core|CoverCrypt|buffer|standard|encrypt|baseline,55,8.878
+core|CoverCrypt|buffer|standard|encrypt|baseline,56,10.0447
+core|CoverCrypt|buffer|standard|encrypt|baseline,57,8.1302
+core|CoverCrypt|buffer|standard|encrypt|baseline,58,8.0865
+core|CoverCrypt|buffer|standard|encrypt|baseline,59,9.1673
+core|CoverCrypt|buffer|standard|encrypt|baseline,60,8.8376
+core|CoverCrypt|buffer|standard|encrypt|baseline,61,8.6089
+core|CoverCrypt|buffer|standard|encrypt|baseline,62,8.7816
+core|CoverCrypt|buffer|standard|encrypt|baseline,63,8.4069
+core|CoverCrypt|buffer|standard|encrypt|baseline,64,9.1632
+core|CoverCrypt|buffer|standard|encrypt|baseline,65,8.4094
+core|CoverCrypt|buffer|standard|encrypt|baseline,66,9.2933
+core|CoverCrypt|buffer|standard|encrypt|baseline,67,8.4114
+core|CoverCrypt|buffer|standard|encrypt|baseline,68,9.1751
+core|CoverCrypt|buffer|standard|encrypt|baseline,69,9.2672
+core|CoverCrypt|buffer|standard|encrypt|baseline,70,6.8241
+core|CoverCrypt|buffer|standard|encrypt|baseline,71,8.4048
+core|CoverCrypt|buffer|standard|encrypt|baseline,72,8.4615
+core|CoverCrypt|buffer|standard|encrypt|baseline,73,8.0275
+core|CoverCrypt|buffer|standard|encrypt|baseline,74,5.188
+core|CoverCrypt|buffer|standard|encrypt|baseline,75,8.8327
+core|CoverCrypt|buffer|standard|encrypt|baseline,76,7.9709
+core|CoverCrypt|buffer|standard|encrypt|baseline,77,6.9923
+core|CoverCrypt|buffer|standard|encrypt|baseline,78,5.3892
+core|CoverCrypt|buffer|standard|encrypt|baseline,79,6.8104
+core|CoverCrypt|buffer|standard|encrypt|baseline,80,6.1967
+core|CoverCrypt|buffer|standard|encrypt|baseline,81,8.0953
+core|CoverCrypt|buffer|standard|encrypt|baseline,82,6.4929
+core|CoverCrypt|buffer|standard|encrypt|baseline,83,8.9449
+core|CoverCrypt|buffer|standard|encrypt|baseline,84,7.5094
+core|CoverCrypt|buffer|standard|encrypt|baseline,85,6.2994
+core|CoverCrypt|buffer|standard|encrypt|baseline,86,8.26
+core|CoverCrypt|buffer|standard|encrypt|baseline,87,6.9233
+core|CoverCrypt|buffer|standard|encrypt|baseline,88,7.8673
+core|CoverCrypt|buffer|standard|encrypt|baseline,89,7.1672
+core|CoverCrypt|buffer|standard|encrypt|baseline,90,11.0852
+core|CoverCrypt|buffer|standard|encrypt|baseline,91,8.0218
+core|CoverCrypt|buffer|standard|encrypt|baseline,92,7.9805
+core|CoverCrypt|buffer|standard|encrypt|baseline,93,7.3955
+core|CoverCrypt|buffer|standard|encrypt|baseline,94,7.9423
+core|CoverCrypt|buffer|standard|encrypt|baseline,95,13.1367
+core|CoverCrypt|buffer|standard|encrypt|baseline,96,9.3005
+core|CoverCrypt|buffer|standard|encrypt|baseline,97,8.6782
+core|CoverCrypt|buffer|standard|encrypt|baseline,98,8.6504
+core|CoverCrypt|buffer|standard|encrypt|baseline,99,8.754
+core|CoverCrypt|buffer|standard|decrypt|baseline,0,9.1385
+core|CoverCrypt|buffer|standard|decrypt|baseline,1,9.2419
+core|CoverCrypt|buffer|standard|decrypt|baseline,2,21.5565
+core|CoverCrypt|buffer|standard|decrypt|baseline,3,7.7855
+core|CoverCrypt|buffer|standard|decrypt|baseline,4,14.163
+core|CoverCrypt|buffer|standard|decrypt|baseline,5,18.6861
+core|CoverCrypt|buffer|standard|decrypt|baseline,6,7.187
+core|CoverCrypt|buffer|standard|decrypt|baseline,7,12.9654
+core|CoverCrypt|buffer|standard|decrypt|baseline,8,11.0709
+core|CoverCrypt|buffer|standard|decrypt|baseline,9,17.5685
+core|CoverCrypt|buffer|standard|decrypt|baseline,10,8.9367
+core|CoverCrypt|buffer|standard|decrypt|baseline,11,14.4991
+core|CoverCrypt|buffer|standard|decrypt|baseline,12,14.5006
+core|CoverCrypt|buffer|standard|decrypt|baseline,13,1.5386
+core|CoverCrypt|buffer|standard|decrypt|baseline,14,21.048
+core|CoverCrypt|buffer|standard|decrypt|baseline,15,18.9434
+core|CoverCrypt|buffer|standard|decrypt|baseline,16,7.0866
+core|CoverCrypt|buffer|standard|decrypt|baseline,17,14.3606
+core|CoverCrypt|buffer|standard|decrypt|baseline,18,12.782
+core|CoverCrypt|buffer|standard|decrypt|baseline,19,1.7414
+core|CoverCrypt|buffer|standard|decrypt|baseline,20,2.7289
+core|CoverCrypt|buffer|standard|decrypt|baseline,21,17.999
+core|CoverCrypt|buffer|standard|decrypt|baseline,22,13.0177
+core|CoverCrypt|buffer|standard|decrypt|baseline,23,10.6663
+core|CoverCrypt|buffer|standard|decrypt|baseline,24,12.3598
+core|CoverCrypt|buffer|standard|decrypt|baseline,25,4.2239
+core|CoverCrypt|buffer|standard|decrypt|baseline,26,6.2809
+core|CoverCrypt|buffer|standard|decrypt|baseline,27,11.7702
+core|CoverCrypt|buffer|standard|decrypt|baseline,28,21.6841
+core|CoverCrypt|buffer|standard|decrypt|baseline,29,3.774
+core|CoverCrypt|buffer|standard|decrypt|baseline,30,19.1398
+core|CoverCrypt|buffer|standard|decrypt|baseline,31,1.724
+core|CoverCrypt|buffer|standard|decrypt|baseline,32,12.6595
+core|CoverCrypt|buffer|standard|decrypt|baseline,33,2.1071
+core|CoverCrypt|buffer|standard|decrypt|baseline,34,3.1277
+core|CoverCrypt|buffer|standard|decrypt|baseline,35,14.5422
+core|CoverCrypt|buffer|standard|decrypt|baseline,36,18.7134
+core|CoverCrypt|buffer|standard|decrypt|baseline,37,14.7787
+core|CoverCrypt|buffer|standard|decrypt|baseline,38,1.979
+core|CoverCrypt|buffer|standard|decrypt|baseline,39,13.4459
+core|CoverCrypt|buffer|standard|decrypt|baseline,40,14.8436
+core|CoverCrypt|buffer|standard|decrypt|baseline,41,17.6646
+core|CoverCrypt|buffer|standard|decrypt|baseline,42,3.1604
+core|CoverCrypt|buffer|standard|decrypt|baseline,43,23.1155
+core|CoverCrypt|buffer|standard|decrypt|baseline,44,4.799
+core|CoverCrypt|buffer|standard|decrypt|baseline,45,1.1643
+core|CoverCrypt|buffer|standard|decrypt|baseline,46,14.5886
+core|CoverCrypt|buffer|standard|decrypt|baseline,47,0.9191
+core|CoverCrypt|buffer|standard|decrypt|baseline,48,13.6876
+core|CoverCrypt|buffer|standard|decrypt|baseline,49,12.4106
+core|CoverCrypt|buffer|standard|decrypt|baseline,50,7.8473
+core|CoverCrypt|buffer|standard|decrypt|baseline,51,11.9845
+core|CoverCrypt|buffer|standard|decrypt|baseline,52,14.3037
+core|CoverCrypt|buffer|standard|decrypt|baseline,53,17.1995
+core|CoverCrypt|buffer|standard|decrypt|baseline,54,3.5393
+core|CoverCrypt|buffer|standard|decrypt|baseline,55,13.4881
+core|CoverCrypt|buffer|standard|decrypt|baseline,56,5.5473
+core|CoverCrypt|buffer|standard|decrypt|baseline,57,1.6936
+core|CoverCrypt|buffer|standard|decrypt|baseline,58,11.3666
+core|CoverCrypt|buffer|standard|decrypt|baseline,59,13.7074
+core|CoverCrypt|buffer|standard|decrypt|baseline,60,9.6938
+core|CoverCrypt|buffer|standard|decrypt|baseline,61,10.625
+core|CoverCrypt|buffer|standard|decrypt|baseline,62,16.063
+core|CoverCrypt|buffer|standard|decrypt|baseline,63,5.4667
+core|CoverCrypt|buffer|standard|decrypt|baseline,64,3.8137
+core|CoverCrypt|buffer|standard|decrypt|baseline,65,10.1074
+core|CoverCrypt|buffer|standard|decrypt|baseline,66,9.5277
+core|CoverCrypt|buffer|standard|decrypt|baseline,67,11.9352
+core|CoverCrypt|buffer|standard|decrypt|baseline,68,6.9412
+core|CoverCrypt|buffer|standard|decrypt|baseline,69,14.7215
+core|CoverCrypt|buffer|standard|decrypt|baseline,70,2.5779
+core|CoverCrypt|buffer|standard|decrypt|baseline,71,17.357
+core|CoverCrypt|buffer|standard|decrypt|baseline,72,10.9233
+core|CoverCrypt|buffer|standard|decrypt|baseline,73,8.3123
+core|CoverCrypt|buffer|standard|decrypt|baseline,74,15.4469
+core|CoverCrypt|buffer|standard|decrypt|baseline,75,3.51
+core|CoverCrypt|buffer|standard|decrypt|baseline,76,17.3176
+core|CoverCrypt|buffer|standard|decrypt|baseline,77,9.4632
+core|CoverCrypt|buffer|standard|decrypt|baseline,78,11.8376
+core|CoverCrypt|buffer|standard|decrypt|baseline,79,9.9982
+core|CoverCrypt|buffer|standard|decrypt|baseline,80,10.191
+core|CoverCrypt|buffer|standard|decrypt|baseline,81,1.7243
+core|CoverCrypt|buffer|standard|decrypt|baseline,82,3.4968
+core|CoverCrypt|buffer|standard|decrypt|baseline,83,3.2718
+core|CoverCrypt|buffer|standard|decrypt|baseline,84,13.4211
+core|CoverCrypt|buffer|standard|decrypt|baseline,85,12.2787
+core|CoverCrypt|buffer|standard|decrypt|baseline,86,7.0223
+core|CoverCrypt|buffer|standard|decrypt|baseline,87,9.3829
+core|CoverCrypt|buffer|standard|decrypt|baseline,88,12.4673
+core|CoverCrypt|buffer|standard|decrypt|baseline,89,10.8899
+core|CoverCrypt|buffer|standard|decrypt|baseline,90,8.5697
+core|CoverCrypt|buffer|standard|decrypt|baseline,91,7.7585
+core|CoverCrypt|buffer|standard|decrypt|baseline,92,1.4431
+core|CoverCrypt|buffer|standard|decrypt|baseline,93,10.5661
+core|CoverCrypt|buffer|standard|decrypt|baseline,94,3.1389
+core|CoverCrypt|buffer|standard|decrypt|baseline,95,3.3624
+core|CoverCrypt|buffer|standard|decrypt|baseline,96,9.8172
+core|CoverCrypt|buffer|standard|decrypt|baseline,97,4.5131
+core|CoverCrypt|buffer|standard|decrypt|baseline,98,6.4134
+core|CoverCrypt|buffer|standard|decrypt|baseline,99,17.4034
+core|TKN20|buffer|standard|setup|baseline,0,17.0621
+core|TKN20|buffer|standard|setup|baseline,1,14.7574
+core|TKN20|buffer|standard|setup|baseline,2,13.9869
+core|TKN20|buffer|standard|setup|baseline,3,16.4411
+core|TKN20|buffer|standard|setup|baseline,4,17.2446
+core|TKN20|buffer|standard|setup|baseline,5,16.5975
+core|TKN20|buffer|standard|setup|baseline,6,16.9281
+core|TKN20|buffer|standard|setup|baseline,7,11.7457
+core|TKN20|buffer|standard|setup|baseline,8,8.877
+core|TKN20|buffer|standard|setup|baseline,9,14.5526
+core|TKN20|buffer|standard|setup|baseline,10,9.3783
+core|TKN20|buffer|standard|setup|baseline,11,16.2566
+core|TKN20|buffer|standard|setup|baseline,12,15.3055
+core|TKN20|buffer|standard|setup|baseline,13,16.9073
+core|TKN20|buffer|standard|setup|baseline,14,15.1549
+core|TKN20|buffer|standard|setup|baseline,15,13.1059
+core|TKN20|buffer|standard|setup|baseline,16,13.1361
+core|TKN20|buffer|standard|setup|baseline,17,14.6294
+core|TKN20|buffer|standard|setup|baseline,18,17.4086
+core|TKN20|buffer|standard|setup|baseline,19,16.8389
+core|TKN20|buffer|standard|setup|baseline,20,18.1075
+core|TKN20|buffer|standard|setup|baseline,21,17.1883
+core|TKN20|buffer|standard|setup|baseline,22,16.9729
+core|TKN20|buffer|standard|setup|baseline,23,17.0051
+core|TKN20|buffer|standard|setup|baseline,24,16.8603
+core|TKN20|buffer|standard|setup|baseline,25,16.672
+core|TKN20|buffer|standard|setup|baseline,26,19.1685
+core|TKN20|buffer|standard|setup|baseline,27,16.5506
+core|TKN20|buffer|standard|setup|baseline,28,20.6484
+core|TKN20|buffer|standard|setup|baseline,29,16.7279
+core|TKN20|buffer|standard|setup|baseline,30,16.4395
+core|TKN20|buffer|standard|setup|baseline,31,17.1631
+core|TKN20|buffer|standard|setup|baseline,32,16.5641
+core|TKN20|buffer|standard|setup|baseline,33,16.8077
+core|TKN20|buffer|standard|setup|baseline,34,16.8555
+core|TKN20|buffer|standard|setup|baseline,35,16.3585
+core|TKN20|buffer|standard|setup|baseline,36,14.9974
+core|TKN20|buffer|standard|setup|baseline,37,16.6728
+core|TKN20|buffer|standard|setup|baseline,38,17.3393
+core|TKN20|buffer|standard|setup|baseline,39,15.6089
+core|TKN20|buffer|standard|setup|baseline,40,19.7685
+core|TKN20|buffer|standard|setup|baseline,41,11.8079
+core|TKN20|buffer|standard|setup|baseline,42,12.796
+core|TKN20|buffer|standard|setup|baseline,43,10.8162
+core|TKN20|buffer|standard|setup|baseline,44,18.0291
+core|TKN20|buffer|standard|setup|baseline,45,17.9503
+core|TKN20|buffer|standard|setup|baseline,46,16.0311
+core|TKN20|buffer|standard|setup|baseline,47,16.6856
+core|TKN20|buffer|standard|setup|baseline,48,24.2295
+core|TKN20|buffer|standard|setup|baseline,49,17.189
+core|TKN20|buffer|standard|setup|baseline,50,9.4862
+core|TKN20|buffer|standard|setup|baseline,51,16.4259
+core|TKN20|buffer|standard|setup|baseline,52,9.1472
+core|TKN20|buffer|standard|setup|baseline,53,15.1725
+core|TKN20|buffer|standard|setup|baseline,54,15.3885
+core|TKN20|buffer|standard|setup|baseline,55,13.9272
+core|TKN20|buffer|standard|setup|baseline,56,12.75
+core|TKN20|buffer|standard|setup|baseline,57,16.97
+core|TKN20|buffer|standard|setup|baseline,58,15.0589
+core|TKN20|buffer|standard|setup|baseline,59,15.356
+core|TKN20|buffer|standard|setup|baseline,60,12.5212
+core|TKN20|buffer|standard|setup|baseline,61,11.4406
+core|TKN20|buffer|standard|setup|baseline,62,16.5025
+core|TKN20|buffer|standard|setup|baseline,63,20.2813
+core|TKN20|buffer|standard|setup|baseline,64,15.9947
+core|TKN20|buffer|standard|setup|baseline,65,12.6409
+core|TKN20|buffer|standard|setup|baseline,66,12.7061
+core|TKN20|buffer|standard|setup|baseline,67,17.3115
+core|TKN20|buffer|standard|setup|baseline,68,14.2159
+core|TKN20|buffer|standard|setup|baseline,69,15.1847
+core|TKN20|buffer|standard|setup|baseline,70,17.0545
+core|TKN20|buffer|standard|setup|baseline,71,11.277
+core|TKN20|buffer|standard|setup|baseline,72,13.2681
+core|TKN20|buffer|standard|setup|baseline,73,8.472
+core|TKN20|buffer|standard|setup|baseline,74,15.9792
+core|TKN20|buffer|standard|setup|baseline,75,15.9819
+core|TKN20|buffer|standard|setup|baseline,76,14.2264
+core|TKN20|buffer|standard|setup|baseline,77,13.953
+core|TKN20|buffer|standard|setup|baseline,78,11.5547
+core|TKN20|buffer|standard|setup|baseline,79,10.6271
+core|TKN20|buffer|standard|setup|baseline,80,14.062
+core|TKN20|buffer|standard|setup|baseline,81,16.4839
+core|TKN20|buffer|standard|setup|baseline,82,17.6015
+core|TKN20|buffer|standard|setup|baseline,83,17.3912
+core|TKN20|buffer|standard|setup|baseline,84,12.1196
+core|TKN20|buffer|standard|setup|baseline,85,17.5095
+core|TKN20|buffer|standard|setup|baseline,86,13.8081
+core|TKN20|buffer|standard|setup|baseline,87,17.583
+core|TKN20|buffer|standard|setup|baseline,88,11.3586
+core|TKN20|buffer|standard|setup|baseline,89,14.792
+core|TKN20|buffer|standard|setup|baseline,90,13.8938
+core|TKN20|buffer|standard|setup|baseline,91,12.3992
+core|TKN20|buffer|standard|setup|baseline,92,9.9485
+core|TKN20|buffer|standard|setup|baseline,93,13.3119
+core|TKN20|buffer|standard|setup|baseline,94,14.0208
+core|TKN20|buffer|standard|setup|baseline,95,15.5597
+core|TKN20|buffer|standard|setup|baseline,96,15.2161
+core|TKN20|buffer|standard|setup|baseline,97,12.0761
+core|TKN20|buffer|standard|setup|baseline,98,17.3781
+core|TKN20|buffer|standard|setup|baseline,99,14.8525
+core|TKN20|buffer|standard|keygen|baseline,0,231.7519
+core|TKN20|buffer|standard|keygen|baseline,1,257.1496
+core|TKN20|buffer|standard|keygen|baseline,2,263.1605
+core|TKN20|buffer|standard|keygen|baseline,3,292.9749
+core|TKN20|buffer|standard|keygen|baseline,4,228.5669
+core|TKN20|buffer|standard|keygen|baseline,5,242.3517
+core|TKN20|buffer|standard|keygen|baseline,6,285.3157
+core|TKN20|buffer|standard|keygen|baseline,7,307.5619
+core|TKN20|buffer|standard|keygen|baseline,8,250.9431
+core|TKN20|buffer|standard|keygen|baseline,9,298.6066
+core|TKN20|buffer|standard|keygen|baseline,10,259.0533
+core|TKN20|buffer|standard|keygen|baseline,11,232.0151
+core|TKN20|buffer|standard|keygen|baseline,12,225.1462
+core|TKN20|buffer|standard|keygen|baseline,13,206.8118
+core|TKN20|buffer|standard|keygen|baseline,14,224.6395
+core|TKN20|buffer|standard|keygen|baseline,15,227.2647
+core|TKN20|buffer|standard|keygen|baseline,16,174.1394
+core|TKN20|buffer|standard|keygen|baseline,17,170.9376
+core|TKN20|buffer|standard|keygen|baseline,18,168.6316
+core|TKN20|buffer|standard|keygen|baseline,19,163.2801
+core|TKN20|buffer|standard|keygen|baseline,20,164.0354
+core|TKN20|buffer|standard|keygen|baseline,21,167.5687
+core|TKN20|buffer|standard|keygen|baseline,22,165.6836
+core|TKN20|buffer|standard|keygen|baseline,23,173.1219
+core|TKN20|buffer|standard|keygen|baseline,24,177.7433
+core|TKN20|buffer|standard|keygen|baseline,25,165.5314
+core|TKN20|buffer|standard|keygen|baseline,26,163.026
+core|TKN20|buffer|standard|keygen|baseline,27,162.9039
+core|TKN20|buffer|standard|keygen|baseline,28,168.2207
+core|TKN20|buffer|standard|keygen|baseline,29,164.7025
+core|TKN20|buffer|standard|keygen|baseline,30,166.4199
+core|TKN20|buffer|standard|keygen|baseline,31,172.6116
+core|TKN20|buffer|standard|keygen|baseline,32,162.2365
+core|TKN20|buffer|standard|keygen|baseline,33,165.0799
+core|TKN20|buffer|standard|keygen|baseline,34,166.8218
+core|TKN20|buffer|standard|keygen|baseline,35,162.5351
+core|TKN20|buffer|standard|keygen|baseline,36,164.7078
+core|TKN20|buffer|standard|keygen|baseline,37,166.2646
+core|TKN20|buffer|standard|keygen|baseline,38,169.3544
+core|TKN20|buffer|standard|keygen|baseline,39,170.5463
+core|TKN20|buffer|standard|keygen|baseline,40,164.9516
+core|TKN20|buffer|standard|keygen|baseline,41,184.0192
+core|TKN20|buffer|standard|keygen|baseline,42,167.9402
+core|TKN20|buffer|standard|keygen|baseline,43,161.3445
+core|TKN20|buffer|standard|keygen|baseline,44,167.1596
+core|TKN20|buffer|standard|keygen|baseline,45,167.3935
+core|TKN20|buffer|standard|keygen|baseline,46,168.0198
+core|TKN20|buffer|standard|keygen|baseline,47,162.3848
+core|TKN20|buffer|standard|keygen|baseline,48,163.4699
+core|TKN20|buffer|standard|keygen|baseline,49,167.8831
+core|TKN20|buffer|standard|keygen|baseline,50,177.8902
+core|TKN20|buffer|standard|keygen|baseline,51,167.0409
+core|TKN20|buffer|standard|keygen|baseline,52,162.6516
+core|TKN20|buffer|standard|keygen|baseline,53,178.1621
+core|TKN20|buffer|standard|keygen|baseline,54,167.5814
+core|TKN20|buffer|standard|keygen|baseline,55,167.081
+core|TKN20|buffer|standard|keygen|baseline,56,165.9074
+core|TKN20|buffer|standard|keygen|baseline,57,166.8141
+core|TKN20|buffer|standard|keygen|baseline,58,162.5734
+core|TKN20|buffer|standard|keygen|baseline,59,160.076
+core|TKN20|buffer|standard|keygen|baseline,60,175.5202
+core|TKN20|buffer|standard|keygen|baseline,61,164.5839
+core|TKN20|buffer|standard|keygen|baseline,62,162.6746
+core|TKN20|buffer|standard|keygen|baseline,63,164.2625
+core|TKN20|buffer|standard|keygen|baseline,64,162.9542
+core|TKN20|buffer|standard|keygen|baseline,65,162.0973
+core|TKN20|buffer|standard|keygen|baseline,66,163.7674
+core|TKN20|buffer|standard|keygen|baseline,67,168.0048
+core|TKN20|buffer|standard|keygen|baseline,68,167.8208
+core|TKN20|buffer|standard|keygen|baseline,69,164.8174
+core|TKN20|buffer|standard|keygen|baseline,70,162.604
+core|TKN20|buffer|standard|keygen|baseline,71,163.728
+core|TKN20|buffer|standard|keygen|baseline,72,164.6947
+core|TKN20|buffer|standard|keygen|baseline,73,161.8702
+core|TKN20|buffer|standard|keygen|baseline,74,167.2132
+core|TKN20|buffer|standard|keygen|baseline,75,170.2788
+core|TKN20|buffer|standard|keygen|baseline,76,170.3979
+core|TKN20|buffer|standard|keygen|baseline,77,170.166
+core|TKN20|buffer|standard|keygen|baseline,78,163.2302
+core|TKN20|buffer|standard|keygen|baseline,79,162.8832
+core|TKN20|buffer|standard|keygen|baseline,80,161.9781
+core|TKN20|buffer|standard|keygen|baseline,81,168.3587
+core|TKN20|buffer|standard|keygen|baseline,82,165.084
+core|TKN20|buffer|standard|keygen|baseline,83,168.6188
+core|TKN20|buffer|standard|keygen|baseline,84,164.2582
+core|TKN20|buffer|standard|keygen|baseline,85,163.2639
+core|TKN20|buffer|standard|keygen|baseline,86,162.3922
+core|TKN20|buffer|standard|keygen|baseline,87,163.6642
+core|TKN20|buffer|standard|keygen|baseline,88,162.563
+core|TKN20|buffer|standard|keygen|baseline,89,166.5647
+core|TKN20|buffer|standard|keygen|baseline,90,169.0782
+core|TKN20|buffer|standard|keygen|baseline,91,166.0256
+core|TKN20|buffer|standard|keygen|baseline,92,161.4809
+core|TKN20|buffer|standard|keygen|baseline,93,161.8418
+core|TKN20|buffer|standard|keygen|baseline,94,168.6212
+core|TKN20|buffer|standard|keygen|baseline,95,161.5759
+core|TKN20|buffer|standard|keygen|baseline,96,162.6415
+core|TKN20|buffer|standard|keygen|baseline,97,171.5249
+core|TKN20|buffer|standard|keygen|baseline,98,162.0671
+core|TKN20|buffer|standard|keygen|baseline,99,160.3601
+core|TKN20|buffer|standard|encrypt|baseline,0,67.8695
+core|TKN20|buffer|standard|encrypt|baseline,1,66.9861
+core|TKN20|buffer|standard|encrypt|baseline,2,68.1457
+core|TKN20|buffer|standard|encrypt|baseline,3,77.5016
+core|TKN20|buffer|standard|encrypt|baseline,4,67.7215
+core|TKN20|buffer|standard|encrypt|baseline,5,74.311
+core|TKN20|buffer|standard|encrypt|baseline,6,69.9303
+core|TKN20|buffer|standard|encrypt|baseline,7,70.4488
+core|TKN20|buffer|standard|encrypt|baseline,8,76.01
+core|TKN20|buffer|standard|encrypt|baseline,9,68.5691
+core|TKN20|buffer|standard|encrypt|baseline,10,71.2781
+core|TKN20|buffer|standard|encrypt|baseline,11,69.6648
+core|TKN20|buffer|standard|encrypt|baseline,12,68.7007
+core|TKN20|buffer|standard|encrypt|baseline,13,73.7004
+core|TKN20|buffer|standard|encrypt|baseline,14,68.7481
+core|TKN20|buffer|standard|encrypt|baseline,15,71.7133
+core|TKN20|buffer|standard|encrypt|baseline,16,68.3396
+core|TKN20|buffer|standard|encrypt|baseline,17,68.752
+core|TKN20|buffer|standard|encrypt|baseline,18,68.7163
+core|TKN20|buffer|standard|encrypt|baseline,19,68.7514
+core|TKN20|buffer|standard|encrypt|baseline,20,69.0395
+core|TKN20|buffer|standard|encrypt|baseline,21,67.7703
+core|TKN20|buffer|standard|encrypt|baseline,22,68.4744
+core|TKN20|buffer|standard|encrypt|baseline,23,69.4326
+core|TKN20|buffer|standard|encrypt|baseline,24,69.3592
+core|TKN20|buffer|standard|encrypt|baseline,25,70.6849
+core|TKN20|buffer|standard|encrypt|baseline,26,67.8654
+core|TKN20|buffer|standard|encrypt|baseline,27,70.3995
+core|TKN20|buffer|standard|encrypt|baseline,28,68.2821
+core|TKN20|buffer|standard|encrypt|baseline,29,68.143
+core|TKN20|buffer|standard|encrypt|baseline,30,68.7881
+core|TKN20|buffer|standard|encrypt|baseline,31,67.8613
+core|TKN20|buffer|standard|encrypt|baseline,32,70.1017
+core|TKN20|buffer|standard|encrypt|baseline,33,68.7592
+core|TKN20|buffer|standard|encrypt|baseline,34,68.6967
+core|TKN20|buffer|standard|encrypt|baseline,35,69.4002
+core|TKN20|buffer|standard|encrypt|baseline,36,71.3611
+core|TKN20|buffer|standard|encrypt|baseline,37,70.0135
+core|TKN20|buffer|standard|encrypt|baseline,38,67.5845
+core|TKN20|buffer|standard|encrypt|baseline,39,69.7972
+core|TKN20|buffer|standard|encrypt|baseline,40,68.51
+core|TKN20|buffer|standard|encrypt|baseline,41,73.8851
+core|TKN20|buffer|standard|encrypt|baseline,42,76.1588
+core|TKN20|buffer|standard|encrypt|baseline,43,69.2677
+core|TKN20|buffer|standard|encrypt|baseline,44,73.3996
+core|TKN20|buffer|standard|encrypt|baseline,45,67.3717
+core|TKN20|buffer|standard|encrypt|baseline,46,69.5883
+core|TKN20|buffer|standard|encrypt|baseline,47,69.1979
+core|TKN20|buffer|standard|encrypt|baseline,48,67.9143
+core|TKN20|buffer|standard|encrypt|baseline,49,69.0268
+core|TKN20|buffer|standard|encrypt|baseline,50,69.6172
+core|TKN20|buffer|standard|encrypt|baseline,51,67.712
+core|TKN20|buffer|standard|encrypt|baseline,52,68.369
+core|TKN20|buffer|standard|encrypt|baseline,53,67.4411
+core|TKN20|buffer|standard|encrypt|baseline,54,68.4404
+core|TKN20|buffer|standard|encrypt|baseline,55,68.8731
+core|TKN20|buffer|standard|encrypt|baseline,56,68.7454
+core|TKN20|buffer|standard|encrypt|baseline,57,69.7826
+core|TKN20|buffer|standard|encrypt|baseline,58,72.7503
+core|TKN20|buffer|standard|encrypt|baseline,59,73.36
+core|TKN20|buffer|standard|encrypt|baseline,60,71.2506
+core|TKN20|buffer|standard|encrypt|baseline,61,68.9193
+core|TKN20|buffer|standard|encrypt|baseline,62,72.6772
+core|TKN20|buffer|standard|encrypt|baseline,63,68.1241
+core|TKN20|buffer|standard|encrypt|baseline,64,66.985
+core|TKN20|buffer|standard|encrypt|baseline,65,71.0165
+core|TKN20|buffer|standard|encrypt|baseline,66,71.695
+core|TKN20|buffer|standard|encrypt|baseline,67,67.6804
+core|TKN20|buffer|standard|encrypt|baseline,68,80.1096
+core|TKN20|buffer|standard|encrypt|baseline,69,68.7342
+core|TKN20|buffer|standard|encrypt|baseline,70,71.9643
+core|TKN20|buffer|standard|encrypt|baseline,71,68.3238
+core|TKN20|buffer|standard|encrypt|baseline,72,68.7588
+core|TKN20|buffer|standard|encrypt|baseline,73,68.3597
+core|TKN20|buffer|standard|encrypt|baseline,74,68.0253
+core|TKN20|buffer|standard|encrypt|baseline,75,76.7968
+core|TKN20|buffer|standard|encrypt|baseline,76,72.6137
+core|TKN20|buffer|standard|encrypt|baseline,77,70.164
+core|TKN20|buffer|standard|encrypt|baseline,78,69.1648
+core|TKN20|buffer|standard|encrypt|baseline,79,71.7889
+core|TKN20|buffer|standard|encrypt|baseline,80,70.1842
+core|TKN20|buffer|standard|encrypt|baseline,81,68.6745
+core|TKN20|buffer|standard|encrypt|baseline,82,69.0212
+core|TKN20|buffer|standard|encrypt|baseline,83,69.5593
+core|TKN20|buffer|standard|encrypt|baseline,84,68.0505
+core|TKN20|buffer|standard|encrypt|baseline,85,68.3703
+core|TKN20|buffer|standard|encrypt|baseline,86,69.6666
+core|TKN20|buffer|standard|encrypt|baseline,87,67.178
+core|TKN20|buffer|standard|encrypt|baseline,88,70.1665
+core|TKN20|buffer|standard|encrypt|baseline,89,69.5157
+core|TKN20|buffer|standard|encrypt|baseline,90,68.1672
+core|TKN20|buffer|standard|encrypt|baseline,91,68.9351
+core|TKN20|buffer|standard|encrypt|baseline,92,70.9765
+core|TKN20|buffer|standard|encrypt|baseline,93,69.9339
+core|TKN20|buffer|standard|encrypt|baseline,94,69.2199
+core|TKN20|buffer|standard|encrypt|baseline,95,68.1353
+core|TKN20|buffer|standard|encrypt|baseline,96,68.7683
+core|TKN20|buffer|standard|encrypt|baseline,97,67.7845
+core|TKN20|buffer|standard|encrypt|baseline,98,67.4161
+core|TKN20|buffer|standard|encrypt|baseline,99,68.0569
+core|TKN20|buffer|standard|decrypt|baseline,0,16.7811
+core|TKN20|buffer|standard|decrypt|baseline,1,16.5703
+core|TKN20|buffer|standard|decrypt|baseline,2,16.3898
+core|TKN20|buffer|standard|decrypt|baseline,3,16.1728
+core|TKN20|buffer|standard|decrypt|baseline,4,17.7612
+core|TKN20|buffer|standard|decrypt|baseline,5,17.3244
+core|TKN20|buffer|standard|decrypt|baseline,6,16.7536
+core|TKN20|buffer|standard|decrypt|baseline,7,16.5902
+core|TKN20|buffer|standard|decrypt|baseline,8,16.4825
+core|TKN20|buffer|standard|decrypt|baseline,9,17.4093
+core|TKN20|buffer|standard|decrypt|baseline,10,16.7069
+core|TKN20|buffer|standard|decrypt|baseline,11,16.8045
+core|TKN20|buffer|standard|decrypt|baseline,12,16.3927
+core|TKN20|buffer|standard|decrypt|baseline,13,17.0427
+core|TKN20|buffer|standard|decrypt|baseline,14,17.3426
+core|TKN20|buffer|standard|decrypt|baseline,15,17.4537
+core|TKN20|buffer|standard|decrypt|baseline,16,17.0384
+core|TKN20|buffer|standard|decrypt|baseline,17,16.433
+core|TKN20|buffer|standard|decrypt|baseline,18,16.3095
+core|TKN20|buffer|standard|decrypt|baseline,19,16.9611
+core|TKN20|buffer|standard|decrypt|baseline,20,17.3976
+core|TKN20|buffer|standard|decrypt|baseline,21,16.6668
+core|TKN20|buffer|standard|decrypt|baseline,22,16.387
+core|TKN20|buffer|standard|decrypt|baseline,23,22.9201
+core|TKN20|buffer|standard|decrypt|baseline,24,20.9934
+core|TKN20|buffer|standard|decrypt|baseline,25,18.2129
+core|TKN20|buffer|standard|decrypt|baseline,26,17.2758
+core|TKN20|buffer|standard|decrypt|baseline,27,17.6443
+core|TKN20|buffer|standard|decrypt|baseline,28,16.6315
+core|TKN20|buffer|standard|decrypt|baseline,29,17.8796
+core|TKN20|buffer|standard|decrypt|baseline,30,17.003
+core|TKN20|buffer|standard|decrypt|baseline,31,17.079
+core|TKN20|buffer|standard|decrypt|baseline,32,17.1032
+core|TKN20|buffer|standard|decrypt|baseline,33,16.6753
+core|TKN20|buffer|standard|decrypt|baseline,34,17.3909
+core|TKN20|buffer|standard|decrypt|baseline,35,17.3818
+core|TKN20|buffer|standard|decrypt|baseline,36,17.9062
+core|TKN20|buffer|standard|decrypt|baseline,37,17.334
+core|TKN20|buffer|standard|decrypt|baseline,38,18.2094
+core|TKN20|buffer|standard|decrypt|baseline,39,18.8977
+core|TKN20|buffer|standard|decrypt|baseline,40,19.2432
+core|TKN20|buffer|standard|decrypt|baseline,41,19.5716
+core|TKN20|buffer|standard|decrypt|baseline,42,19.1893
+core|TKN20|buffer|standard|decrypt|baseline,43,17.339
+core|TKN20|buffer|standard|decrypt|baseline,44,18.8133
+core|TKN20|buffer|standard|decrypt|baseline,45,17.2365
+core|TKN20|buffer|standard|decrypt|baseline,46,17.2492
+core|TKN20|buffer|standard|decrypt|baseline,47,17.0758
+core|TKN20|buffer|standard|decrypt|baseline,48,17.4549
+core|TKN20|buffer|standard|decrypt|baseline,49,18.9067
+core|TKN20|buffer|standard|decrypt|baseline,50,17.7166
+core|TKN20|buffer|standard|decrypt|baseline,51,17.1648
+core|TKN20|buffer|standard|decrypt|baseline,52,17.3562
+core|TKN20|buffer|standard|decrypt|baseline,53,17.1673
+core|TKN20|buffer|standard|decrypt|baseline,54,17.4034
+core|TKN20|buffer|standard|decrypt|baseline,55,16.9475
+core|TKN20|buffer|standard|decrypt|baseline,56,17.1812
+core|TKN20|buffer|standard|decrypt|baseline,57,17.0853
+core|TKN20|buffer|standard|decrypt|baseline,58,16.8893
+core|TKN20|buffer|standard|decrypt|baseline,59,16.4973
+core|TKN20|buffer|standard|decrypt|baseline,60,16.7922
+core|TKN20|buffer|standard|decrypt|baseline,61,16.8688
+core|TKN20|buffer|standard|decrypt|baseline,62,17.0473
+core|TKN20|buffer|standard|decrypt|baseline,63,16.868
+core|TKN20|buffer|standard|decrypt|baseline,64,17.6433
+core|TKN20|buffer|standard|decrypt|baseline,65,17.9065
+core|TKN20|buffer|standard|decrypt|baseline,66,17.5685
+core|TKN20|buffer|standard|decrypt|baseline,67,16.6619
+core|TKN20|buffer|standard|decrypt|baseline,68,16.3511
+core|TKN20|buffer|standard|decrypt|baseline,69,16.6793
+core|TKN20|buffer|standard|decrypt|baseline,70,16.503
+core|TKN20|buffer|standard|decrypt|baseline,71,16.7292
+core|TKN20|buffer|standard|decrypt|baseline,72,16.9073
+core|TKN20|buffer|standard|decrypt|baseline,73,16.5778
+core|TKN20|buffer|standard|decrypt|baseline,74,17.8209
+core|TKN20|buffer|standard|decrypt|baseline,75,17.1499
+core|TKN20|buffer|standard|decrypt|baseline,76,17.2255
+core|TKN20|buffer|standard|decrypt|baseline,77,17.5835
+core|TKN20|buffer|standard|decrypt|baseline,78,16.5703
+core|TKN20|buffer|standard|decrypt|baseline,79,16.5999
+core|TKN20|buffer|standard|decrypt|baseline,80,17.3202
+core|TKN20|buffer|standard|decrypt|baseline,81,17.4436
+core|TKN20|buffer|standard|decrypt|baseline,82,16.9971
+core|TKN20|buffer|standard|decrypt|baseline,83,16.6872
+core|TKN20|buffer|standard|decrypt|baseline,84,17.6452
+core|TKN20|buffer|standard|decrypt|baseline,85,17.6802
+core|TKN20|buffer|standard|decrypt|baseline,86,16.6139
+core|TKN20|buffer|standard|decrypt|baseline,87,16.1771
+core|TKN20|buffer|standard|decrypt|baseline,88,16.4754
+core|TKN20|buffer|standard|decrypt|baseline,89,17.2869
+core|TKN20|buffer|standard|decrypt|baseline,90,17.4501
+core|TKN20|buffer|standard|decrypt|baseline,91,18.2731
+core|TKN20|buffer|standard|decrypt|baseline,92,16.9878
+core|TKN20|buffer|standard|decrypt|baseline,93,16.6756
+core|TKN20|buffer|standard|decrypt|baseline,94,16.96
+core|TKN20|buffer|standard|decrypt|baseline,95,16.888
+core|TKN20|buffer|standard|decrypt|baseline,96,17.1384
+core|TKN20|buffer|standard|decrypt|baseline,97,17.1081
+core|TKN20|buffer|standard|decrypt|baseline,98,16.4885
+core|TKN20|buffer|standard|decrypt|baseline,99,17.152
+core|AC17|buffer|standard|setup|baseline,0,15.8572
+core|AC17|buffer|standard|setup|baseline,1,15.2038
+core|AC17|buffer|standard|setup|baseline,2,15.8697
+core|AC17|buffer|standard|setup|baseline,3,16.5724
+core|AC17|buffer|standard|setup|baseline,4,17.5752
+core|AC17|buffer|standard|setup|baseline,5,16.0841
+core|AC17|buffer|standard|setup|baseline,6,16.3819
+core|AC17|buffer|standard|setup|baseline,7,15.7011
+core|AC17|buffer|standard|setup|baseline,8,16.7508
+core|AC17|buffer|standard|setup|baseline,9,17.6266
+core|AC17|buffer|standard|setup|baseline,10,16.798
+core|AC17|buffer|standard|setup|baseline,11,17.1981
+core|AC17|buffer|standard|setup|baseline,12,16.4428
+core|AC17|buffer|standard|setup|baseline,13,17.1103
+core|AC17|buffer|standard|setup|baseline,14,16.2041
+core|AC17|buffer|standard|setup|baseline,15,17.5286
+core|AC17|buffer|standard|setup|baseline,16,17.5548
+core|AC17|buffer|standard|setup|baseline,17,16.6854
+core|AC17|buffer|standard|setup|baseline,18,16.2779
+core|AC17|buffer|standard|setup|baseline,19,16.8205
+core|AC17|buffer|standard|setup|baseline,20,16.6886
+core|AC17|buffer|standard|setup|baseline,21,16.5203
+core|AC17|buffer|standard|setup|baseline,22,15.7462
+core|AC17|buffer|standard|setup|baseline,23,15.5139
+core|AC17|buffer|standard|setup|baseline,24,16.4141
+core|AC17|buffer|standard|setup|baseline,25,17.7703
+core|AC17|buffer|standard|setup|baseline,26,15.957
+core|AC17|buffer|standard|setup|baseline,27,16.2737
+core|AC17|buffer|standard|setup|baseline,28,17.0544
+core|AC17|buffer|standard|setup|baseline,29,16.616
+core|AC17|buffer|standard|setup|baseline,30,15.8462
+core|AC17|buffer|standard|setup|baseline,31,15.8763
+core|AC17|buffer|standard|setup|baseline,32,15.9081
+core|AC17|buffer|standard|setup|baseline,33,15.8687
+core|AC17|buffer|standard|setup|baseline,34,15.9888
+core|AC17|buffer|standard|setup|baseline,35,17.082
+core|AC17|buffer|standard|setup|baseline,36,16.1249
+core|AC17|buffer|standard|setup|baseline,37,15.5319
+core|AC17|buffer|standard|setup|baseline,38,15.7765
+core|AC17|buffer|standard|setup|baseline,39,15.6369
+core|AC17|buffer|standard|setup|baseline,40,16.0743
+core|AC17|buffer|standard|setup|baseline,41,16.1996
+core|AC17|buffer|standard|setup|baseline,42,16.1096
+core|AC17|buffer|standard|setup|baseline,43,15.4566
+core|AC17|buffer|standard|setup|baseline,44,16.3468
+core|AC17|buffer|standard|setup|baseline,45,16.8342
+core|AC17|buffer|standard|setup|baseline,46,15.9054
+core|AC17|buffer|standard|setup|baseline,47,19.3891
+core|AC17|buffer|standard|setup|baseline,48,17.4438
+core|AC17|buffer|standard|setup|baseline,49,16.811
+core|AC17|buffer|standard|setup|baseline,50,16.193
+core|AC17|buffer|standard|setup|baseline,51,16.208
+core|AC17|buffer|standard|setup|baseline,52,16.1513
+core|AC17|buffer|standard|setup|baseline,53,16.1988
+core|AC17|buffer|standard|setup|baseline,54,15.9805
+core|AC17|buffer|standard|setup|baseline,55,15.9492
+core|AC17|buffer|standard|setup|baseline,56,16.5749
+core|AC17|buffer|standard|setup|baseline,57,15.6856
+core|AC17|buffer|standard|setup|baseline,58,15.8707
+core|AC17|buffer|standard|setup|baseline,59,15.6183
+core|AC17|buffer|standard|setup|baseline,60,16.002
+core|AC17|buffer|standard|setup|baseline,61,15.655
+core|AC17|buffer|standard|setup|baseline,62,16.0218
+core|AC17|buffer|standard|setup|baseline,63,15.6335
+core|AC17|buffer|standard|setup|baseline,64,17.2888
+core|AC17|buffer|standard|setup|baseline,65,16.7119
+core|AC17|buffer|standard|setup|baseline,66,15.9825
+core|AC17|buffer|standard|setup|baseline,67,16.1154
+core|AC17|buffer|standard|setup|baseline,68,16.9307
+core|AC17|buffer|standard|setup|baseline,69,15.8547
+core|AC17|buffer|standard|setup|baseline,70,16.0955
+core|AC17|buffer|standard|setup|baseline,71,16.4472
+core|AC17|buffer|standard|setup|baseline,72,15.6831
+core|AC17|buffer|standard|setup|baseline,73,15.4495
+core|AC17|buffer|standard|setup|baseline,74,15.9199
+core|AC17|buffer|standard|setup|baseline,75,15.9718
+core|AC17|buffer|standard|setup|baseline,76,16.3404
+core|AC17|buffer|standard|setup|baseline,77,15.6856
+core|AC17|buffer|standard|setup|baseline,78,20.0204
+core|AC17|buffer|standard|setup|baseline,79,16.4658
+core|AC17|buffer|standard|setup|baseline,80,16.3394
+core|AC17|buffer|standard|setup|baseline,81,15.6494
+core|AC17|buffer|standard|setup|baseline,82,15.7535
+core|AC17|buffer|standard|setup|baseline,83,17.3932
+core|AC17|buffer|standard|setup|baseline,84,16.7644
+core|AC17|buffer|standard|setup|baseline,85,16.5793
+core|AC17|buffer|standard|setup|baseline,86,17.5712
+core|AC17|buffer|standard|setup|baseline,87,17.9092
+core|AC17|buffer|standard|setup|baseline,88,17.3875
+core|AC17|buffer|standard|setup|baseline,89,16.234
+core|AC17|buffer|standard|setup|baseline,90,16.4094
+core|AC17|buffer|standard|setup|baseline,91,16.5587
+core|AC17|buffer|standard|setup|baseline,92,16.5459
+core|AC17|buffer|standard|setup|baseline,93,15.9396
+core|AC17|buffer|standard|setup|baseline,94,15.851
+core|AC17|buffer|standard|setup|baseline,95,15.7154
+core|AC17|buffer|standard|setup|baseline,96,16.2819
+core|AC17|buffer|standard|setup|baseline,97,16.1902
+core|AC17|buffer|standard|setup|baseline,98,17.0368
+core|AC17|buffer|standard|setup|baseline,99,15.6545
+core|AC17|buffer|standard|keygen|baseline,0,85.9564
+core|AC17|buffer|standard|keygen|baseline,1,86.4295
+core|AC17|buffer|standard|keygen|baseline,2,86.8525
+core|AC17|buffer|standard|keygen|baseline,3,85.5624
+core|AC17|buffer|standard|keygen|baseline,4,90.1384
+core|AC17|buffer|standard|keygen|baseline,5,90.8375
+core|AC17|buffer|standard|keygen|baseline,6,88.7575
+core|AC17|buffer|standard|keygen|baseline,7,89.4482
+core|AC17|buffer|standard|keygen|baseline,8,86.0386
+core|AC17|buffer|standard|keygen|baseline,9,86.6537
+core|AC17|buffer|standard|keygen|baseline,10,87.9641
+core|AC17|buffer|standard|keygen|baseline,11,85.2097
+core|AC17|buffer|standard|keygen|baseline,12,86.8682
+core|AC17|buffer|standard|keygen|baseline,13,85.2909
+core|AC17|buffer|standard|keygen|baseline,14,85.1979
+core|AC17|buffer|standard|keygen|baseline,15,90.0081
+core|AC17|buffer|standard|keygen|baseline,16,86.498
+core|AC17|buffer|standard|keygen|baseline,17,84.4339
+core|AC17|buffer|standard|keygen|baseline,18,86.8494
+core|AC17|buffer|standard|keygen|baseline,19,90.0596
+core|AC17|buffer|standard|keygen|baseline,20,90.446
+core|AC17|buffer|standard|keygen|baseline,21,86.1015
+core|AC17|buffer|standard|keygen|baseline,22,85.6504
+core|AC17|buffer|standard|keygen|baseline,23,90.9901
+core|AC17|buffer|standard|keygen|baseline,24,85.5141
+core|AC17|buffer|standard|keygen|baseline,25,84.6231
+core|AC17|buffer|standard|keygen|baseline,26,85.2576
+core|AC17|buffer|standard|keygen|baseline,27,86.8905
+core|AC17|buffer|standard|keygen|baseline,28,85.1813
+core|AC17|buffer|standard|keygen|baseline,29,86.962
+core|AC17|buffer|standard|keygen|baseline,30,87.1485
+core|AC17|buffer|standard|keygen|baseline,31,91.9933
+core|AC17|buffer|standard|keygen|baseline,32,85.0665
+core|AC17|buffer|standard|keygen|baseline,33,87.3588
+core|AC17|buffer|standard|keygen|baseline,34,88.7707
+core|AC17|buffer|standard|keygen|baseline,35,94.4007
+core|AC17|buffer|standard|keygen|baseline,36,85.9866
+core|AC17|buffer|standard|keygen|baseline,37,84.7238
+core|AC17|buffer|standard|keygen|baseline,38,86.6411
+core|AC17|buffer|standard|keygen|baseline,39,102.7602
+core|AC17|buffer|standard|keygen|baseline,40,154.087
+core|AC17|buffer|standard|keygen|baseline,41,142.7011
+core|AC17|buffer|standard|keygen|baseline,42,157.1181
+core|AC17|buffer|standard|keygen|baseline,43,158.8643
+core|AC17|buffer|standard|keygen|baseline,44,99.1843
+core|AC17|buffer|standard|keygen|baseline,45,151.8234
+core|AC17|buffer|standard|keygen|baseline,46,164.9918
+core|AC17|buffer|standard|keygen|baseline,47,163.9572
+core|AC17|buffer|standard|keygen|baseline,48,148.5814
+core|AC17|buffer|standard|keygen|baseline,49,121.5801
+core|AC17|buffer|standard|keygen|baseline,50,134.708
+core|AC17|buffer|standard|keygen|baseline,51,139.2035
+core|AC17|buffer|standard|keygen|baseline,52,140.7297
+core|AC17|buffer|standard|keygen|baseline,53,135.1853
+core|AC17|buffer|standard|keygen|baseline,54,119.7142
+core|AC17|buffer|standard|keygen|baseline,55,111.7085
+core|AC17|buffer|standard|keygen|baseline,56,137.3914
+core|AC17|buffer|standard|keygen|baseline,57,115.3712
+core|AC17|buffer|standard|keygen|baseline,58,128.9852
+core|AC17|buffer|standard|keygen|baseline,59,118.1525
+core|AC17|buffer|standard|keygen|baseline,60,140.4999
+core|AC17|buffer|standard|keygen|baseline,61,137.2843
+core|AC17|buffer|standard|keygen|baseline,62,139.3311
+core|AC17|buffer|standard|keygen|baseline,63,152.6748
+core|AC17|buffer|standard|keygen|baseline,64,143.6828
+core|AC17|buffer|standard|keygen|baseline,65,114.2045
+core|AC17|buffer|standard|keygen|baseline,66,157.0256
+core|AC17|buffer|standard|keygen|baseline,67,146.6648
+core|AC17|buffer|standard|keygen|baseline,68,103.5625
+core|AC17|buffer|standard|keygen|baseline,69,148.8817
+core|AC17|buffer|standard|keygen|baseline,70,110.9455
+core|AC17|buffer|standard|keygen|baseline,71,87.283
+core|AC17|buffer|standard|keygen|baseline,72,85.6208
+core|AC17|buffer|standard|keygen|baseline,73,85.0883
+core|AC17|buffer|standard|keygen|baseline,74,88.2393
+core|AC17|buffer|standard|keygen|baseline,75,92.728
+core|AC17|buffer|standard|keygen|baseline,76,88.4676
+core|AC17|buffer|standard|keygen|baseline,77,87.162
+core|AC17|buffer|standard|keygen|baseline,78,87.6429
+core|AC17|buffer|standard|keygen|baseline,79,86.2205
+core|AC17|buffer|standard|keygen|baseline,80,85.379
+core|AC17|buffer|standard|keygen|baseline,81,86.6791
+core|AC17|buffer|standard|keygen|baseline,82,85.6825
+core|AC17|buffer|standard|keygen|baseline,83,90.7684
+core|AC17|buffer|standard|keygen|baseline,84,90.812
+core|AC17|buffer|standard|keygen|baseline,85,87.6358
+core|AC17|buffer|standard|keygen|baseline,86,85.9415
+core|AC17|buffer|standard|keygen|baseline,87,86.3458
+core|AC17|buffer|standard|keygen|baseline,88,87.0126
+core|AC17|buffer|standard|keygen|baseline,89,83.9054
+core|AC17|buffer|standard|keygen|baseline,90,90.7092
+core|AC17|buffer|standard|keygen|baseline,91,85.4257
+core|AC17|buffer|standard|keygen|baseline,92,90.136
+core|AC17|buffer|standard|keygen|baseline,93,86.5557
+core|AC17|buffer|standard|keygen|baseline,94,85.4267
+core|AC17|buffer|standard|keygen|baseline,95,86.423
+core|AC17|buffer|standard|keygen|baseline,96,85.5976
+core|AC17|buffer|standard|keygen|baseline,97,85.4751
+core|AC17|buffer|standard|keygen|baseline,98,88.4211
+core|AC17|buffer|standard|keygen|baseline,99,88.4695
+core|AC17|buffer|standard|encrypt|baseline,0,85.9487
+core|AC17|buffer|standard|encrypt|baseline,1,85.974
+core|AC17|buffer|standard|encrypt|baseline,2,89.3992
+core|AC17|buffer|standard|encrypt|baseline,3,86.5026
+core|AC17|buffer|standard|encrypt|baseline,4,85.9902
+core|AC17|buffer|standard|encrypt|baseline,5,88.8998
+core|AC17|buffer|standard|encrypt|baseline,6,85.3617
+core|AC17|buffer|standard|encrypt|baseline,7,87.8816
+core|AC17|buffer|standard|encrypt|baseline,8,87.2391
+core|AC17|buffer|standard|encrypt|baseline,9,87.0496
+core|AC17|buffer|standard|encrypt|baseline,10,84.9501
+core|AC17|buffer|standard|encrypt|baseline,11,87.9454
+core|AC17|buffer|standard|encrypt|baseline,12,89.6026
+core|AC17|buffer|standard|encrypt|baseline,13,86.1674
+core|AC17|buffer|standard|encrypt|baseline,14,88.2556
+core|AC17|buffer|standard|encrypt|baseline,15,87.2957
+core|AC17|buffer|standard|encrypt|baseline,16,85.2009
+core|AC17|buffer|standard|encrypt|baseline,17,84.6228
+core|AC17|buffer|standard|encrypt|baseline,18,86.9994
+core|AC17|buffer|standard|encrypt|baseline,19,84.7077
+core|AC17|buffer|standard|encrypt|baseline,20,86.9191
+core|AC17|buffer|standard|encrypt|baseline,21,86.1296
+core|AC17|buffer|standard|encrypt|baseline,22,92.4222
+core|AC17|buffer|standard|encrypt|baseline,23,143.446
+core|AC17|buffer|standard|encrypt|baseline,24,160.0815
+core|AC17|buffer|standard|encrypt|baseline,25,162.4057
+core|AC17|buffer|standard|encrypt|baseline,26,175.9798
+core|AC17|buffer|standard|encrypt|baseline,27,168.5509
+core|AC17|buffer|standard|encrypt|baseline,28,143.0351
+core|AC17|buffer|standard|encrypt|baseline,29,137.1968
+core|AC17|buffer|standard|encrypt|baseline,30,127.556
+core|AC17|buffer|standard|encrypt|baseline,31,124.6131
+core|AC17|buffer|standard|encrypt|baseline,32,157.5672
+core|AC17|buffer|standard|encrypt|baseline,33,148.6494
+core|AC17|buffer|standard|encrypt|baseline,34,148.388
+core|AC17|buffer|standard|encrypt|baseline,35,106.2438
+core|AC17|buffer|standard|encrypt|baseline,36,139.5381
+core|AC17|buffer|standard|encrypt|baseline,37,124.1508
+core|AC17|buffer|standard|encrypt|baseline,38,134.7377
+core|AC17|buffer|standard|encrypt|baseline,39,135.0029
+core|AC17|buffer|standard|encrypt|baseline,40,157.4379
+core|AC17|buffer|standard|encrypt|baseline,41,131.0313
+core|AC17|buffer|standard|encrypt|baseline,42,127.8752
+core|AC17|buffer|standard|encrypt|baseline,43,128.1178
+core|AC17|buffer|standard|encrypt|baseline,44,145.1318
+core|AC17|buffer|standard|encrypt|baseline,45,140.6725
+core|AC17|buffer|standard|encrypt|baseline,46,146.2014
+core|AC17|buffer|standard|encrypt|baseline,47,130.9763
+core|AC17|buffer|standard|encrypt|baseline,48,128.8132
+core|AC17|buffer|standard|encrypt|baseline,49,166.2104
+core|AC17|buffer|standard|encrypt|baseline,50,126.6104
+core|AC17|buffer|standard|encrypt|baseline,51,135.0983
+core|AC17|buffer|standard|encrypt|baseline,52,159.3685
+core|AC17|buffer|standard|encrypt|baseline,53,160.3127
+core|AC17|buffer|standard|encrypt|baseline,54,143.0867
+core|AC17|buffer|standard|encrypt|baseline,55,128.4976
+core|AC17|buffer|standard|encrypt|baseline,56,135.4631
+core|AC17|buffer|standard|encrypt|baseline,57,126.8534
+core|AC17|buffer|standard|encrypt|baseline,58,122.1907
+core|AC17|buffer|standard|encrypt|baseline,59,129.0432
+core|AC17|buffer|standard|encrypt|baseline,60,141.4041
+core|AC17|buffer|standard|encrypt|baseline,61,127.0801
+core|AC17|buffer|standard|encrypt|baseline,62,119.0721
+core|AC17|buffer|standard|encrypt|baseline,63,137.5013
+core|AC17|buffer|standard|encrypt|baseline,64,147.384
+core|AC17|buffer|standard|encrypt|baseline,65,146.3317
+core|AC17|buffer|standard|encrypt|baseline,66,153.4492
+core|AC17|buffer|standard|encrypt|baseline,67,130.9821
+core|AC17|buffer|standard|encrypt|baseline,68,112.4358
+core|AC17|buffer|standard|encrypt|baseline,69,149.086
+core|AC17|buffer|standard|encrypt|baseline,70,114.9767
+core|AC17|buffer|standard|encrypt|baseline,71,174.4842
+core|AC17|buffer|standard|encrypt|baseline,72,141.9008
+core|AC17|buffer|standard|encrypt|baseline,73,160.7003
+core|AC17|buffer|standard|encrypt|baseline,74,136.9363
+core|AC17|buffer|standard|encrypt|baseline,75,126.88
+core|AC17|buffer|standard|encrypt|baseline,76,154.278
+core|AC17|buffer|standard|encrypt|baseline,77,159.052
+core|AC17|buffer|standard|encrypt|baseline,78,161.0949
+core|AC17|buffer|standard|encrypt|baseline,79,163.7635
+core|AC17|buffer|standard|encrypt|baseline,80,104.0736
+core|AC17|buffer|standard|encrypt|baseline,81,95.8171
+core|AC17|buffer|standard|encrypt|baseline,82,101.8347
+core|AC17|buffer|standard|encrypt|baseline,83,89.2887
+core|AC17|buffer|standard|encrypt|baseline,84,91.9871
+core|AC17|buffer|standard|encrypt|baseline,85,94.3886
+core|AC17|buffer|standard|encrypt|baseline,86,117.3949
+core|AC17|buffer|standard|encrypt|baseline,87,87.1574
+core|AC17|buffer|standard|encrypt|baseline,88,87.7216
+core|AC17|buffer|standard|encrypt|baseline,89,90.0816
+core|AC17|buffer|standard|encrypt|baseline,90,128.3435
+core|AC17|buffer|standard|encrypt|baseline,91,157.964
+core|AC17|buffer|standard|encrypt|baseline,92,143.2697
+core|AC17|buffer|standard|encrypt|baseline,93,125.5645
+core|AC17|buffer|standard|encrypt|baseline,94,155.4288
+core|AC17|buffer|standard|encrypt|baseline,95,145.4318
+core|AC17|buffer|standard|encrypt|baseline,96,161.1937
+core|AC17|buffer|standard|encrypt|baseline,97,165.4877
+core|AC17|buffer|standard|encrypt|baseline,98,126.8655
+core|AC17|buffer|standard|encrypt|baseline,99,139.7391
+core|AC17|buffer|standard|decrypt|baseline,0,24.1542
+core|AC17|buffer|standard|decrypt|baseline,1,25.4732
+core|AC17|buffer|standard|decrypt|baseline,2,24.7391
+core|AC17|buffer|standard|decrypt|baseline,3,25.4633
+core|AC17|buffer|standard|decrypt|baseline,4,25.8107
+core|AC17|buffer|standard|decrypt|baseline,5,24.5551
+core|AC17|buffer|standard|decrypt|baseline,6,24.166
+core|AC17|buffer|standard|decrypt|baseline,7,23.7111
+core|AC17|buffer|standard|decrypt|baseline,8,24.3855
+core|AC17|buffer|standard|decrypt|baseline,9,23.8647
+core|AC17|buffer|standard|decrypt|baseline,10,23.2103
+core|AC17|buffer|standard|decrypt|baseline,11,23.209
+core|AC17|buffer|standard|decrypt|baseline,12,23.6526
+core|AC17|buffer|standard|decrypt|baseline,13,23.6696
+core|AC17|buffer|standard|decrypt|baseline,14,23.4063
+core|AC17|buffer|standard|decrypt|baseline,15,24.3075
+core|AC17|buffer|standard|decrypt|baseline,16,24.7154
+core|AC17|buffer|standard|decrypt|baseline,17,23.3521
+core|AC17|buffer|standard|decrypt|baseline,18,23.8537
+core|AC17|buffer|standard|decrypt|baseline,19,24.3378
+core|AC17|buffer|standard|decrypt|baseline,20,23.9731
+core|AC17|buffer|standard|decrypt|baseline,21,24.1405
+core|AC17|buffer|standard|decrypt|baseline,22,23.081
+core|AC17|buffer|standard|decrypt|baseline,23,24.0426
+core|AC17|buffer|standard|decrypt|baseline,24,24.8213
+core|AC17|buffer|standard|decrypt|baseline,25,23.5559
+core|AC17|buffer|standard|decrypt|baseline,26,23.3364
+core|AC17|buffer|standard|decrypt|baseline,27,22.8203
+core|AC17|buffer|standard|decrypt|baseline,28,23.9498
+core|AC17|buffer|standard|decrypt|baseline,29,23.3961
+core|AC17|buffer|standard|decrypt|baseline,30,23.5837
+core|AC17|buffer|standard|decrypt|baseline,31,23.853
+core|AC17|buffer|standard|decrypt|baseline,32,22.991
+core|AC17|buffer|standard|decrypt|baseline,33,23.1512
+core|AC17|buffer|standard|decrypt|baseline,34,22.6967
+core|AC17|buffer|standard|decrypt|baseline,35,24.1664
+core|AC17|buffer|standard|decrypt|baseline,36,22.8194
+core|AC17|buffer|standard|decrypt|baseline,37,24.2409
+core|AC17|buffer|standard|decrypt|baseline,38,23.686
+core|AC17|buffer|standard|decrypt|baseline,39,30.1124
+core|AC17|buffer|standard|decrypt|baseline,40,23.7799
+core|AC17|buffer|standard|decrypt|baseline,41,23.0989
+core|AC17|buffer|standard|decrypt|baseline,42,22.9877
+core|AC17|buffer|standard|decrypt|baseline,43,24.8895
+core|AC17|buffer|standard|decrypt|baseline,44,26.5455
+core|AC17|buffer|standard|decrypt|baseline,45,24.9135
+core|AC17|buffer|standard|decrypt|baseline,46,31.2762
+core|AC17|buffer|standard|decrypt|baseline,47,36.2055
+core|AC17|buffer|standard|decrypt|baseline,48,38.3012
+core|AC17|buffer|standard|decrypt|baseline,49,40.0349
+core|AC17|buffer|standard|decrypt|baseline,50,41.881
+core|AC17|buffer|standard|decrypt|baseline,51,39.8475
+core|AC17|buffer|standard|decrypt|baseline,52,35.6259
+core|AC17|buffer|standard|decrypt|baseline,53,41.6479
+core|AC17|buffer|standard|decrypt|baseline,54,40.4063
+core|AC17|buffer|standard|decrypt|baseline,55,40.691
+core|AC17|buffer|standard|decrypt|baseline,56,38.9597
+core|AC17|buffer|standard|decrypt|baseline,57,36.1161
+core|AC17|buffer|standard|decrypt|baseline,58,38.839
+core|AC17|buffer|standard|decrypt|baseline,59,34.0235
+core|AC17|buffer|standard|decrypt|baseline,60,38.7598
+core|AC17|buffer|standard|decrypt|baseline,61,40.2644
+core|AC17|buffer|standard|decrypt|baseline,62,32.4997
+core|AC17|buffer|standard|decrypt|baseline,63,34.1998
+core|AC17|buffer|standard|decrypt|baseline,64,42.7034
+core|AC17|buffer|standard|decrypt|baseline,65,36.5978
+core|AC17|buffer|standard|decrypt|baseline,66,39.3071
+core|AC17|buffer|standard|decrypt|baseline,67,41.588
+core|AC17|buffer|standard|decrypt|baseline,68,40.1738
+core|AC17|buffer|standard|decrypt|baseline,69,27.7532
+core|AC17|buffer|standard|decrypt|baseline,70,33.1599
+core|AC17|buffer|standard|decrypt|baseline,71,30.4274
+core|AC17|buffer|standard|decrypt|baseline,72,32.839
+core|AC17|buffer|standard|decrypt|baseline,73,30.0517
+core|AC17|buffer|standard|decrypt|baseline,74,31.7828
+core|AC17|buffer|standard|decrypt|baseline,75,35.8464
+core|AC17|buffer|standard|decrypt|baseline,76,26.0126
+core|AC17|buffer|standard|decrypt|baseline,77,27.5006
+core|AC17|buffer|standard|decrypt|baseline,78,31.5786
+core|AC17|buffer|standard|decrypt|baseline,79,25.6924
+core|AC17|buffer|standard|decrypt|baseline,80,31.0672
+core|AC17|buffer|standard|decrypt|baseline,81,29.8733
+core|AC17|buffer|standard|decrypt|baseline,82,26.431
+core|AC17|buffer|standard|decrypt|baseline,83,33.8279
+core|AC17|buffer|standard|decrypt|baseline,84,31.5641
+core|AC17|buffer|standard|decrypt|baseline,85,30.2996
+core|AC17|buffer|standard|decrypt|baseline,86,34.2809
+core|AC17|buffer|standard|decrypt|baseline,87,36.7454
+core|AC17|buffer|standard|decrypt|baseline,88,25.5046
+core|AC17|buffer|standard|decrypt|baseline,89,31.6585
+core|AC17|buffer|standard|decrypt|baseline,90,34.1341
+core|AC17|buffer|standard|decrypt|baseline,91,35.2144
+core|AC17|buffer|standard|decrypt|baseline,92,32.1805
+core|AC17|buffer|standard|decrypt|baseline,93,36.3045
+core|AC17|buffer|standard|decrypt|baseline,94,29.931
+core|AC17|buffer|standard|decrypt|baseline,95,31.4882
+core|AC17|buffer|standard|decrypt|baseline,96,27.2305
+core|AC17|buffer|standard|decrypt|baseline,97,31.3685
+core|AC17|buffer|standard|decrypt|baseline,98,34.3805
+core|AC17|buffer|standard|decrypt|baseline,99,33.3408
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,0,10.246
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,1,9.4121
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,2,9.0613
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,3,5.4426
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,4,5.7395
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,5,9.8093
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,6,13.7729
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,7,6.2101
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,8,6.8555
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,9,12.9837
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,10,9.8833
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,11,11.866
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,12,8.3618
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,13,11.3842
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,14,7.7986
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,15,5.3183
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,16,9.6904
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,17,6.9531
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,18,8.07
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,19,6.0608
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,20,5.2791
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,21,5.0527
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,22,5.1237
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,23,5.3161
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,24,5.2562
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,25,5.2166
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,26,7.5183
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,27,5.6545
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,28,6.8634
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,29,5.8574
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,30,6.3236
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,31,10.9693
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,32,5.8029
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,33,7.2265
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,34,5.2081
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,35,5.7596
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,36,7.1458
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,37,5.1051
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,38,5.1882
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,39,5.1782
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,40,5.4778
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,41,6.6334
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,42,5.1882
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,43,5.1971
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,44,4.9912
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,45,5.4746
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,46,7.1049
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,47,5.4656
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,48,5.675
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,49,8.7937
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,50,6.6111
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,51,6.3677
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,52,9.8985
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,53,5.5333
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,54,4.9525
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,55,6.0266
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,56,6.9476
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,57,5.1993
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,58,5.4576
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,59,5.2442
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,60,5.1139
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,61,5.3468
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,62,6.9911
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,63,5.2447
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,64,6.5128
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,65,5.105
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,66,5.5402
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,67,4.9213
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,68,5.481
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,69,9.0897
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,70,13.4735
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,71,5.2877
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,72,5.9444
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,73,5.0364
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,74,5.128
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,75,11.137
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,76,6.2207
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,77,5.3348
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,78,5.1224
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,79,10.3206
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,80,7.5449
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,81,5.5518
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,82,8.8409
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,83,10.9554
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,84,8.6971
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,85,10.4248
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,86,6.4707
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,87,6.9889
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,88,10.1184
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,89,11.1077
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,90,7.3648
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,91,5.5114
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,92,10.2869
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,93,9.4032
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,94,9.383
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,95,6.4762
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,96,9.3841
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,97,5.1091
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,98,5.143
+pqc|CoverCrypt|buffer|pqc|setup_pqc|baseline,99,6.7764
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,0,9.4394
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,1,8.7131
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,2,5.6272
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,3,9.3001
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,4,4.4382
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,5,10.0087
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,6,11.0236
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,7,5.9982
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,8,9.2934
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,9,8.9551
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,10,9.2627
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,11,8.7946
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,12,9.1141
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,13,9.5096
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,14,8.4173
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,15,8.6138
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,16,8.0335
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,17,7.8289
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,18,9.7413
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,19,8.1856
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,20,7.5737
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,21,7.2429
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,22,6.9373
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,23,8.0038
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,24,6.4036
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,25,7.0376
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,26,9.6329
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,27,5.8663
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,28,5.1716
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,29,5.2078
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,30,4.7092
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,31,4.7051
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,32,6.0535
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,33,5.0411
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,34,4.7806
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,35,9.1639
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,36,6.4683
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,37,5.2559
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,38,5.5779
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,39,5.2375
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,40,6.3169
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,41,4.8079
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,42,5.3107
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,43,8.1059
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,44,5.2375
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,45,4.8212
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,46,5.1907
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,47,4.5059
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,48,12.7795
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,49,10.0637
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,50,8.9366
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,51,9.2671
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,52,9.0601
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,53,8.036
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,54,9.1805
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,55,10.0373
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,56,7.9346
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,57,4.5431
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,58,5.0899
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,59,5.7858
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,60,5.5884
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,61,5.267
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,62,4.6885
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,63,4.5909
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,64,4.1621
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,65,4.268
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,66,4.1343
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,67,4.6524
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,68,4.1174
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,69,4.9202
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,70,4.7959
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,71,4.3206
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,72,5.0038
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,73,4.3331
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,74,5.0116
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,75,4.8132
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,76,4.2039
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,77,4.73
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,78,4.2641
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,79,5.0166
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,80,4.9005
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,81,5.019
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,82,4.7083
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,83,4.999
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,84,4.8092
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,85,4.8848
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,86,5.1341
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,87,4.4607
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,88,4.1458
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,89,4.5202
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,90,4.4916
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,91,4.4844
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,92,4.5808
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,93,4.2797
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,94,4.8222
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,95,4.2399
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,96,4.3718
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,97,4.389
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,98,4.4652
+pqc|CoverCrypt|buffer|pqc|encrypt_sign|baseline,99,4.3281
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,0,2.8495
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,1,4.852
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,2,7.4359
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,3,7.4829
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,4,6.2516
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,5,1.1143
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,6,9.178
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,7,2.2876
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,8,3.6726
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,9,2.1455
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,10,8.6284
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,11,1.4012
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,12,5.8971
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,13,7.1286
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,14,6.378
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,15,9.2927
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,16,7.2043
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,17,8.6755
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,18,2.8977
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,19,1.3738
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,20,4.5166
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,21,8.3262
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,22,5.6975
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,23,8.8142
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,24,2.0665
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,25,5.1935
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,26,7.8823
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,27,7.6993
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,28,8.5418
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,29,6.5926
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,30,5.7895
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,31,4.4082
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,32,0.8805
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,33,7.3089
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,34,8.5906
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,35,4.9973
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,36,2.4477
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,37,4.2001
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,38,7.8252
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,39,7.0532
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,40,7.2672
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,41,2.5459
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,42,5.8082
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,43,2.7793
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,44,2.1377
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,45,1.4612
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,46,4.2458
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,47,1.3404
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,48,6.5431
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,49,4.2877
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,50,7.5265
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,51,5.2519
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,52,1.7631
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,53,3.2365
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,54,7.3441
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,55,4.0314
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,56,9.5152
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,57,2.5573
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,58,3.3806
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,59,9.7174
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,60,9.4321
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,61,8.0491
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,62,8.1667
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,63,9.2103
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,64,8.555
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,65,9.6008
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,66,10.0396
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,67,3.9304
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,68,6.8347
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,69,4.8362
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,70,5.0488
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,71,1.4039
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,72,1.4969
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,73,7.0041
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,74,9.6428
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,75,3.068
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,76,3.0492
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,77,5.2683
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,78,5.5118
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,79,3.3394
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,80,9.7429
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,81,7.9263
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,82,1.3238
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,83,4.2533
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,84,4.6952
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,85,1.7217
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,86,7.4796
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,87,8.0948
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,88,6.3101
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,89,3.3471
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,90,7.3194
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,91,8.2067
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,92,9.0109
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,93,5.0471
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,94,7.4511
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,95,6.1472
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,96,8.8019
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,97,0.9293
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,98,7.7673
+pqc|CoverCrypt|buffer|pqc|decrypt_verify|baseline,99,8.6663
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,0,9.0016
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,1,8.5106
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,2,8.0398
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,3,8.2151
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,4,8.9445
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,5,8.1537
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,6,8.4951
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,7,8.1969
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,8,8.2443
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,9,8.616
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,10,8.1387
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,11,8.2012
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,12,7.772
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,13,8.5466
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,14,8.3954
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,15,8.1138
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,16,7.8066
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,17,8.1663
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,18,8.2683
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,19,8.617
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,20,8.0815
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,21,8.9893
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,22,7.9213
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,23,8.0748
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,24,8.1611
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,25,8.3127
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,26,7.9928
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,27,7.8247
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,28,8.869
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,29,8.4269
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,30,8.5176
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,31,8.1428
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,32,8.1351
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,33,8.5704
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,34,8.73
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,35,8.9829
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,36,8.6043
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,37,8.8164
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,38,8.8748
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,39,8.8473
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,40,8.7182
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,41,8.8545
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,42,8.126
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,43,8.0503
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,44,8.8486
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,45,9.2888
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,46,8.5239
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,47,8.5375
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,48,8.2383
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,49,8.7615
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,50,8.3158
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,51,8.0151
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,52,8.2853
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,53,8.1699
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,54,9.3097
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,55,8.8768
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,56,12.4401
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,57,8.7199
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,58,8.4726
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,59,8.7043
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,60,8.4088
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,61,8.1083
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,62,8.1654
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,63,10.3877
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,64,8.5551
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,65,9.0861
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,66,8.5903
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,67,7.9653
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,68,8.2147
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,69,8.5326
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,70,8.6034
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,71,8.2786
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,72,8.21
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,73,8.0857
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,74,8.2129
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,75,8.1178
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,76,8.0223
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,77,7.6938
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,78,7.9549
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,79,7.9977
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,80,8.1604
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,81,8.0073
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,82,8.2686
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,83,7.7501
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,84,8.7917
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,85,8.4798
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,86,8.4747
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,87,7.7745
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,88,8.3893
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,89,8.084
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,90,8.4274
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,91,8.2698
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,92,7.902
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,93,8.2626
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,94,7.9115
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,95,8.5251
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,96,8.6586
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,97,8.2626
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,98,7.9188
+pqc|TKN20|buffer|pqc|setup_pqc|baseline,99,8.2202
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,0,69.2149
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,1,68.7062
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,2,69.0216
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,3,70.7175
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,4,97.3697
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,5,150.4348
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,6,134.0489
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,7,105.6995
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,8,105.8406
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,9,125.6022
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,10,117.9577
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,11,102.9844
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,12,77.3697
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,13,71.6512
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,14,67.5486
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,15,68.2934
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,16,68.2118
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,17,69.4293
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,18,67.6604
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,19,74.4302
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,20,70.6414
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,21,69.3891
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,22,73.2874
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,23,73.5077
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,24,71.1435
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,25,71.5576
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,26,67.7641
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,27,70.0265
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,28,73.9028
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,29,69.9869
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,30,69.1813
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,31,68.7551
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,32,68.3126
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,33,67.8387
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,34,68.8772
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,35,69.3492
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,36,68.7547
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,37,70.0519
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,38,85.4406
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,39,124.6944
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,40,123.8779
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,41,117.0599
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,42,128.1905
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,43,133.4959
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,44,117.6333
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,45,123.9541
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,46,153.8936
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,47,111.9746
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,48,101.3091
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,49,102.6898
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,50,112.2047
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,51,115.0534
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,52,96.7043
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,53,96.6128
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,54,98.2727
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,55,80.2614
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,56,82.5899
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,57,105.7465
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,58,97.6131
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,59,106.3501
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,60,110.3853
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,61,115.4149
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,62,119.7735
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,63,131.827
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,64,107.3291
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,65,121.9235
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,66,117.7216
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,67,82.0925
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,68,81.8868
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,69,96.1617
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,70,103.9737
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,71,120.4554
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,72,114.3541
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,73,109.532
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,74,95.9759
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,75,94.0372
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,76,101.6509
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,77,92.3268
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,78,128.8882
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,79,101.5296
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,80,120.8707
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,81,130.7512
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,82,135.9334
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,83,134.2305
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,84,123.7094
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,85,145.4356
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,86,130.3048
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,87,136.805
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,88,122.8695
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,89,146.0877
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,90,134.2916
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,91,121.7812
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,92,136.422
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,93,141.1618
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,94,144.3604
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,95,125.2928
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,96,127.1841
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,97,137.4586
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,98,153.8303
+pqc|TKN20|buffer|pqc|encrypt_sign|baseline,99,138.4865
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,0,24.381
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,1,32.43
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,2,36.3017
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,3,36.0358
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,4,36.0632
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,5,35.7757
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,6,33.4698
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,7,30.7944
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,8,32.835
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,9,28.9247
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,10,25.1482
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,11,32.9035
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,12,30.8482
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,13,35.1071
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,14,35.1239
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,15,31.4005
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,16,33.7762
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,17,32.5087
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,18,37.7263
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,19,32.4561
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,20,31.7547
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,21,39.9204
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,22,40.4271
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,23,31.1274
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,24,28.951
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,25,26.7765
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,26,36.3844
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,27,29.8074
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,28,30.0371
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,29,29.8382
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,30,33.3295
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,31,29.4004
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,32,28.208
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,33,36.4889
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,34,32.969
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,35,32.3438
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,36,28.7132
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,37,38.1301
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,38,34.0451
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,39,33.2105
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,40,32.4359
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,41,36.3216
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,42,28.5644
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,43,28.6023
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,44,35.095
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,45,35.3805
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,46,22.7954
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,47,34.7546
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,48,31.837
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,49,30.1993
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,50,35.5374
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,51,36.381
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,52,34.3854
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,53,30.4729
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,54,33.7945
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,55,37.113
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,56,37.8686
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,57,34.3433
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,58,37.9863
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,59,35.8926
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,60,36.646
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,61,32.6343
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,62,43.7191
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,63,35.6344
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,64,33.1459
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,65,35.1812
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,66,34.6928
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,67,35.9452
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,68,36.6977
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,69,36.718
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,70,30.7979
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,71,28.9074
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,72,35.6615
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,73,36.1107
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,74,28.2735
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,75,35.6684
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,76,34.82
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,77,32.402
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,78,31.9943
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,79,31.8451
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,80,28.579
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,81,29.6101
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,82,30.1621
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,83,26.2555
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,84,29.9452
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,85,33.9914
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,86,31.6231
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,87,27.3275
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,88,30.3316
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,89,27.2193
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,90,31.52
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,91,28.6481
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,92,34.7826
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,93,35.0879
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,94,28.7966
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,95,28.4331
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,96,37.7301
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,97,30.6187
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,98,37.5858
+pqc|TKN20|buffer|pqc|decrypt_verify|baseline,99,29.671
+pqc|AC17|buffer|pqc|setup_pqc|baseline,0,28.3609
+pqc|AC17|buffer|pqc|setup_pqc|baseline,1,28.9463
+pqc|AC17|buffer|pqc|setup_pqc|baseline,2,25.6774
+pqc|AC17|buffer|pqc|setup_pqc|baseline,3,23.294
+pqc|AC17|buffer|pqc|setup_pqc|baseline,4,28.7277
+pqc|AC17|buffer|pqc|setup_pqc|baseline,5,28.2302
+pqc|AC17|buffer|pqc|setup_pqc|baseline,6,29.6765
+pqc|AC17|buffer|pqc|setup_pqc|baseline,7,31.8751
+pqc|AC17|buffer|pqc|setup_pqc|baseline,8,29.8059
+pqc|AC17|buffer|pqc|setup_pqc|baseline,9,33.8028
+pqc|AC17|buffer|pqc|setup_pqc|baseline,10,31.7329
+pqc|AC17|buffer|pqc|setup_pqc|baseline,11,32.1946
+pqc|AC17|buffer|pqc|setup_pqc|baseline,12,25.9413
+pqc|AC17|buffer|pqc|setup_pqc|baseline,13,32.7782
+pqc|AC17|buffer|pqc|setup_pqc|baseline,14,24.0447
+pqc|AC17|buffer|pqc|setup_pqc|baseline,15,31.016
+pqc|AC17|buffer|pqc|setup_pqc|baseline,16,31.4386
+pqc|AC17|buffer|pqc|setup_pqc|baseline,17,34.9432
+pqc|AC17|buffer|pqc|setup_pqc|baseline,18,29.2404
+pqc|AC17|buffer|pqc|setup_pqc|baseline,19,31.3186
+pqc|AC17|buffer|pqc|setup_pqc|baseline,20,29.6171
+pqc|AC17|buffer|pqc|setup_pqc|baseline,21,29.4907
+pqc|AC17|buffer|pqc|setup_pqc|baseline,22,33.7704
+pqc|AC17|buffer|pqc|setup_pqc|baseline,23,30.3801
+pqc|AC17|buffer|pqc|setup_pqc|baseline,24,28.6818
+pqc|AC17|buffer|pqc|setup_pqc|baseline,25,27.3058
+pqc|AC17|buffer|pqc|setup_pqc|baseline,26,25.3863
+pqc|AC17|buffer|pqc|setup_pqc|baseline,27,31.2496
+pqc|AC17|buffer|pqc|setup_pqc|baseline,28,34.462
+pqc|AC17|buffer|pqc|setup_pqc|baseline,29,30.7474
+pqc|AC17|buffer|pqc|setup_pqc|baseline,30,24.9528
+pqc|AC17|buffer|pqc|setup_pqc|baseline,31,23.8387
+pqc|AC17|buffer|pqc|setup_pqc|baseline,32,28.0665
+pqc|AC17|buffer|pqc|setup_pqc|baseline,33,27.0385
+pqc|AC17|buffer|pqc|setup_pqc|baseline,34,26.9221
+pqc|AC17|buffer|pqc|setup_pqc|baseline,35,28.6313
+pqc|AC17|buffer|pqc|setup_pqc|baseline,36,29.2202
+pqc|AC17|buffer|pqc|setup_pqc|baseline,37,27.9742
+pqc|AC17|buffer|pqc|setup_pqc|baseline,38,26.6556
+pqc|AC17|buffer|pqc|setup_pqc|baseline,39,26.2969
+pqc|AC17|buffer|pqc|setup_pqc|baseline,40,22.015
+pqc|AC17|buffer|pqc|setup_pqc|baseline,41,25.0892
+pqc|AC17|buffer|pqc|setup_pqc|baseline,42,26.6388
+pqc|AC17|buffer|pqc|setup_pqc|baseline,43,27.4645
+pqc|AC17|buffer|pqc|setup_pqc|baseline,44,28.3976
+pqc|AC17|buffer|pqc|setup_pqc|baseline,45,29.2686
+pqc|AC17|buffer|pqc|setup_pqc|baseline,46,29.1192
+pqc|AC17|buffer|pqc|setup_pqc|baseline,47,32.1806
+pqc|AC17|buffer|pqc|setup_pqc|baseline,48,28.3142
+pqc|AC17|buffer|pqc|setup_pqc|baseline,49,28.7124
+pqc|AC17|buffer|pqc|setup_pqc|baseline,50,31.9234
+pqc|AC17|buffer|pqc|setup_pqc|baseline,51,35.5866
+pqc|AC17|buffer|pqc|setup_pqc|baseline,52,30.7639
+pqc|AC17|buffer|pqc|setup_pqc|baseline,53,29.4235
+pqc|AC17|buffer|pqc|setup_pqc|baseline,54,29.3658
+pqc|AC17|buffer|pqc|setup_pqc|baseline,55,31.3909
+pqc|AC17|buffer|pqc|setup_pqc|baseline,56,31.8433
+pqc|AC17|buffer|pqc|setup_pqc|baseline,57,25.9235
+pqc|AC17|buffer|pqc|setup_pqc|baseline,58,28.5638
+pqc|AC17|buffer|pqc|setup_pqc|baseline,59,23.8726
+pqc|AC17|buffer|pqc|setup_pqc|baseline,60,29.918
+pqc|AC17|buffer|pqc|setup_pqc|baseline,61,25.5711
+pqc|AC17|buffer|pqc|setup_pqc|baseline,62,24.0911
+pqc|AC17|buffer|pqc|setup_pqc|baseline,63,27.993
+pqc|AC17|buffer|pqc|setup_pqc|baseline,64,39.2018
+pqc|AC17|buffer|pqc|setup_pqc|baseline,65,33.0345
+pqc|AC17|buffer|pqc|setup_pqc|baseline,66,29.8827
+pqc|AC17|buffer|pqc|setup_pqc|baseline,67,27.0236
+pqc|AC17|buffer|pqc|setup_pqc|baseline,68,26.4115
+pqc|AC17|buffer|pqc|setup_pqc|baseline,69,29.5561
+pqc|AC17|buffer|pqc|setup_pqc|baseline,70,24.8321
+pqc|AC17|buffer|pqc|setup_pqc|baseline,71,26.8898
+pqc|AC17|buffer|pqc|setup_pqc|baseline,72,28.917
+pqc|AC17|buffer|pqc|setup_pqc|baseline,73,26.2247
+pqc|AC17|buffer|pqc|setup_pqc|baseline,74,28.3754
+pqc|AC17|buffer|pqc|setup_pqc|baseline,75,22.6767
+pqc|AC17|buffer|pqc|setup_pqc|baseline,76,21.4672
+pqc|AC17|buffer|pqc|setup_pqc|baseline,77,24.2493
+pqc|AC17|buffer|pqc|setup_pqc|baseline,78,27.1855
+pqc|AC17|buffer|pqc|setup_pqc|baseline,79,25.8996
+pqc|AC17|buffer|pqc|setup_pqc|baseline,80,28.179
+pqc|AC17|buffer|pqc|setup_pqc|baseline,81,26.5592
+pqc|AC17|buffer|pqc|setup_pqc|baseline,82,23.8879
+pqc|AC17|buffer|pqc|setup_pqc|baseline,83,23.438
+pqc|AC17|buffer|pqc|setup_pqc|baseline,84,27.3009
+pqc|AC17|buffer|pqc|setup_pqc|baseline,85,22.9201
+pqc|AC17|buffer|pqc|setup_pqc|baseline,86,23.9289
+pqc|AC17|buffer|pqc|setup_pqc|baseline,87,26.2815
+pqc|AC17|buffer|pqc|setup_pqc|baseline,88,29.1536
+pqc|AC17|buffer|pqc|setup_pqc|baseline,89,29.5338
+pqc|AC17|buffer|pqc|setup_pqc|baseline,90,27.4612
+pqc|AC17|buffer|pqc|setup_pqc|baseline,91,35.3661
+pqc|AC17|buffer|pqc|setup_pqc|baseline,92,24.8663
+pqc|AC17|buffer|pqc|setup_pqc|baseline,93,29.2939
+pqc|AC17|buffer|pqc|setup_pqc|baseline,94,28.0604
+pqc|AC17|buffer|pqc|setup_pqc|baseline,95,29.5299
+pqc|AC17|buffer|pqc|setup_pqc|baseline,96,27.0901
+pqc|AC17|buffer|pqc|setup_pqc|baseline,97,39.3014
+pqc|AC17|buffer|pqc|setup_pqc|baseline,98,33.8127
+pqc|AC17|buffer|pqc|setup_pqc|baseline,99,28.5894
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,0,156.3216
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,1,158.6532
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,2,160.0544
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,3,139.6153
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,4,108.5502
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,5,105.9353
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,6,103.0847
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,7,153.2225
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,8,159.6749
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,9,154.1951
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,10,157.5003
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,11,159.779
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,12,165.8778
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,13,164.3265
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,14,153.9086
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,15,151.3127
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,16,143.1018
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,17,149.72
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,18,102.5731
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,19,131.1164
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,20,125.4533
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,21,162.1612
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,22,156.161
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,23,153.4495
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,24,162.9191
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,25,118.2431
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,26,145.622
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,27,163.2056
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,28,127.6977
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,29,142.9717
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,30,152.6045
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,31,152.8171
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,32,163.2147
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,33,111.847
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,34,125.8348
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,35,107.2198
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,36,137.7475
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,37,153.7792
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,38,139.5918
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,39,140.7766
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,40,128.2641
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,41,152.9967
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,42,160.9275
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,43,111.2993
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,44,111.3651
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,45,130.7068
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,46,110.5492
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,47,162.3298
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,48,92.7651
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,49,109.4223
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,50,145.0845
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,51,148.2002
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,52,155.2946
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,53,157.3159
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,54,111.0637
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,55,105.2553
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,56,126.5599
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,57,128.1697
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,58,131.8348
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,59,144.8661
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,60,135.0286
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,61,121.2015
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,62,108.6446
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,63,104.0979
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,64,147.3791
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,65,156.3445
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,66,125.788
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,67,129.8469
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,68,120.0143
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,69,158.1182
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,70,99.1577
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,71,94.9673
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,72,113.2492
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,73,102.1506
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,74,122.3137
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,75,105.1245
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,76,129.3696
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,77,122.5781
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,78,117.1259
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,79,117.5776
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,80,127.243
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,81,149.8732
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,82,170.8299
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,83,138.9775
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,84,100.3556
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,85,127.5782
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,86,132.4642
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,87,110.3086
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,88,115.7878
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,89,135.3193
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,90,140.1011
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,91,136.1684
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,92,158.8696
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,93,151.8719
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,94,151.8397
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,95,111.441
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,96,124.1057
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,97,151.8791
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,98,117.1633
+pqc|AC17|buffer|pqc|encrypt_sign|baseline,99,153.9741
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,0,31.0322
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,1,33.158
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,2,38.1913
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,3,32.5142
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,4,48.9304
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,5,48.9388
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,6,25.1477
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,7,26.5528
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,8,27.1321
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,9,25.5313
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,10,28.3889
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,11,28.4636
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,12,37.959
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,13,34.2719
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,14,42.0683
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,15,41.3908
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,16,36.5236
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,17,27.4052
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,18,35.4294
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,19,31.5227
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,20,40.1058
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,21,48.0096
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,22,44.1664
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,23,44.9396
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,24,30.6463
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,25,39.1012
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,26,31.2109
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,27,42.0474
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,28,30.244
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,29,31.8539
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,30,44.5029
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,31,34.8798
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,32,41.1253
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,33,44.049
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,34,48.3224
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,35,44.3471
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,36,42.8846
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,37,47.9596
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,38,44.3486
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,39,42.4808
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,40,42.7032
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,41,42.1902
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,42,26.5877
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,43,29.2886
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,44,28.3809
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,45,30.3277
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,46,32.7415
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,47,28.0619
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,48,34.4011
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,49,40.1256
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,50,35.2424
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,51,29.1095
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,52,30.4746
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,53,35.1852
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,54,31.5812
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,55,30.3207
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,56,48.2241
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,57,32.4611
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,58,43.8736
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,59,37.7174
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,60,33.1504
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,61,41.1801
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,62,41.5611
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,63,41.4396
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,64,41.4967
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,65,34.6155
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,66,37.1006
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,67,31.5903
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,68,24.0374
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,69,22.9733
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,70,23.598
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,71,23.0316
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,72,24.7322
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,73,22.7264
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,74,23.0107
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,75,24.2599
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,76,24.1642
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,77,24.2148
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,78,24.3
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,79,24.3143
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,80,23.5039
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,81,25.0026
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,82,22.9947
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,83,23.8872
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,84,24.3677
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,85,25.2029
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,86,23.2816
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,87,23.2754
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,88,23.7119
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,89,24.82
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,90,23.8965
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,91,23.8718
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,92,23.1579
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,93,23.8315
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,94,23.0472
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,95,23.9021
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,96,23.1315
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,97,26.5392
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,98,29.053
+pqc|AC17|buffer|pqc|decrypt_verify|baseline,99,27.4895
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,0,0.5048
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,1,0.4944
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,2,0.4538
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,3,0.4703
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,4,0.3752
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,5,0.4867
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,6,0.431
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,7,0.4668
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,8,0.4174
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,9,0.5635
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,10,0.3826
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,11,0.4197
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,12,0.3489
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,13,0.3916
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,14,0.3596
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,15,0.4192
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,16,0.3718
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,17,0.461
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,18,0.3888
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,19,0.3786
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,20,0.3746
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,21,0.4513
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,22,0.4302
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,23,0.4372
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,24,0.3021
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,25,0.5057
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,26,0.3683
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,27,0.3906
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,28,0.3378
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,29,0.3211
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,30,0.3247
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,31,0.3544
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,32,0.3263
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,33,0.3911
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,34,0.3155
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,35,0.3394
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,36,0.2944
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,37,0.2951
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,38,0.2998
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,39,0.45
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,40,0.3661
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,41,0.4105
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,42,0.3468
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,43,0.3688
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,44,0.3356
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,45,0.3526
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,46,0.3454
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,47,0.3538
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,48,0.2948
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,49,0.2984
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,50,0.3155
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,51,0.3043
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,52,0.3396
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,53,0.3075
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,54,0.2935
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,55,0.3062
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,56,0.311
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,57,0.3104
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,58,0.2937
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,59,0.3147
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,60,0.4439
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,61,0.4108
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,62,0.3398
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,63,0.3238
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,64,0.3679
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,65,0.3315
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,66,0.3072
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,67,0.3094
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,68,0.3082
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,69,0.3407
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,70,0.4183
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,71,0.4336
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,72,0.3675
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,73,0.4092
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,74,0.3647
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,75,0.354
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,76,0.3287
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,77,0.2986
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,78,0.5992
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,79,0.391
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,80,0.3818
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,81,0.4648
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,82,0.333
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,83,0.3478
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,84,0.3349
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,85,0.353
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,86,0.3105
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,87,0.3067
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,88,0.3562
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,89,0.33
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,90,0.3091
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,91,0.3271
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,92,0.3145
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,93,0.3291
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,94,0.3101
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,95,0.2967
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,96,0.3683
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,97,0.3748
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,98,0.3954
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,99,0.3854
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,100,0.3517
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,101,0.315
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,102,0.2888
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,103,0.3426
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,104,0.3091
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,105,0.3476
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,106,0.3282
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,107,0.348
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,108,0.3235
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,109,0.3209
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,110,0.2984
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,111,0.2946
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,112,0.3219
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,113,0.4554
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,114,0.3566
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,115,0.3203
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,116,0.2865
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,117,0.3665
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,118,0.4027
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,119,0.3673
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,120,0.326
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,121,0.4682
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,122,0.3534
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,123,0.3345
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,124,0.3349
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,125,0.3019
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,126,0.29
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,127,0.2825
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,128,0.2747
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,129,0.378
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,130,0.2948
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,131,0.2964
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,132,0.3449
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,133,0.2866
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,134,0.3022
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,135,0.3027
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,136,0.2962
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,137,0.3014
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,138,0.3465
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,139,0.3838
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,140,0.3287
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,141,0.4024
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,142,0.3178
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,143,0.3267
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,144,0.3396
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,145,0.3156
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,146,0.2971
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,147,0.2953
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,148,0.3194
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,149,0.2799
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,150,0.3469
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,151,0.2927
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,152,0.3041
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,153,0.2869
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,154,0.2732
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,155,0.2901
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,156,0.2986
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,157,0.2793
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,158,0.284
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,159,0.3189
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,160,0.4137
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,161,0.3229
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,162,0.3801
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,163,0.3532
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,164,0.3054
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,165,0.3007
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,166,0.2733
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,167,0.3402
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,168,0.2957
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,169,0.2815
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,170,0.3056
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,171,0.3522
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,172,0.2923
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,173,0.3333
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,174,0.2735
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,175,0.2984
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,176,0.2883
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,177,0.2789
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,178,0.2977
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,179,0.3122
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,180,0.2943
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,181,0.3854
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,182,0.3345
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,183,0.3137
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,184,0.3001
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,185,0.3197
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,186,0.3441
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,187,0.3054
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,188,0.293
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,189,0.309
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,190,0.2909
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,191,0.3165
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,192,0.3174
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,193,0.2862
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,194,0.3586
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,195,0.2891
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,196,0.2793
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,197,0.3152
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,198,0.2826
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,199,0.3029
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,200,0.2755
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,201,0.2856
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,202,0.3161
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,203,0.3394
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,204,0.3235
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,205,0.3223
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,206,0.3589
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,207,0.2881
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,208,0.3149
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,209,0.5369
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,210,0.3379
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,211,0.3085
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,212,0.3063
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,213,0.2937
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,214,0.3019
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,215,0.3149
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,216,0.2921
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,217,0.3166
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,218,0.2926
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,219,0.2756
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,220,0.2847
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,221,0.2788
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,222,0.3017
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,223,0.3584
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,224,0.3275
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,225,0.3128
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,226,0.365
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,227,0.4807
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,228,0.3344
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,229,0.297
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,230,0.3068
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,231,0.3492
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,232,0.2864
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,233,0.3075
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,234,0.2818
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,235,0.2948
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,236,0.2928
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,237,0.2945
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,238,0.3277
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,239,0.32
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,240,0.3094
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,241,0.3272
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,242,0.2999
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,243,0.2778
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,244,0.3048
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,245,0.3715
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,246,0.3632
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,247,0.3698
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,248,0.327
+mldsa|ML-DSA-87|native|primitive|keygen|keypair,249,0.3121
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,0,1.2112
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,1,0.5333
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,2,0.6245
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,3,0.4664
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,4,0.8026
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,5,1.0065
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,6,0.757
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,7,0.7986
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,8,0.6119
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,9,0.5328
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,10,0.3863
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,11,0.5069
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,12,0.4822
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,13,0.5291
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,14,0.6951
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,15,0.3966
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,16,0.4639
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,17,0.6537
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,18,0.4723
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,19,0.7438
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,20,0.6084
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,21,0.8223
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,22,0.6192
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,23,0.807
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,24,0.4523
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,25,0.6394
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,26,0.466
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,27,0.636
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,28,0.6156
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,29,0.6962
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,30,0.8571
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,31,0.9052
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,32,0.4248
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,33,0.7286
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,34,0.9091
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,35,1.2806
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,36,1.2051
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,37,0.5064
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,38,0.7312
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,39,1.489
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,40,0.5718
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,41,0.6639
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,42,1.0159
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,43,0.3983
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,44,0.8702
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,45,0.6516
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,46,0.6757
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,47,0.4669
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,48,0.7979
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,49,1.0812
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,50,0.472
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,51,0.4029
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,52,0.7123
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,53,0.5438
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,54,0.4707
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,55,0.9789
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,56,0.4512
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,57,0.564
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,58,0.4065
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,59,0.4869
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,60,0.4832
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,61,0.8823
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,62,0.9591
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,63,0.8623
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,64,0.5477
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,65,0.5065
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,66,0.6724
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,67,0.7422
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,68,0.7246
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,69,0.56
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,70,0.7308
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,71,0.6032
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,72,0.7584
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,73,0.4674
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,74,0.5811
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,75,0.4277
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,76,0.7641
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,77,0.6491
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,78,0.656
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,79,1.0014
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,80,0.5188
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,81,0.4477
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,82,0.5093
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,83,0.8659
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,84,0.7587
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,85,0.5686
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,86,0.7207
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,87,0.4818
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,88,0.5294
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,89,0.4347
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,90,0.7469
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,91,0.9666
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,92,0.9522
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,93,0.6111
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,94,0.435
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,95,0.5092
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,96,0.6805
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,97,0.539
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,98,0.3916
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,99,0.9753
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,100,0.6883
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,101,0.5632
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,102,0.5183
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,103,0.632
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,104,0.4543
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,105,1.106
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,106,0.5603
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,107,0.4725
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,108,0.632
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,109,2.1811
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,110,0.7343
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,111,0.6213
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,112,0.4625
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,113,0.7782
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,114,0.4526
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,115,0.7755
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,116,0.4337
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,117,0.5246
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,118,0.5199
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,119,0.5386
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,120,0.4218
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,121,0.5312
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,122,0.6476
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,123,1.0258
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,124,0.7189
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,125,0.5417
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,126,0.9794
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,127,0.7302
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,128,0.4382
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,129,0.5681
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,130,0.459
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,131,0.7921
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,132,0.385
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,133,0.5231
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,134,0.5201
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,135,0.6612
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,136,0.6378
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,137,0.498
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,138,0.4609
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,139,1.2268
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,140,1.1685
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,141,0.515
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,142,0.4154
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,143,0.4529
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,144,0.4807
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,145,0.5493
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,146,0.5903
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,147,0.7693
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,148,0.4585
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,149,0.396
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,150,0.6988
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,151,0.4598
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,152,0.4681
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,153,0.8896
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,154,0.4874
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,155,0.4561
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,156,0.4573
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,157,0.5194
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,158,0.8423
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,159,0.6186
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,160,0.5332
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,161,0.726
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,162,0.6347
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,163,0.483
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,164,0.436
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,165,0.6363
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,166,0.5606
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,167,0.5052
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,168,0.6997
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,169,1.0533
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,170,0.5611
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,171,0.9363
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,172,0.4136
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,173,0.4007
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,174,0.5577
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,175,0.6684
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,176,0.5727
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,177,0.6724
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,178,0.6159
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,179,0.3822
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,180,0.4562
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,181,0.5099
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,182,0.4251
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,183,0.4095
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,184,0.7912
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,185,0.8769
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,186,0.7648
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,187,0.4592
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,188,0.7242
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,189,0.4979
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,190,0.5006
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,191,0.593
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,192,0.7024
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,193,0.507
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,194,0.4426
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,195,0.593
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,196,0.4167
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,197,0.6032
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,198,0.8063
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,199,0.5135
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,200,0.9528
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,201,0.7311
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,202,0.4557
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,203,0.753
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,204,0.6016
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,205,0.5632
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,206,0.474
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,207,0.4316
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,208,0.7055
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,209,2.0518
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,210,0.6831
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,211,0.5787
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,212,0.3855
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,213,0.9159
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,214,0.3952
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,215,0.4731
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,216,0.5527
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,217,0.494
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,218,0.5195
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,219,0.4182
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,220,0.5153
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,221,0.7848
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,222,0.4927
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,223,0.6894
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,224,0.4012
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,225,0.4459
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,226,0.4056
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,227,0.6057
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,228,0.5516
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,229,0.5083
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,230,0.4053
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,231,0.7815
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,232,0.4485
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,233,0.4145
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,234,0.8198
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,235,0.4611
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,236,0.753
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,237,0.478
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,238,0.5726
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,239,0.8272
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,240,1.007
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,241,0.6393
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,242,0.619
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,243,0.9445
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,244,0.7887
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,245,0.5607
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,246,0.6197
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,247,0.6685
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,248,0.4073
+mldsa|ML-DSA-87|native|primitive|sign|4.00 KiB,249,0.3706
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,0,0.4871
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,1,0.3419
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,2,0.3082
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,3,0.3604
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,4,0.3386
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,5,0.5078
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,6,0.3513
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,7,0.3625
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,8,0.481
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,9,0.3662
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,10,0.3329
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,11,0.5388
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,12,0.3376
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,13,0.3469
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,14,0.3143
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,15,0.2922
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,16,0.5232
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,17,0.3071
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,18,0.3119
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,19,0.2974
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,20,0.3654
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,21,0.3185
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,22,0.3042
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,23,0.3333
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,24,0.3145
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,25,0.3003
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,26,0.3107
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,27,0.2893
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,28,0.3111
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,29,0.3482
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,30,0.3683
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,31,0.3302
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,32,0.3075
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,33,0.3162
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,34,0.2755
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,35,0.3396
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,36,0.3211
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,37,0.326
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,38,0.3001
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,39,0.3485
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,40,0.2998
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,41,0.2986
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,42,0.2864
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,43,0.2864
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,44,0.3024
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,45,0.2877
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,46,0.2943
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,47,0.334
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,48,0.3424
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,49,0.344
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,50,0.5898
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,51,0.4383
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,52,0.3996
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,53,0.327
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,54,0.3307
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,55,0.3152
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,56,0.3128
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,57,0.3364
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,58,0.3941
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,59,0.3962
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,60,0.3509
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,61,0.3218
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,62,0.2965
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,63,0.3441
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,64,0.3
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,65,0.2822
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,66,0.3093
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,67,0.296
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,68,0.2985
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,69,0.3986
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,70,0.3598
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,71,0.3549
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,72,0.3713
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,73,0.3306
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,74,0.3746
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,75,0.3121
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,76,0.3792
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,77,0.3508
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,78,0.3224
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,79,0.3085
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,80,0.337
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,81,0.3386
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,82,0.2939
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,83,0.3035
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,84,0.3183
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,85,0.2955
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,86,0.29
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,87,0.3274
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,88,0.2914
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,89,0.3678
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,90,0.3244
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,91,0.3373
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,92,0.3406
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,93,0.4225
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,94,0.3354
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,95,0.5196
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,96,0.3321
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,97,0.3822
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,98,0.2978
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,99,0.3194
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,100,0.317
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,101,0.3049
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,102,0.2968
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,103,0.2963
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,104,0.2948
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,105,0.3242
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,106,0.2825
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,107,0.3162
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,108,0.3354
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,109,0.3576
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,110,0.3587
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,111,0.3219
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,112,0.3359
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,113,0.3148
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,114,0.436
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,115,0.3718
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,116,0.3514
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,117,0.3616
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,118,0.2933
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,119,0.3359
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,120,0.3296
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,121,0.3041
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,122,0.3254
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,123,0.2986
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,124,0.3045
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,125,0.291
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,126,0.3149
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,127,0.2815
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,128,0.3091
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,129,0.3031
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,130,0.3024
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,131,0.3836
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,132,0.3679
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,133,0.347
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,134,0.2999
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,135,0.352
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,136,0.354
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,137,0.3118
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,138,0.2928
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,139,0.2915
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,140,0.2939
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,141,0.2919
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,142,0.4036
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,143,0.318
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,144,0.3325
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,145,0.2942
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,146,0.3085
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,147,0.2905
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,148,0.3044
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,149,0.3111
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,150,0.3058
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,151,0.3521
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,152,0.3514
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,153,0.4216
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,154,0.3397
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,155,0.3862
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,156,0.3124
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,157,0.3042
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,158,0.3092
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,159,0.3062
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,160,0.2895
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,161,0.2951
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,162,0.3057
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,163,0.2941
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,164,0.3199
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,165,0.3715
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,166,0.2862
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,167,0.326
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,168,0.3015
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,169,0.3706
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,170,0.3016
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,171,0.4464
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,172,0.3664
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,173,0.3481
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,174,0.3469
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,175,0.3717
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,176,0.3226
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,177,0.3061
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,178,0.3503
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,179,0.3021
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,180,0.3526
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,181,0.3318
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,182,0.3115
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,183,0.3224
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,184,0.3251
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,185,0.2971
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,186,0.3083
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,187,0.283
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,188,0.4229
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,189,0.3492
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,190,0.3082
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,191,0.4527
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,192,0.4805
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,193,0.3358
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,194,0.3633
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,195,0.3758
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,196,0.3621
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,197,0.3278
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,198,0.3231
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,199,0.2931
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,200,0.3615
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,201,0.2941
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,202,0.2844
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,203,0.3771
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,204,0.3139
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,205,0.3009
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,206,0.3053
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,207,0.2999
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,208,0.3049
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,209,0.3162
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,210,0.3124
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,211,0.3
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,212,0.3433
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,213,0.3431
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,214,0.3504
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,215,0.3161
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,216,0.3598
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,217,0.3086
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,218,0.3392
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,219,0.3257
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,220,0.3184
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,221,0.3177
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,222,0.2932
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,223,0.3289
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,224,0.3528
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,225,0.288
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,226,0.332
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,227,0.3228
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,228,0.2923
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,229,0.3002
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,230,0.3044
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,231,0.2894
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,232,0.342
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,233,0.3253
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,234,0.6341
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,235,0.4105
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,236,0.374
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,237,0.342
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,238,0.3461
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,239,0.3448
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,240,0.3448
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,241,0.2967
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,242,0.2921
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,243,0.2763
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,244,0.3236
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,245,0.3069
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,246,0.2979
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,247,0.3011
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,248,0.2834
+mldsa|ML-DSA-87|native|primitive|verify|4.00 KiB,249,0.2989
+charm_reference|AC17|python|primitive_reference|setup|baseline,0,50.4573
+charm_reference|AC17|python|primitive_reference|setup|baseline,1,51.5245
+charm_reference|AC17|python|primitive_reference|setup|baseline,2,48.9741
+charm_reference|AC17|python|primitive_reference|setup|baseline,3,48.6643
+charm_reference|AC17|python|primitive_reference|setup|baseline,4,47.9804
+charm_reference|AC17|python|primitive_reference|setup|baseline,5,48.982
+charm_reference|AC17|python|primitive_reference|setup|baseline,6,49.3788
+charm_reference|AC17|python|primitive_reference|setup|baseline,7,48.9559
+charm_reference|AC17|python|primitive_reference|setup|baseline,8,48.4097
+charm_reference|AC17|python|primitive_reference|setup|baseline,9,48.3056
+charm_reference|AC17|python|primitive_reference|setup|baseline,10,50.5237
+charm_reference|AC17|python|primitive_reference|setup|baseline,11,52.469
+charm_reference|AC17|python|primitive_reference|setup|baseline,12,52.4389
+charm_reference|AC17|python|primitive_reference|setup|baseline,13,50.5934
+charm_reference|AC17|python|primitive_reference|setup|baseline,14,53.1797
+charm_reference|AC17|python|primitive_reference|setup|baseline,15,51.5739
+charm_reference|AC17|python|primitive_reference|setup|baseline,16,50.9878
+charm_reference|AC17|python|primitive_reference|setup|baseline,17,49.9354
+charm_reference|AC17|python|primitive_reference|setup|baseline,18,49.6273
+charm_reference|AC17|python|primitive_reference|setup|baseline,19,50.246
+charm_reference|AC17|python|primitive_reference|setup|baseline,20,48.5769
+charm_reference|AC17|python|primitive_reference|setup|baseline,21,49.3978
+charm_reference|AC17|python|primitive_reference|setup|baseline,22,48.0847
+charm_reference|AC17|python|primitive_reference|setup|baseline,23,50.5291
+charm_reference|AC17|python|primitive_reference|setup|baseline,24,49.6772
+charm_reference|AC17|python|primitive_reference|setup|baseline,25,48.5522
+charm_reference|AC17|python|primitive_reference|setup|baseline,26,51.2961
+charm_reference|AC17|python|primitive_reference|setup|baseline,27,49.3815
+charm_reference|AC17|python|primitive_reference|setup|baseline,28,49.2664
+charm_reference|AC17|python|primitive_reference|setup|baseline,29,50.4227
+charm_reference|AC17|python|primitive_reference|setup|baseline,30,51.5543
+charm_reference|AC17|python|primitive_reference|setup|baseline,31,50.492
+charm_reference|AC17|python|primitive_reference|setup|baseline,32,49.0668
+charm_reference|AC17|python|primitive_reference|setup|baseline,33,48.0665
+charm_reference|AC17|python|primitive_reference|setup|baseline,34,51.9635
+charm_reference|AC17|python|primitive_reference|setup|baseline,35,57.3082
+charm_reference|AC17|python|primitive_reference|setup|baseline,36,89.6919
+charm_reference|AC17|python|primitive_reference|setup|baseline,37,103.6111
+charm_reference|AC17|python|primitive_reference|setup|baseline,38,110.8102
+charm_reference|AC17|python|primitive_reference|setup|baseline,39,103.0127
+charm_reference|AC17|python|primitive_reference|setup|baseline,40,81.0761
+charm_reference|AC17|python|primitive_reference|setup|baseline,41,83.5765
+charm_reference|AC17|python|primitive_reference|setup|baseline,42,94.9358
+charm_reference|AC17|python|primitive_reference|setup|baseline,43,104.7245
+charm_reference|AC17|python|primitive_reference|setup|baseline,44,63.2134
+charm_reference|AC17|python|primitive_reference|setup|baseline,45,71.6707
+charm_reference|AC17|python|primitive_reference|setup|baseline,46,89.4006
+charm_reference|AC17|python|primitive_reference|setup|baseline,47,88.7475
+charm_reference|AC17|python|primitive_reference|setup|baseline,48,76.8745
+charm_reference|AC17|python|primitive_reference|setup|baseline,49,88.0519
+charm_reference|AC17|python|primitive_reference|setup|baseline,50,74.3707
+charm_reference|AC17|python|primitive_reference|setup|baseline,51,89.6078
+charm_reference|AC17|python|primitive_reference|setup|baseline,52,89.6942
+charm_reference|AC17|python|primitive_reference|setup|baseline,53,96.5788
+charm_reference|AC17|python|primitive_reference|setup|baseline,54,58.0065
+charm_reference|AC17|python|primitive_reference|setup|baseline,55,60.6613
+charm_reference|AC17|python|primitive_reference|setup|baseline,56,74.2723
+charm_reference|AC17|python|primitive_reference|setup|baseline,57,56.0893
+charm_reference|AC17|python|primitive_reference|setup|baseline,58,80.7132
+charm_reference|AC17|python|primitive_reference|setup|baseline,59,100.6844
+charm_reference|AC17|python|primitive_reference|setup|baseline,60,112.613
+charm_reference|AC17|python|primitive_reference|setup|baseline,61,95.3139
+charm_reference|AC17|python|primitive_reference|setup|baseline,62,102.36
+charm_reference|AC17|python|primitive_reference|setup|baseline,63,67.501
+charm_reference|AC17|python|primitive_reference|setup|baseline,64,69.1737
+charm_reference|AC17|python|primitive_reference|setup|baseline,65,95.0982
+charm_reference|AC17|python|primitive_reference|setup|baseline,66,85.7677
+charm_reference|AC17|python|primitive_reference|setup|baseline,67,64.0555
+charm_reference|AC17|python|primitive_reference|setup|baseline,68,99.3169
+charm_reference|AC17|python|primitive_reference|setup|baseline,69,110.8779
+charm_reference|AC17|python|primitive_reference|setup|baseline,70,62.1029
+charm_reference|AC17|python|primitive_reference|setup|baseline,71,57.0153
+charm_reference|AC17|python|primitive_reference|setup|baseline,72,115.3209
+charm_reference|AC17|python|primitive_reference|setup|baseline,73,61.4855
+charm_reference|AC17|python|primitive_reference|setup|baseline,74,71.8693
+charm_reference|AC17|python|primitive_reference|setup|baseline,75,110.0103
+charm_reference|AC17|python|primitive_reference|setup|baseline,76,62.9142
+charm_reference|AC17|python|primitive_reference|setup|baseline,77,61.6278
+charm_reference|AC17|python|primitive_reference|setup|baseline,78,81.1507
+charm_reference|AC17|python|primitive_reference|setup|baseline,79,95.0667
+charm_reference|AC17|python|primitive_reference|setup|baseline,80,106.9105
+charm_reference|AC17|python|primitive_reference|setup|baseline,81,103.0601
+charm_reference|AC17|python|primitive_reference|setup|baseline,82,75.8466
+charm_reference|AC17|python|primitive_reference|setup|baseline,83,97.7883
+charm_reference|AC17|python|primitive_reference|setup|baseline,84,82.7864
+charm_reference|AC17|python|primitive_reference|setup|baseline,85,66.0108
+charm_reference|AC17|python|primitive_reference|setup|baseline,86,69.4126
+charm_reference|AC17|python|primitive_reference|setup|baseline,87,86.4366
+charm_reference|AC17|python|primitive_reference|setup|baseline,88,97.4363
+charm_reference|AC17|python|primitive_reference|setup|baseline,89,74.7845
+charm_reference|AC17|python|primitive_reference|setup|baseline,90,59.1424
+charm_reference|AC17|python|primitive_reference|setup|baseline,91,75.6917
+charm_reference|AC17|python|primitive_reference|setup|baseline,92,88.3335
+charm_reference|AC17|python|primitive_reference|setup|baseline,93,87.1065
+charm_reference|AC17|python|primitive_reference|setup|baseline,94,90.1338
+charm_reference|AC17|python|primitive_reference|setup|baseline,95,124.5212
+charm_reference|AC17|python|primitive_reference|setup|baseline,96,87.9438
+charm_reference|AC17|python|primitive_reference|setup|baseline,97,108.3624
+charm_reference|AC17|python|primitive_reference|setup|baseline,98,109.0721
+charm_reference|AC17|python|primitive_reference|setup|baseline,99,99.3374
+charm_reference|AC17|python|primitive_reference|keygen|baseline,0,165.8076
+charm_reference|AC17|python|primitive_reference|keygen|baseline,1,217.5738
+charm_reference|AC17|python|primitive_reference|keygen|baseline,2,221.7819
+charm_reference|AC17|python|primitive_reference|keygen|baseline,3,181.1258
+charm_reference|AC17|python|primitive_reference|keygen|baseline,4,171.5816
+charm_reference|AC17|python|primitive_reference|keygen|baseline,5,204.1675
+charm_reference|AC17|python|primitive_reference|keygen|baseline,6,207.048
+charm_reference|AC17|python|primitive_reference|keygen|baseline,7,205.5732
+charm_reference|AC17|python|primitive_reference|keygen|baseline,8,177.4766
+charm_reference|AC17|python|primitive_reference|keygen|baseline,9,216.1498
+charm_reference|AC17|python|primitive_reference|keygen|baseline,10,214.9701
+charm_reference|AC17|python|primitive_reference|keygen|baseline,11,190.4022
+charm_reference|AC17|python|primitive_reference|keygen|baseline,12,203.5771
+charm_reference|AC17|python|primitive_reference|keygen|baseline,13,195.3732
+charm_reference|AC17|python|primitive_reference|keygen|baseline,14,236.2201
+charm_reference|AC17|python|primitive_reference|keygen|baseline,15,208.3861
+charm_reference|AC17|python|primitive_reference|keygen|baseline,16,202.2947
+charm_reference|AC17|python|primitive_reference|keygen|baseline,17,188.0151
+charm_reference|AC17|python|primitive_reference|keygen|baseline,18,184.7059
+charm_reference|AC17|python|primitive_reference|keygen|baseline,19,198.1214
+charm_reference|AC17|python|primitive_reference|keygen|baseline,20,216.2747
+charm_reference|AC17|python|primitive_reference|keygen|baseline,21,190.1758
+charm_reference|AC17|python|primitive_reference|keygen|baseline,22,200.5967
+charm_reference|AC17|python|primitive_reference|keygen|baseline,23,170.7895
+charm_reference|AC17|python|primitive_reference|keygen|baseline,24,170.0829
+charm_reference|AC17|python|primitive_reference|keygen|baseline,25,172.3006
+charm_reference|AC17|python|primitive_reference|keygen|baseline,26,193.5919
+charm_reference|AC17|python|primitive_reference|keygen|baseline,27,197.3943
+charm_reference|AC17|python|primitive_reference|keygen|baseline,28,203.7474
+charm_reference|AC17|python|primitive_reference|keygen|baseline,29,186.9272
+charm_reference|AC17|python|primitive_reference|keygen|baseline,30,152.2989
+charm_reference|AC17|python|primitive_reference|keygen|baseline,31,159.6612
+charm_reference|AC17|python|primitive_reference|keygen|baseline,32,210.9317
+charm_reference|AC17|python|primitive_reference|keygen|baseline,33,165.3805
+charm_reference|AC17|python|primitive_reference|keygen|baseline,34,203.6859
+charm_reference|AC17|python|primitive_reference|keygen|baseline,35,176.3622
+charm_reference|AC17|python|primitive_reference|keygen|baseline,36,156.0104
+charm_reference|AC17|python|primitive_reference|keygen|baseline,37,180.1197
+charm_reference|AC17|python|primitive_reference|keygen|baseline,38,196.803
+charm_reference|AC17|python|primitive_reference|keygen|baseline,39,194.7524
+charm_reference|AC17|python|primitive_reference|keygen|baseline,40,184.3848
+charm_reference|AC17|python|primitive_reference|keygen|baseline,41,175.5477
+charm_reference|AC17|python|primitive_reference|keygen|baseline,42,203.0632
+charm_reference|AC17|python|primitive_reference|keygen|baseline,43,226.1792
+charm_reference|AC17|python|primitive_reference|keygen|baseline,44,200.1327
+charm_reference|AC17|python|primitive_reference|keygen|baseline,45,179.7031
+charm_reference|AC17|python|primitive_reference|keygen|baseline,46,166.5996
+charm_reference|AC17|python|primitive_reference|keygen|baseline,47,180.1873
+charm_reference|AC17|python|primitive_reference|keygen|baseline,48,225.3632
+charm_reference|AC17|python|primitive_reference|keygen|baseline,49,194.2071
+charm_reference|AC17|python|primitive_reference|keygen|baseline,50,226.1186
+charm_reference|AC17|python|primitive_reference|keygen|baseline,51,188.357
+charm_reference|AC17|python|primitive_reference|keygen|baseline,52,172.8956
+charm_reference|AC17|python|primitive_reference|keygen|baseline,53,155.2113
+charm_reference|AC17|python|primitive_reference|keygen|baseline,54,177.4897
+charm_reference|AC17|python|primitive_reference|keygen|baseline,55,230.2337
+charm_reference|AC17|python|primitive_reference|keygen|baseline,56,170.7879
+charm_reference|AC17|python|primitive_reference|keygen|baseline,57,153.4352
+charm_reference|AC17|python|primitive_reference|keygen|baseline,58,207.45
+charm_reference|AC17|python|primitive_reference|keygen|baseline,59,204.3632
+charm_reference|AC17|python|primitive_reference|keygen|baseline,60,173.208
+charm_reference|AC17|python|primitive_reference|keygen|baseline,61,179.2436
+charm_reference|AC17|python|primitive_reference|keygen|baseline,62,191.0581
+charm_reference|AC17|python|primitive_reference|keygen|baseline,63,202.3114
+charm_reference|AC17|python|primitive_reference|keygen|baseline,64,189.4394
+charm_reference|AC17|python|primitive_reference|keygen|baseline,65,185.4992
+charm_reference|AC17|python|primitive_reference|keygen|baseline,66,175.9343
+charm_reference|AC17|python|primitive_reference|keygen|baseline,67,215.2139
+charm_reference|AC17|python|primitive_reference|keygen|baseline,68,199.7466
+charm_reference|AC17|python|primitive_reference|keygen|baseline,69,216.6211
+charm_reference|AC17|python|primitive_reference|keygen|baseline,70,189.5662
+charm_reference|AC17|python|primitive_reference|keygen|baseline,71,154.7721
+charm_reference|AC17|python|primitive_reference|keygen|baseline,72,179.9122
+charm_reference|AC17|python|primitive_reference|keygen|baseline,73,209.4282
+charm_reference|AC17|python|primitive_reference|keygen|baseline,74,228.7232
+charm_reference|AC17|python|primitive_reference|keygen|baseline,75,231.6178
+charm_reference|AC17|python|primitive_reference|keygen|baseline,76,249.5465
+charm_reference|AC17|python|primitive_reference|keygen|baseline,77,215.5355
+charm_reference|AC17|python|primitive_reference|keygen|baseline,78,174.876
+charm_reference|AC17|python|primitive_reference|keygen|baseline,79,221.3761
+charm_reference|AC17|python|primitive_reference|keygen|baseline,80,163.6137
+charm_reference|AC17|python|primitive_reference|keygen|baseline,81,162.8286
+charm_reference|AC17|python|primitive_reference|keygen|baseline,82,166.5173
+charm_reference|AC17|python|primitive_reference|keygen|baseline,83,189.6108
+charm_reference|AC17|python|primitive_reference|keygen|baseline,84,191.8157
+charm_reference|AC17|python|primitive_reference|keygen|baseline,85,151.1143
+charm_reference|AC17|python|primitive_reference|keygen|baseline,86,185.2647
+charm_reference|AC17|python|primitive_reference|keygen|baseline,87,186.8916
+charm_reference|AC17|python|primitive_reference|keygen|baseline,88,168.2134
+charm_reference|AC17|python|primitive_reference|keygen|baseline,89,250.3346
+charm_reference|AC17|python|primitive_reference|keygen|baseline,90,200.9243
+charm_reference|AC17|python|primitive_reference|keygen|baseline,91,207.1039
+charm_reference|AC17|python|primitive_reference|keygen|baseline,92,186.7307
+charm_reference|AC17|python|primitive_reference|keygen|baseline,93,191.6563
+charm_reference|AC17|python|primitive_reference|keygen|baseline,94,185.7654
+charm_reference|AC17|python|primitive_reference|keygen|baseline,95,234.1508
+charm_reference|AC17|python|primitive_reference|keygen|baseline,96,294.7257
+charm_reference|AC17|python|primitive_reference|keygen|baseline,97,212.5166
+charm_reference|AC17|python|primitive_reference|keygen|baseline,98,135.5083
+charm_reference|AC17|python|primitive_reference|keygen|baseline,99,135.2665
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,0,82.7351
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,1,80.4059
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,2,103.2675
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,3,78.4576
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,4,84.1489
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,5,81.3438
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,6,76.5668
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,7,79.7246
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,8,73.8964
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,9,76.8008
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,10,76.9659
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,11,77.3752
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,12,77.4098
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,13,79.5168
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,14,80.2276
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,15,79.4585
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,16,88.9522
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,17,82.6513
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,18,79.6401
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,19,80.7331
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,20,75.0045
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,21,74.3907
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,22,76.9581
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,23,75.9363
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,24,75.8453
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,25,77.4247
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,26,77.3645
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,27,77.258
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,28,80.3401
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,29,77.8236
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,30,75.2756
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,31,83.0822
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,32,80.7138
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,33,79.8897
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,34,75.8225
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,35,80.0904
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,36,79.4873
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,37,75.9981
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,38,77.1414
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,39,78.6872
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,40,78.2079
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,41,75.9523
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,42,77.9946
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,43,80.7635
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,44,80.5066
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,45,78.1643
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,46,82.2704
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,47,84.3557
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,48,85.2345
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,49,81.0637
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,50,78.7422
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,51,83.2109
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,52,77.2112
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,53,75.9326
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,54,75.4689
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,55,80.0528
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,56,76.9137
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,57,78.1254
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,58,76.7657
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,59,81.6921
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,60,79.4714
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,61,78.9174
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,62,79.2243
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,63,83.2047
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,64,77.1552
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,65,76.8327
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,66,76.8967
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,67,78.1336
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,68,76.9772
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,69,76.4395
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,70,77.0211
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,71,81.7794
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,72,77.2817
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,73,77.6054
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,74,77.9327
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,75,78.6691
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,76,78.7519
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,77,77.4663
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,78,81.4549
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,79,81.8911
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,80,79.1794
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,81,75.0315
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,82,74.8067
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,83,78.3766
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,84,78.4547
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,85,77.6718
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,86,93.4602
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,87,87.8952
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,88,85.1407
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,89,87.6336
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,90,82.172
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,91,80.2075
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,92,79.9452
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,93,84.8264
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,94,90.5556
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,95,80.3502
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,96,81.3438
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,97,84.4006
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,98,82.3692
+charm_reference|AC17|python|primitive_reference|encrypt|GT element,99,90.4175
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,0,178.1308
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,1,169.2984
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,2,164.4569
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,3,156.0454
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,4,152.5656
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,5,163.4829
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,6,167.139
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,7,160.8639
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,8,156.1724
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,9,157.386
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,10,156.8988
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,11,154.0851
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,12,159.5175
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,13,170.1261
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,14,159.5226
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,15,164.5345
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,16,159.9147
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,17,161.0463
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,18,162.5786
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,19,159.5454
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,20,169.7811
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,21,165.9855
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,22,165.7551
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,23,165.9298
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,24,159.957
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,25,191.8478
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,26,188.9554
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,27,202.3371
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,28,336.7373
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,29,377.758
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,30,318.5594
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,31,327.8683
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,32,315.8265
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,33,236.3983
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,34,284.2684
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,35,288.3277
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,36,333.3765
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,37,348.3526
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,38,304.9933
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,39,308.0052
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,40,295.7872
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,41,332.8383
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,42,329.5717
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,43,307.1523
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,44,356.4428
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,45,274.9821
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,46,321.8712
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,47,275.9779
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,48,318.1434
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,49,201.9006
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,50,303.4175
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,51,234.6672
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,52,306.3959
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,53,220.548
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,54,251.0161
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,55,303.24
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,56,276.8093
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,57,203.0276
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,58,196.139
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,59,267.5454
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,60,295.8951
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,61,256.2881
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,62,305.8941
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,63,237.2722
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,64,246.3216
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,65,295.5519
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,66,300.0476
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,67,287.0139
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,68,335.2474
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,69,304.6431
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,70,337.5019
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,71,357.2997
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,72,278.0755
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,73,225.5277
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,74,363.8796
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,75,367.1161
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,76,345.6581
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,77,337.2964
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,78,365.3399
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,79,338.3308
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,80,344.9737
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,81,307.5616
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,82,197.6977
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,83,191.0797
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,84,200.647
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,85,176.5348
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,86,172.1726
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,87,177.2305
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,88,171.3517
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,89,166.553
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,90,169.515
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,91,164.3184
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,92,190.8575
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,93,161.1695
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,94,161.2685
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,95,160.9692
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,96,170.0279
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,97,163.2775
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,98,162.9864
+charm_reference|AC17|python|primitive_reference|decrypt|GT element,99,164.9032
