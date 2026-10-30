@@ -247,7 +247,7 @@ func (v *Prio3[M, A, T, V, E, F]) PrepInit(
 	ps PublicShare, inputShare InputShare[V, E],
 ) (*PrepState[V, E], *PrepShare[V, E], error) {
 	params := v.Params()
-	if aggID > v.shares {
+	if aggID >= v.shares {
 		return nil, nil, ErrAggID
 	}
 
@@ -264,7 +264,7 @@ func (v *Prio3[M, A, T, V, E, F]) PrepInit(
 	var jointRand V
 	jointRandLen := params.JointRandLength()
 	if jointRandLen > 0 {
-		if share.blind == nil || len(ps) == 0 {
+		if share.blind == nil || len(ps) != int(SeedSize)*int(v.shares) {
 			return nil, nil, ErrJointRand
 		}
 
@@ -280,9 +280,17 @@ func (v *Prio3[M, A, T, V, E, F]) PrepInit(
 		if err != nil {
 			return nil, nil, err
 		}
+		partStart := int(aggID) * int(SeedSize)
+		partEnd := partStart + int(SeedSize)
+		if subtle.ConstantTimeCompare(
+			ps[partStart:partEnd], prepShare.jointRandPart[:]) != 1 {
+			return nil, nil, ErrJointRand
+		}
+		correctedJointRandParts := append(PublicShare(nil), ps...)
+		copy(correctedJointRandParts[partStart:partEnd], prepShare.jointRandPart[:])
 
 		prepState.correctedJointRandSeed = &Seed{}
-		*prepState.correctedJointRandSeed, err = v.xof.jointRandSeed(ps)
+		*prepState.correctedJointRandSeed, err = v.xof.jointRandSeed(correctedJointRandParts)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -324,6 +332,10 @@ func (v *Prio3[M, A, T, V, E, F]) PrepInit(
 func (v *Prio3[M, A, T, V, E, F]) PrepSharesToPrep(
 	prepShares []PrepShare[V, E],
 ) (*PrepMessage, error) {
+	if len(prepShares) != int(v.shares) {
+		return nil, ErrPrepShareSize
+	}
+
 	params := v.Params()
 	msg := new(PrepMessage)
 	// Unshard the verifier shares into the verifier message.
@@ -366,12 +378,21 @@ func (v *Prio3[M, A, T, V, E, F]) PrepSharesToPrep(
 
 // PrepNext is used by each aggregator to produce its output share.
 //
+// The caller must only call PrepNext with a message produced by a successful
+// PrepSharesToPrep call over one authenticated prep share from each aggregator.
+// PrepNext does not independently verify the FLP proof.
+//
 // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-13#section-7.2.2
 func (v *Prio3[M, A, T, V, E, F]) PrepNext(
 	state *PrepState[V, E], msg *PrepMessage,
 ) (*OutShare[V, E], error) {
-	if msg != nil && state != nil && msg.joinRand != nil &&
-		state.correctedJointRandSeed != nil {
+	if state == nil {
+		return nil, ErrShare
+	}
+	if state.correctedJointRandSeed != nil {
+		if msg == nil || msg.joinRand == nil {
+			return nil, ErrJointRand
+		}
 		if subtle.ConstantTimeCompare(
 			msg.joinRand[:], state.correctedJointRandSeed[:]) != 1 {
 			return nil, ErrJointRand
@@ -529,6 +550,7 @@ var (
 	ErrNonceSize     = errors.New("invalid nonce length, (NonceSize)")
 	ErrVerifyKeySize = errors.New("invalid verify key length, (VerifyKeySize)")
 	ErrRandSize      = errors.New("invalid randomness length")
+	ErrPrepShareSize = errors.New("invalid prep shares length")
 	ErrAggShareSize  = errors.New("invalid aggregate shares length")
 	ErrAggID         = errors.New("invalid aggregation ID")
 	ErrJointRand     = errors.New("invalid joint randomness")

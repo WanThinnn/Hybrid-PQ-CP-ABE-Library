@@ -2,6 +2,7 @@ package oprf
 
 import (
 	"crypto/rand"
+	"math"
 
 	"github.com/cloudflare/circl/group"
 	"github.com/cloudflare/circl/zk/dleq"
@@ -51,11 +52,19 @@ func (c client) blind(inputs [][]byte, blinds []Blind) (*FinalizeData, *Evaluati
 	blindedElements := make([]Blinded, len(inputs))
 	dst := c.params.getDST(hashToGroupDST)
 	for i := range inputs {
+		blind := blinds[i]
+		if blind == nil || *blind.Group().Params() != *c.params.group.Params() || blind.IsZero() {
+			return nil, nil, ErrInvalidInput
+		}
+
 		point := c.params.group.HashToElement(inputs[i], dst)
 		if point.IsIdentity() {
 			return nil, nil, ErrInvalidInput
 		}
-		blindedElements[i] = c.params.group.NewElement().Mul(point, blinds[i])
+		blindedElements[i] = c.params.group.NewElement().Mul(point, blind)
+		if blindedElements[i].IsIdentity() {
+			return nil, nil, ErrInvalidInput
+		}
 	}
 
 	evalReq := &EvaluationRequest{blindedElements}
@@ -81,11 +90,36 @@ func (c client) unblind(serUnblindeds [][]byte, blindeds []group.Element, blind 
 }
 
 func (c client) validate(f *FinalizeData, e *Evaluation) (err error) {
-	if l := len(f.blinds); len(f.evalReq.Elements) != l || len(e.Elements) != l {
-		err = ErrInvalidInput
+	if f == nil || e == nil || f.evalReq == nil {
+		return ErrInvalidInput
 	}
 
-	return
+	l := len(f.inputs)
+	if l == 0 || len(f.blinds) != l || len(f.evalReq.Elements) != l || len(e.Elements) != l {
+		return ErrInvalidInput
+	}
+
+	wantGroup := *c.params.group.Params()
+	for i := range l {
+		// finalizeHash frames the input with I2OSP(len(input), 2), so an input
+		// of 2^16 bytes or more silently wraps the length prefix. Reject it, as
+		// scalarFromInfo already does for info.
+		if len(f.inputs[i]) > math.MaxUint16 {
+			return ErrInvalidInput
+		}
+		blind := f.blinds[i]
+		blinded := f.evalReq.Elements[i]
+		evaluated := e.Elements[i]
+		if blind == nil || blinded == nil || evaluated == nil ||
+			*blind.Group().Params() != wantGroup ||
+			*blinded.Group().Params() != wantGroup ||
+			*evaluated.Group().Params() != wantGroup ||
+			blinded.IsIdentity() || evaluated.IsIdentity() {
+			return ErrInvalidInput
+		}
+	}
+
+	return nil
 }
 
 func (c client) finalize(f *FinalizeData, e *Evaluation, info []byte) ([][]byte, error) {
@@ -117,8 +151,7 @@ func (c VerifiableClient) Finalize(f *FinalizeData, e *Evaluation) (outputs [][]
 		return nil, err
 	}
 
-	if !(dleq.Verifier{Params: c.getDLEQParams()}).VerifyBatch(
-		c.params.group.Generator(),
+	if !(dleq.Verifier{Params: c.getDLEQParams()}).VerifyBatchRFC9497(
 		c.pkS.e,
 		f.evalReq.Elements,
 		e.Elements,
@@ -140,8 +173,7 @@ func (c PartialObliviousClient) Finalize(f *FinalizeData, e *Evaluation, info []
 		return nil, err
 	}
 
-	if !(dleq.Verifier{Params: c.getDLEQParams()}).VerifyBatch(
-		c.params.group.Generator(),
+	if !(dleq.Verifier{Params: c.getDLEQParams()}).VerifyBatchRFC9497(
 		tweakedKey,
 		e.Elements,
 		f.evalReq.Elements,

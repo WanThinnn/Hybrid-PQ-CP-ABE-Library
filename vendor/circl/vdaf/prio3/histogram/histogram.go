@@ -2,6 +2,8 @@
 package histogram
 
 import (
+	"errors"
+
 	"github.com/cloudflare/circl/vdaf/prio3/arith"
 	"github.com/cloudflare/circl/vdaf/prio3/arith/fp128"
 	"github.com/cloudflare/circl/vdaf/prio3/internal/flp"
@@ -32,6 +34,13 @@ type Histogram struct {
 }
 
 func New(numShares uint8, length, chunkLen uint, context []byte) (h *Histogram, err error) {
+	if length == 0 {
+		return nil, ErrLength
+	}
+	if chunkLen == 0 {
+		return nil, ErrChunkLength
+	}
+
 	const histogramID = 4
 	h = new(Histogram)
 	h.p, err = prio3.New(newFlpHistogram(length, chunkLen), histogramID, numShares, context)
@@ -63,6 +72,9 @@ func (h *Histogram) PrepSharesToPrep(prepShares []PrepShare) (*PrepMessage, erro
 	return h.p.PrepSharesToPrep(prepShares)
 }
 
+// PrepNext produces an output share after successful preparation. The caller
+// must provide a message derived from one authenticated prep share from each
+// aggregator; PrepNext does not independently verify the FLP proof.
 func (h *Histogram) PrepNext(state *PrepState, msg *PrepMessage) (*OutShare, error) {
 	return h.p.PrepNext(state, msg)
 }
@@ -114,7 +126,7 @@ func (h *flpHistogram) Eval(
 }
 
 func (h *flpHistogram) Encode(measurement uint64) (out Vec, err error) {
-	if measurement > uint64(h.length) {
+	if measurement >= uint64(h.length) {
 		return nil, flp.ErrMeasurementValue
 	}
 
@@ -142,3 +154,8 @@ func (h *flpHistogram) Decode(output Vec, numMeas uint) (*[]uint64, error) {
 
 	return &out, nil
 }
+
+var (
+	ErrLength      = errors.New("length cannot be zero")
+	ErrChunkLength = errors.New("chunk length cannot be zero")
+)

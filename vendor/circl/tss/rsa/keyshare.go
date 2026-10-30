@@ -116,13 +116,13 @@ func (kshare *KeyShare) UnmarshalBinary(data []byte) error {
 		return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: data length was too short for reading siLen length")
 	}
 
-	siLen := binary.BigEndian.Uint16(data[6:8])
+	siLen := int(binary.BigEndian.Uint16(data[6:8]))
 
 	if siLen == 0 {
 		return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: si is a required field but siLen was 0")
 	}
 
-	if uint16(len(data[8:])) < siLen {
+	if len(data[8:]) < siLen {
 		return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: data length was too short for reading si, needed: %d found: %d", siLen, len(data[8:]))
 	}
 
@@ -141,10 +141,10 @@ func (kshare *KeyShare) UnmarshalBinary(data []byte) error {
 			return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: data length was too short for reading twoDeltaSiLen length")
 		}
 
-		twoDeltaSiLen := binary.BigEndian.Uint16(data[8+siLen+1 : 8+siLen+3])
+		twoDeltaSiLen := int(binary.BigEndian.Uint16(data[8+siLen+1 : 8+siLen+3]))
 
-		if uint16(len(data[8+siLen+3:])) < twoDeltaSiLen {
-			return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: data length was too short for reading twoDeltaSi, needed: %d found: %d", twoDeltaSiLen, len(data[8+siLen+2:]))
+		if len(data[8+siLen+3:]) < twoDeltaSiLen {
+			return fmt.Errorf("rsa_threshold: keyshare unmarshalKeyShareTest failed: data length was too short for reading twoDeltaSi, needed: %d found: %d", twoDeltaSiLen, len(data[8+siLen+3:]))
 		}
 
 		twoDeltaSi = new(big.Int).SetBytes(data[8+siLen+3 : 8+siLen+3+twoDeltaSiLen])
@@ -181,6 +181,10 @@ func (kshare *KeyShare) get2DeltaSi(players int64) *big.Int {
 // parallel indicates whether the blinding operations should use go routines to operate in parallel.
 // If parallel is false, blinding will take about 2x longer than nonbinding, otherwise it will take about the same time
 // (see benchmarks). If randSource is nil, parallel has no effect. parallel should almost always be set to true.
+//
+// pub must correspond to the private key originally passed to Deal and must
+// come from trusted local configuration. Passing an attacker-controlled RSA
+// modulus can disclose the long-term secret key share.
 func (kshare *KeyShare) Sign(randSource io.Reader, pub *rsa.PublicKey, digest []byte, parallel bool) (SignShare, error) {
 	x := &big.Int{}
 	x.SetBytes(digest)

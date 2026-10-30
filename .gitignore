@@ -372,3 +372,4 @@ venv/
 graphify-out/
 bindings/python/test*
 !bindings/python/test_api.py
+test_api

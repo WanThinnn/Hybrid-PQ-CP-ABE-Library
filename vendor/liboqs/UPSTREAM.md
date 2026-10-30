@@ -2,7 +2,7 @@
 
 - Project: liboqs
 - Repository: https://github.com/open-quantum-safe/liboqs
-- Vendored commit: `e1f480f382d9443c4412133b55948374c77a5c21`
+- Vendored commit: `a9ad1876e14c2be093a538aca41fd3468fe3cf19`
 - Upstream: Open Quantum Safe project
 - License: see `LICENSE.txt`
 

@@ -70,6 +70,9 @@ func (s *SumVec) PrepSharesToPrep(prepShares []PrepShare) (*PrepMessage, error) 
 	return s.p.PrepSharesToPrep(prepShares)
 }
 
+// PrepNext produces an output share after successful preparation. The caller
+// must provide a message derived from one authenticated prep share from each
+// aggregator; PrepNext does not independently verify the FLP proof.
 func (s *SumVec) PrepNext(state *PrepState, msg *PrepMessage) (*OutShare, error) {
 	return s.p.PrepNext(state, msg)
 }
@@ -92,8 +95,14 @@ type flpSumVec struct {
 }
 
 func newFlpSumVec(length, bits, chunkLen uint) (*flpSumVec, error) {
-	if bits > 64 {
+	if length == 0 {
+		return nil, ErrLength
+	}
+	if bits == 0 || bits > 64 {
 		return nil, ErrBits
+	}
+	if chunkLen == 0 {
+		return nil, ErrChunkLength
 	}
 
 	numGadgetCalls := (length*bits + chunkLen - 1) / chunkLen
@@ -165,4 +174,8 @@ func (s *flpSumVec) Decode(output Vec, numMeas uint) (*[]uint64, error) {
 	return &out, nil
 }
 
-var ErrBits = errors.New("bits larger than 64 is not supported")
+var (
+	ErrLength      = errors.New("length cannot be zero")
+	ErrBits        = errors.New("bits must be between 1 and 64")
+	ErrChunkLength = errors.New("chunk length cannot be zero")
+)

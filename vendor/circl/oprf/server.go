@@ -3,6 +3,7 @@ package oprf
 import (
 	"crypto/rand"
 	"crypto/subtle"
+	"math"
 
 	"github.com/cloudflare/circl/group"
 	"github.com/cloudflare/circl/zk/dleq"
@@ -39,9 +40,8 @@ func (s Server) Evaluate(req *EvaluationRequest) (*Evaluation, error) {
 func (s VerifiableServer) Evaluate(req *EvaluationRequest) (*Evaluation, error) {
 	evaluations := s.server.evaluate(req.Elements, s.privateKey.k)
 
-	proof, err := dleq.Prover{Params: s.getDLEQParams()}.ProveBatch(
+	proof, err := dleq.Prover{Params: s.getDLEQParams()}.ProveBatchRFC9497(
 		s.privateKey.k,
-		s.params.group.Generator(),
 		s.PublicKey().e,
 		req.Elements,
 		evaluations,
@@ -62,9 +62,8 @@ func (s PartialObliviousServer) Evaluate(req *EvaluationRequest, info []byte) (*
 
 	evaluations := s.server.evaluate(req.Elements, evalSecret)
 
-	proof, err := dleq.Prover{Params: s.getDLEQParams()}.ProveBatch(
+	proof, err := dleq.Prover{Params: s.getDLEQParams()}.ProveBatchRFC9497(
 		keyProof,
-		s.params.group.Generator(),
 		s.params.group.NewElement().MulGen(keyProof),
 		evaluations,
 		req.Elements,
@@ -93,6 +92,12 @@ func (s server) secretFromInfo(info []byte) (t, tInv group.Scalar, err error) {
 }
 
 func (s server) fullEvaluate(input, info []byte) ([]byte, error) {
+	// finalizeHash frames the input with I2OSP(len(input), 2), so an input of
+	// 2^16 bytes or more silently wraps the length prefix. Reject it, as
+	// scalarFromInfo already does for info.
+	if len(input) > math.MaxUint16 {
+		return nil, ErrInvalidInput
+	}
 	evalSecret := s.privateKey.k
 	if s.params.m == PartialObliviousMode {
 		var err error

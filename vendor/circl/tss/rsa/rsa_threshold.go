@@ -3,6 +3,12 @@
 // This package implements the Protocol 1 of "Practical Threshold Signatures"
 // by Victor Shoup [1].
 //
+// Warning: Sign operations rely on math/big and are not constant time in the
+// secret key share. Pass a non-nil random source to Sign to enable blinding.
+// The public key passed to KeyShare.Sign must correspond to the private key
+// originally passed to Deal and must not be attacker controlled. Substituting
+// another RSA modulus can disclose the secret key share.
+//
 // # References
 //
 // [1] https://www.iacr.org/archive/eurocrypt2000/1807/18070209-new.pdf
@@ -195,17 +201,23 @@ func PadHash(padder Padder, hash crypto.Hash, pub *rsa.PublicKey, msg []byte) ([
 
 type Signature = []byte
 
-// CombineSignShares combines t SignShare's to produce a valid signature
-func CombineSignShares(pub *rsa.PublicKey, shares []SignShare, msg []byte) (Signature, error) {
-	players := shares[0].Players
-	threshold := shares[0].Threshold
+// CombineSignShares combines SignShares to produce a valid signature. Players
+// and threshold must be trusted protocol parameters; the function checks them
+// against every share before combining.
+func CombineSignShares(pub *rsa.PublicKey, players, threshold uint, shares []SignShare, msg []byte) (Signature, error) {
+	if err := validateParams(players, threshold); err != nil {
+		return nil, err
+	}
+	if len(shares) == 0 {
+		return nil, errors.New("rsa_threshold: no shares provided")
+	}
 
 	for i := range shares {
 		if shares[i].Players != players {
-			return nil, errors.New("rsa_threshold: shares didn't have consistent players")
+			return nil, errors.New("rsa_threshold: share players did not match protocol players")
 		}
 		if shares[i].Threshold != threshold {
-			return nil, errors.New("rsa_threshold: shares didn't have consistent threshold")
+			return nil, errors.New("rsa_threshold: share threshold did not match protocol threshold")
 		}
 	}
 

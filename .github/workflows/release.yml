@@ -105,6 +105,9 @@ jobs:
       - name: Test configure without installing host packages
         run: python -m unittest discover -s tests -p test_configure.py -v
 
+      - name: Test vendor Git workflow with local repositories
+        run: python -m unittest discover -s tests -p test_vendor_git.py -v
+
       - name: Build and test MSVC libraries
         if: runner.os == 'Windows'
         shell: pwsh
@@ -129,7 +132,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Package and verify release archive
-        run: python scripts/package-release.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
+        # Both platform build steps above have completed before these CLI checks.
+        run: |
+          python -m unittest discover -s tests -p test_cli_covercrypt_demo.py -v
+          python -m unittest discover -s tests -p test_version_header.py -v
+          python scripts/package-release.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v7
         with:

@@ -167,6 +167,10 @@ build/artifacts/        Core build output grouped by platform
 >
 > **Dependency source of truth:** third-party source is vendored under `vendor/`. Built dependency headers and libraries are normalized under `build/deps/<platform>/`; the top level of that directory contains only `include/` and `lib/` after a successful dependency build.
 
+For maintainer-only upstream Git histories and update commands, see
+[vendor/README.md](vendor/README.md). Source stays vendored; ordinary clones do
+not require submodule initialization.
+
 1. Clone the repository:
     ```sh
     git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git
@@ -174,6 +178,11 @@ build/artifacts/        Core build output grouped by platform
     ```
 
 Required toolchains: CMake, Rust/Cargo, Go 1.24+, GNU Make, and a native C/C++ compiler. Windows additionally requires Visual Studio 2022/MSVC and MinGW-w64 `gcc` for Go CGO/TKN20.
+
+The root `VERSION` file is the version source of truth. Make generates the public
+`include/hybrid_pq_cp_abe/version.h` header and embeds that value in the library
+and CLI. Changing `VERSION` triggers an incremental rebuild; deployed binaries
+do not need to find a `VERSION` file at runtime.
 
 ### Configure a new machine
 

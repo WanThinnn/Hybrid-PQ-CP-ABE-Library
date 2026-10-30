@@ -115,10 +115,15 @@
     SBBQ R12, R9 \
     SBBQ R13,R10 \
     SBBQ  $0,R14 \
+    SHLQ  $1,R10,R14 \
     SHLQ  $1,R10 \
+    BTRQ $63,R14 \
+    SBBQ  $0,R10 \
+    SBBQ  $0,R14 \
     BTRQ $63, R9 \
     ADCQ R10, R8 \
     ADCQ R14, R9 \
+    _fpReduce(R8, R9) \
     MOVQ R8, R14 \
     MOVQ R9, R15 \
     _fpMulLeg(R10, R9, R8, 0+a,16+b) \
@@ -130,6 +135,7 @@
     BTRQ $63, R9 \
     ADCQ R10, R8 \
     ADCQ  $0, R9 \
+    _fpReduce(R8, R9) \
     MOVQ R14, 0+c \
     MOVQ R15, 8+c \
     MOVQ  R8,16+c \
@@ -146,6 +152,7 @@
     \
     BTRQ $63, R11 \
     SBBQ $0, R10 \
+    SBBQ $0, R11 \
     \
     \ // t1 = R11:R10 = a0 - a1
     MOVQ R10, DX \
@@ -156,7 +163,6 @@
     \
     \ //  c0 = t0 * t1 = (a0 + a1)*(a0 - a1), CX:R14:R13:R12 <- R9:R8 * R11:R10
     MULXQ R8, R12, R13 \
-    SBBQ $0, R11 \
     MULXQ R9, R14, AX \
     MOVQ R11, DX \
     ADDQ R14, R13 \

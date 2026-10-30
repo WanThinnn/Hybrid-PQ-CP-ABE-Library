@@ -3,7 +3,7 @@
 - Project: CIRCL
 - Repository: https://github.com/cloudflare/circl
 - Vendored release: `v1.6.4`
-- Vendored commit: `901199c7d4fcefc8c43e8ad46397439ccd3a0ed0`
+- Vendored commit: `9ab0d912da37755412cfa68cdde5e3f0e1b030b1`
 - Upstream: Cloudflare
 - License: see `LICENSE`
 

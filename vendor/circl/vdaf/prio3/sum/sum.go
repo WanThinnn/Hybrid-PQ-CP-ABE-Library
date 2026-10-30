@@ -2,6 +2,7 @@
 package sum
 
 import (
+	"errors"
 	"math/bits"
 
 	"github.com/cloudflare/circl/vdaf/prio3/arith/fp64"
@@ -70,6 +71,9 @@ func (s *Sum) PrepSharesToPrep(prepShares []PrepShare) (*PrepMessage, error) {
 	return s.p.PrepSharesToPrep(prepShares)
 }
 
+// PrepNext produces an output share after successful preparation. The caller
+// must provide a message derived from one authenticated prep share from each
+// aggregator; PrepNext does not independently verify the FLP proof.
 func (s *Sum) PrepNext(state *PrepState, msg *PrepMessage) (*OutShare, error) {
 	return s.p.PrepNext(state, msg)
 }
@@ -86,16 +90,22 @@ func (s *Sum) Unshard(aggShares []AggShare, numMeas uint) (aggregate *uint64, er
 
 type flpSum struct {
 	flp.FLP[flp.GadgetPolyEvalx2x, poly, Vec, Fp, *Fp]
-	bits   uint
-	offset Fp
+	bits           uint
+	maxMeasurement uint64
+	offset         Fp
 }
 
 func newFlpSum(maxMeasurement uint64) (*flpSum, error) {
+	if maxMeasurement >= 1<<63 {
+		return nil, ErrMaxMeasurement
+	}
+
 	bits := uint(bits.Len64(maxMeasurement))
 	offset := (uint64(1) << uint64(bits)) - 1 - maxMeasurement
 
 	s := new(flpSum)
 	s.bits = bits
+	s.maxMeasurement = maxMeasurement
 	err := s.offset.SetUint64(offset)
 	if err != nil {
 		return nil, err
@@ -134,6 +144,10 @@ func (s *flpSum) Eval(
 }
 
 func (s *flpSum) Encode(measurement uint64) (Vec, error) {
+	if measurement > s.maxMeasurement {
+		return nil, flp.ErrMeasurementValue
+	}
+
 	offset, err := s.offset.GetUint64()
 	if err != nil {
 		return nil, err
@@ -163,6 +177,12 @@ func (s *flpSum) Decode(output Vec, numMeas uint) (*uint64, error) {
 		return nil, flp.ErrOutputLen
 	}
 
+	hi, maxAggregate := bits.Mul64(uint64(numMeas), s.maxMeasurement)
+	var fieldBound Fp
+	if hi != 0 || fieldBound.SetUint64(maxAggregate) != nil {
+		return nil, ErrAggregateBound
+	}
+
 	n, err := output[0].GetUint64()
 	if err != nil {
 		return nil, err
@@ -170,3 +190,11 @@ func (s *flpSum) Decode(output Vec, numMeas uint) (*uint64, error) {
 
 	return &n, nil
 }
+
+// ErrMaxMeasurement indicates that the maximum measurement cannot be
+// represented injectively in Fp64.
+var ErrMaxMeasurement = errors.New("max measurement must be less than 2^63")
+
+// ErrAggregateBound indicates that a Sum aggregate may wrap around the Fp64
+// field for the supplied number of measurements.
+var ErrAggregateBound = errors.New("sum aggregate bound is not representable in Fp64")

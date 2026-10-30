@@ -1,8 +1,12 @@
 // Package dleq provides zero-knowledge proofs of Discrete-Logarithm Equivalence (DLEQ).
 //
-// This implementation is compatible with the one used for VOPRFs [1].
-// It supports batching proofs to amortize the cost of the proof generation and
-// verification.
+// It supports batching proofs to amortize the cost of proof generation and
+// verification. The methods whose names end in RFC9497 implement the
+// fixed-generator transcript used for VOPRFs [1].
+//
+// Warning: When instantiated with the group.P256, group.P384, or group.P521
+// groups, proof generation is currently not constant time in the secret
+// scalar.
 //
 // References:
 //
@@ -12,6 +16,8 @@ package dleq
 import (
 	"crypto"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 
 	"github.com/cloudflare/circl/group"
@@ -36,6 +42,10 @@ type Proof struct {
 
 type Prover struct{ Params }
 
+// ErrInvalidBatch indicates that a DLEQ batch is empty or its input vectors
+// have different lengths.
+var ErrInvalidBatch = errors.New("dleq: invalid batch shape")
+
 func (p Prover) Prove(k group.Scalar, a, ka, b, kb group.Element, rnd io.Reader) (*Proof, error) {
 	return p.ProveBatch(k, a, ka, []group.Element{b}, []group.Element{kb}, rnd)
 }
@@ -48,15 +58,57 @@ func (p Prover) ProveBatch(k group.Scalar, a, ka group.Element, bi, kbi []group.
 	return p.ProveBatchWithRandomness(k, a, ka, bi, kbi, p.Params.G.RandomScalar(rnd))
 }
 
+// ProveBatchRFC9497 generates a batched proof using the fixed-generator
+// transcript specified in RFC 9497.
+func (p Prover) ProveBatchRFC9497(
+	k group.Scalar,
+	ka group.Element,
+	bi, kbi []group.Element,
+	rnd io.Reader,
+) (*Proof, error) {
+	return p.ProveBatchWithRandomnessRFC9497(k, ka, bi, kbi, p.Params.G.RandomScalar(rnd))
+}
+
 func (p Prover) ProveBatchWithRandomness(
 	k group.Scalar,
 	a, ka group.Element,
 	bi, kbi []group.Element,
 	rnd group.Scalar,
 ) (*Proof, error) {
+	return p.proveBatchWithRandomness(k, a, ka, bi, kbi, rnd, true)
+}
+
+// ProveBatchWithRandomnessRFC9497 generates a batched proof using the
+// fixed-generator transcript specified in RFC 9497 and the supplied scalar as
+// proof randomness.
+func (p Prover) ProveBatchWithRandomnessRFC9497(
+	k group.Scalar,
+	ka group.Element,
+	bi, kbi []group.Element,
+	rnd group.Scalar,
+) (*Proof, error) {
+	return p.proveBatchWithRandomness(k, p.G.Generator(), ka, bi, kbi, rnd, false)
+}
+
+func (p Prover) proveBatchWithRandomness(
+	k group.Scalar,
+	a, ka group.Element,
+	bi, kbi []group.Element,
+	rnd group.Scalar,
+	bindBase bool,
+) (*Proof, error) {
 	M, Z, err := p.computeComposites(k, ka, bi, kbi)
 	if err != nil {
 		return nil, err
+	}
+
+	challengeInput := make([][]byte, 0, 6)
+	if bindBase {
+		aSer, marshalErr := a.MarshalBinaryCompress()
+		if marshalErr != nil {
+			return nil, marshalErr
+		}
+		challengeInput = append(challengeInput, aSer)
 	}
 
 	kAm, err := ka.MarshalBinaryCompress()
@@ -86,7 +138,8 @@ func (p Prover) ProveBatchWithRandomness(
 		return nil, err
 	}
 
-	cc := p.doChallenge([5][]byte{kAm, a0, a1, a2, a3})
+	challengeInput = append(challengeInput, kAm, a0, a1, a2, a3)
+	cc := p.doChallenge(challengeInput)
 	ss := p.G.NewScalar()
 	ss.Mul(cc, k)
 	ss.Sub(rnd, ss)
@@ -100,6 +153,10 @@ func (p Params) computeComposites(
 	bi []group.Element,
 	kbi []group.Element,
 ) (m, z group.Element, err error) {
+	if len(bi) == 0 || len(bi) != len(kbi) {
+		return nil, nil, ErrInvalidBatch
+	}
+
 	kAm, err := ka.MarshalBinaryCompress()
 	if err != nil {
 		return nil, nil, err
@@ -167,7 +224,7 @@ func (p Params) computeComposites(
 	return m, z, nil
 }
 
-func (p Params) doChallenge(a [5][]byte) group.Scalar {
+func (p Params) doChallenge(a [][]byte) group.Scalar {
 	h2Input := []byte{}
 	lenBuf := []byte{0, 0}
 
@@ -189,6 +246,25 @@ func (v Verifier) Verify(a, ka, b, kb group.Element, p *Proof) bool {
 }
 
 func (v Verifier) VerifyBatch(a, ka group.Element, bi, kbi []group.Element, p *Proof) bool {
+	return v.verifyBatch(a, ka, bi, kbi, p, true)
+}
+
+// VerifyBatchRFC9497 verifies a batched proof using the fixed-generator
+// transcript specified in RFC 9497.
+func (v Verifier) VerifyBatchRFC9497(ka group.Element, bi, kbi []group.Element, p *Proof) bool {
+	return v.verifyBatch(v.G.Generator(), ka, bi, kbi, p, false)
+}
+
+func (v Verifier) verifyBatch(
+	a, ka group.Element,
+	bi, kbi []group.Element,
+	p *Proof,
+	bindBase bool,
+) bool {
+	if p == nil || p.c == nil || p.s == nil {
+		return false
+	}
+
 	g := v.Params.G
 	M, Z, err := v.Params.computeComposites(nil, ka, bi, kbi)
 	if err != nil {
@@ -201,6 +277,15 @@ func (v Verifier) VerifyBatch(a, ka group.Element, bi, kbi []group.Element, p *P
 	sM := g.NewElement().Mul(M, p.s)
 	cZ := g.NewElement().Mul(Z, p.c)
 	t3 := g.NewElement().Add(sM, cZ)
+
+	challengeInput := make([][]byte, 0, 6)
+	if bindBase {
+		aSer, marshalErr := a.MarshalBinaryCompress()
+		if marshalErr != nil {
+			return false
+		}
+		challengeInput = append(challengeInput, aSer)
+	}
 
 	kAm, err := ka.MarshalBinaryCompress()
 	if err != nil {
@@ -224,7 +309,8 @@ func (v Verifier) VerifyBatch(a, ka group.Element, bi, kbi []group.Element, p *P
 		return false
 	}
 
-	gotC := v.Params.doChallenge([5][]byte{kAm, a0, a1, a2, a3})
+	challengeInput = append(challengeInput, kAm, a0, a1, a2, a3)
+	gotC := v.Params.doChallenge(challengeInput)
 
 	return gotC.IsEqual(p.c)
 }
@@ -251,8 +337,9 @@ func (p *Proof) MarshalBinary() ([]byte, error) {
 
 func (p *Proof) UnmarshalBinary(g group.Group, data []byte) error {
 	scalarSize := int(g.Params().ScalarLength)
-	if len(data) < 2*scalarSize {
-		return io.ErrShortBuffer
+	// NOTE Previously trailing data was accepted.
+	if len(data) != 2*scalarSize {
+		return fmt.Errorf("dleq: invalid proof length: got %d bytes, want %d", len(data), 2*scalarSize)
 	}
 
 	c := g.NewScalar()

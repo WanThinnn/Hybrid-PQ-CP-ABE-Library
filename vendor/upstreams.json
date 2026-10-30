@@ -1,0 +1,22 @@
+{
+  "librabe-ffi": {
+    "url": "https://github.com/WanThinnn/librabe-ffi.git",
+    "commit": "ff828d13a635042c9569cfb29117f299b553f946"
+  },
+  "circl": {
+    "url": "https://github.com/cloudflare/circl.git",
+    "commit": "9ab0d912da37755412cfa68cdde5e3f0e1b030b1"
+  },
+  "liboqs": {
+    "url": "https://github.com/open-quantum-safe/liboqs.git",
+    "commit": "a9ad1876e14c2be093a538aca41fd3468fe3cf19"
+  },
+  "cover_crypt": {
+    "url": "https://github.com/Cosmian/cover_crypt.git",
+    "commit": "492de850b51c73123e5fc3e96ecc64b360fbf39b"
+  },
+  "cryptopp": {
+    "url": "https://github.com/weidai11/cryptopp.git",
+    "commit": "5873a73a231c95771f5bbf3466a484952fb22780"
+  }
+}

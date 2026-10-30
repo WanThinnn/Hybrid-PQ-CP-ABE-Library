@@ -16,6 +16,9 @@
 // In this implementation, secret sharing is defined over the scalar field of
 // a prime order group.
 //
+// Warning: With the group.P256, group.P384, or group.P521 groups, splitting
+// and recovering a secret are currently not constant time in the secret.
+//
 // References
 //
 //	[1] Shamir, How to share a secret. https://dl.acm.org/doi/10.1145/359168.359176/
@@ -23,12 +26,15 @@
 package secretsharing
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/cloudflare/circl/group"
 	"github.com/cloudflare/circl/math/polynomial"
 )
+
+var errZeroID = errors.New("secretsharing: share ID cannot be zero")
 
 // Share represents a share of a secret.
 type Share struct {
@@ -120,11 +126,18 @@ func Verify(t uint, s Share, c SecretCommitment) bool {
 }
 
 // Recover returns a secret provided more than t different shares are given.
-// Returns an error if the number of shares is not above the threshold t.
+// Returns an error if the number of shares is not above the threshold t, or if
+// any share has a zero ID.
 // Panics if some shares are duplicated, i.e., shares must have different IDs.
 func Recover(t uint, shares []Share) (secret group.Scalar, err error) {
 	if l := len(shares); l <= int(t) {
 		return nil, errThreshold(t, uint(l))
+	}
+
+	for i := range shares {
+		if shares[i].ID.IsZero() {
+			return nil, errZeroID
+		}
 	}
 
 	x := make([]group.Scalar, t+1)

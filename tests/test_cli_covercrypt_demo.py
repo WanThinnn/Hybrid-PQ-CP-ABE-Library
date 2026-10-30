@@ -60,6 +60,31 @@ class CovercryptDemoTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(recovered.read_bytes(), plain.read_bytes())
 
+    def test_omitting_a_dimension_does_not_grant_its_attributes(self):
+        env = dict(os.environ, HCPABE_COVERCRYPT_CONFIG=str(ROOT / 'scripts/covercrypt-demo.json'),
+                   HCPABE_COVERCRYPT_MODE='hybridized')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prefix, plain, cipher = root / 'demo', root / 'plain.txt', root / 'data.enc'
+            plain.write_bytes(b'Only IT administrators may decrypt this')
+            result = self.call('setup', '--scheme', 'covercrypt', prefix, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = self.call('encrypt', '--scheme', 'covercrypt', str(prefix) + '_pk.key', plain,
+                               'Department::IT && Level::ADMIN', cipher, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            cases = [('Department::IT && Level::ADMIN', True), ('Department::IT', False),
+                     ('Department::HR', False), ('Department::HR && Level::ADMIN', False)]
+            for index, (attributes, allowed) in enumerate(cases):
+                with self.subTest(attributes=attributes):
+                    key, recovered = root / f'user-{index}.key', root / f'out-{index}.txt'
+                    result = self.call('genkey', '--scheme', 'covercrypt', str(prefix) + '_msk.key',
+                                       attributes, key, env=env)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    result = self.call('decrypt', key, cipher, recovered, env=env)
+                    self.assertEqual(result.returncode == 0, allowed, result.stdout + result.stderr)
+                    if allowed:
+                        self.assertEqual(recovered.read_bytes(), plain.read_bytes())
+
 
 if __name__ == '__main__':
     unittest.main()

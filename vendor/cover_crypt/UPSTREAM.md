@@ -5,7 +5,7 @@ This directory vendors CoverCrypt from Cosmian for integration work in Hybrid-CP
 - Upstream project: Cosmian CoverCrypt
 - Repository: https://github.com/Cosmian/cover_crypt
 - Vendored version: v16.0.1
-- Vendored commit: 492de85
+- Vendored commit: 492de850b51c73123e5fc3e96ecc64b360fbf39b
 - License: BUSL-1.1 (see `LICENSE.md` in this directory)
 
 Upstream authors listed in `Cargo.toml`:

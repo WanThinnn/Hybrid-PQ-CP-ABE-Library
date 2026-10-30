@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -57,6 +58,89 @@ func TestDLEQ(t *testing.T) {
 	}
 }
 
+func TestChallengeBindsBase(t *testing.T) {
+	g := group.P256
+	params := dleq.Params{G: g, H: crypto.SHA256, DST: []byte("domain_sep_string")}
+	prover := dleq.Prover{Params: params}
+	verifier := dleq.Verifier{Params: params}
+
+	k := g.RandomScalar(rand.Reader)
+	b := g.RandomElement(rand.Reader)
+	kb := g.NewElement().Mul(b, k)
+	ka := g.RandomElement(rand.Reader)
+
+	r := g.RandomScalar(rand.Reader)
+	a := g.Generator()
+	proof, err := prover.ProveWithRandomness(k, a, ka, b, kb, r)
+	test.CheckNoErr(t, err, "wrong proof generation")
+
+	rawProof, err := proof.MarshalBinary()
+	test.CheckNoErr(t, err, "error on marshaling proof")
+	scalarLen := int(g.Params().ScalarLength)
+	c := g.NewScalar()
+	err = c.UnmarshalBinary(rawProof[:scalarLen])
+	test.CheckNoErr(t, err, "error on unmarshaling challenge")
+	s := g.NewScalar()
+	err = s.UnmarshalBinary(rawProof[scalarLen:])
+	test.CheckNoErr(t, err, "error on unmarshaling response")
+
+	rA := g.NewElement().Mul(a, r)
+	cKA := g.NewElement().Mul(ka, c)
+	diff := g.NewElement().Add(rA, g.NewElement().Neg(cKA))
+	forgedA := g.NewElement().Mul(diff, g.NewScalar().Inv(s))
+
+	if g.NewElement().Mul(forgedA, k).IsEqual(ka) {
+		t.Fatal("unexpected true statement")
+	}
+	if verifier.Verify(forgedA, ka, b, kb, proof) {
+		t.Fatal("Verify accepted a proof for a false statement with an adaptively chosen base")
+	}
+}
+
+func TestMalformedBatch(t *testing.T) {
+	g := group.P256
+	params := dleq.Params{G: g, H: crypto.SHA256, DST: []byte("domain_sep_string")}
+	prover := dleq.Prover{Params: params}
+	verifier := dleq.Verifier{Params: params}
+	k := g.RandomScalar(rand.Reader)
+	a := g.RandomElement(rand.Reader)
+	ka := g.NewElement().Mul(a, k)
+	bi := []group.Element{g.RandomElement(rand.Reader), g.RandomElement(rand.Reader)}
+	kbi := []group.Element{
+		g.NewElement().Mul(bi[0], k),
+		g.NewElement().Mul(bi[1], k),
+	}
+	rnd := g.RandomScalar(rand.Reader)
+	proof, err := prover.ProveBatchWithRandomness(k, a, ka, bi, kbi, rnd)
+	test.CheckNoErr(t, err, "wrong proof generation")
+
+	tests := []struct {
+		name string
+		bi   []group.Element
+		kbi  []group.Element
+	}{
+		{"empty", nil, nil},
+		{"short evaluated vector", bi, kbi[:1]},
+		{"long evaluated vector", bi, append(kbi, g.RandomElement(rand.Reader))},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := prover.ProveBatchWithRandomness(
+				k, a, ka, tc.bi, tc.kbi, rnd,
+			); !errors.Is(err, dleq.ErrInvalidBatch) {
+				t.Fatalf("got proving error %v, want %v", err, dleq.ErrInvalidBatch)
+			}
+			if verifier.VerifyBatch(a, ka, tc.bi, tc.kbi, proof) {
+				t.Fatal("malformed batch verified")
+			}
+		})
+	}
+
+	if verifier.VerifyBatch(a, ka, bi, kbi, nil) {
+		t.Fatal("nil proof verified")
+	}
+}
+
 func testMarshal(t *testing.T, g group.Group, proof *dleq.Proof) {
 	t.Helper()
 
@@ -94,6 +178,10 @@ func testErrors(
 	tamperedProof := new(dleq.Proof)
 	err = tamperedProof.UnmarshalBinary(g, proofBytes[:5])
 	test.CheckIsErr(t, err, "unmarshal must fail")
+
+	// Trailing bytes must be rejected to keep the encoding canonical.
+	err = tamperedProof.UnmarshalBinary(g, append(append([]byte{}, proofBytes...), 0x00))
+	test.CheckIsErr(t, err, "unmarshal with trailing bytes must fail")
 
 	err = tamperedProof.UnmarshalBinary(g, proofBytes)
 	test.CheckNoErr(t, err, "proof must be unmarshaled")
