@@ -17,7 +17,7 @@ SPEC.loader.exec_module(PACKAGE)
 class ReleasePackageTests(unittest.TestCase):
     def fixture(self, root, target):
         core, dependencies = PACKAGE.required_outputs(target)
-        names = [f"build/{target}/{name}" for name in core]
+        names = [f"build/artifacts/{target}/{name}" for name in core]
         names += [f"build/deps/{target}/lib/{name}" for name in dependencies]
         names += [f"build/deps/{target}/include/{name}" for name in (
             "cryptopp/aes.h", "rabe/rabe.h", "liboqs/oqs/oqs.h", "tkn20/cpabe_tkn20.h", "covercrypt/covercrypt_ffi.h")]
@@ -49,7 +49,7 @@ class ReleasePackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.fixture(root, "windows")
-            (root / "build/windows/libhybrid-pq-cp-abe_dll.lib").unlink()
+            (root / "build/artifacts/windows/libhybrid-pq-cp-abe_dll.lib").unlink()
             with self.assertRaises(FileNotFoundError):
                 PACKAGE.stage_package(root, root / "package", "windows")
 

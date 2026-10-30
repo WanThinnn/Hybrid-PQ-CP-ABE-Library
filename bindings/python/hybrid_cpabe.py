@@ -26,12 +26,10 @@ if not os.path.exists(lib_path):
     sys.exit(1)
 
 # The public Python binding loads only libhybrid-pq-cp-abe. On Windows its
-# TKN20 runtime dependency is produced under build/windows.
+# TKN20 runtime dependency is published beside it in lib/.
 _dll_directories = []
 if system == "Windows" and hasattr(os, "add_dll_directory"):
-    for dll_dir in (lib_dir, os.path.join(project_root, "build", "windows")):
-        if os.path.isdir(dll_dir):
-            _dll_directories.append(os.add_dll_directory(dll_dir))
+    _dll_directories.append(os.add_dll_directory(lib_dir))
 
 # Load the single public Hybrid CP-ABE shared library.
 abe_lib = ctypes.CDLL(lib_path)

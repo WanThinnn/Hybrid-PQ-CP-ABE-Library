@@ -382,7 +382,7 @@ function Build-CoverCrypt([bool]$RunTests = $false) {
     $Header = Join-Path $DepIncludeDir "covercrypt_ffi.h"
     $Work = Join-Path $WorkDir "covercrypt-target"
     if ($RunTests) {
-        $env:CARGO_TARGET_DIR = Join-Path $Root "build\windows\covercrypt-rust-tests"
+        $env:CARGO_TARGET_DIR = Join-Path $Root "build\artifacts\windows\covercrypt-rust-tests"
         & cargo "+$Toolchain" test --locked --release --jobs $InnerJobs --manifest-path "vendor\cover_crypt\Cargo.toml" --lib --no-default-features --features curve25519,mlkem-768
         if ($LASTEXITCODE -ne 0) { throw "CoverCrypt upstream tests failed" }
         return

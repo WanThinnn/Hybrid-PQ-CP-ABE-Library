@@ -1,1 +1,0 @@
-Hello, this is top secret data that needs to be encrypted by Hybrid CP-ABE!

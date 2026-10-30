@@ -301,7 +301,7 @@ build_covercrypt() {
 }
 
 test_covercrypt() {
-  CARGO_TARGET_DIR="$ROOT/build/$PLATFORM/covercrypt-rust-tests" cargo test --locked --release --jobs "$INNER_JOBS" --manifest-path vendor/cover_crypt/Cargo.toml --lib --no-default-features --features curve25519,mlkem-768
+  CARGO_TARGET_DIR="$ROOT/build/artifacts/$PLATFORM/covercrypt-rust-tests" cargo test --locked --release --jobs "$INNER_JOBS" --manifest-path vendor/cover_crypt/Cargo.toml --lib --no-default-features --features curve25519,mlkem-768
 }
 
 build_tkn20() {

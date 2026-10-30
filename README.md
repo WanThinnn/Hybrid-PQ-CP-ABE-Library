@@ -16,6 +16,10 @@ The v5.2 public function names and parameters remain unchanged. Select
 Existing default functions continue to select AC17. Keys are specific to a scheme;
 changing the selection does not convert existing keys or ciphertexts.
 
+Windows core builds publish `libcpabe_tkn20.dll` beside the public library in
+`lib/` and beside the CLI in `build/artifacts/windows/`. Python bindings load
+the public library and its runtime dependencies from `lib/`.
+
 ```text
 src/hybrid-pq-cp-abe.cpp       Public interface and forwarding
 src/core/abe-setup.cpp         Setup and optional signing-key generation
@@ -138,12 +142,10 @@ vendor/circl/           Vendored Cloudflare CIRCL v1.6.4 source
 vendor/cover_crypt/     Vendored Cosmian CoverCrypt source
 lib/                    Generated/prebuilt native libraries
 tests/cpp/              Native test suite
-build/windows/          Windows build output
-build/linux/            Linux build output
-build/macos/            macOS build output
+build/artifacts/        Core build output grouped by platform
 ```
 
-`src/` is intentionally reserved for the project's C++ implementation. Optional integrations, bindings, and third-party source live outside it. All native build artifacts are grouped under the single `build/` root by platform.
+`src/` is intentionally reserved for the project's C++ implementation. Optional integrations, bindings, and third-party source live outside it. Core build artifacts are grouped under `build/artifacts/<platform>/`; dependency output remains under `build/deps/<platform>/`.
 
 ## Building (Multi-OS)
 > [!IMPORTANT]

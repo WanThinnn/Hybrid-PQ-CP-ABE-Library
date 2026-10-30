@@ -6,7 +6,7 @@ directly into `build/`:
 | Directory | Contents |
 | --- | --- |
 | `deps/<platform>/` | Staged dependency headers/libraries, ready marker and dependency build cache |
-| `windows/`, `linux/`, `macos/` | Project binaries, object files and platform tests |
+| `artifacts/<platform>/` | Project binaries, object files and platform tests |
 | `logs/` | Build, test and diagnostic logs; older logs are under `logs/archive/` |
 | `reports/covercrypt/` | CoverCrypt cost and KeyGen measurements |
 | `reports/benchmarks/` | Local benchmark verification runs |

@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set EXEC=build\windows\main.exe
+set EXEC=build\artifacts\windows\main.exe
 set TC=tests\cpp\cases
 set PASS=0
 set FAIL=0

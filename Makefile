@@ -42,7 +42,7 @@ ifeq ($(PLATFORM),windows)
     endif
 endif
 
-BUILD_DIR = $(BUILD_ROOT)/$(PLATFORM)
+BUILD_DIR = $(BUILD_ROOT)/artifacts/$(PLATFORM)
 DEPS_DIR = $(BUILD_ROOT)/deps/$(PLATFORM)
 DEPS_LIB_DIR = $(DEPS_DIR)/lib
 DEPS_READY = $(DEPS_LIB_DIR)/.ready
@@ -128,6 +128,7 @@ ifeq ($(COMPILER),msvc)
     WIN_STATIC_DEPS = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.lib $(DEPS_LIB_DIR)/liboqs/liboqs.lib $(DEPS_LIB_DIR)/rabe/librabe_ffi.lib $(COVERCRYPT_LIB)
     TKN20_IMPORT_LIB = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.lib
     TKN20_DLL = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.dll
+    PUBLISHED_TKN20_DLL = $(LIB_DIR)/libcpabe_tkn20.dll
     WIN_LINK_DEPS = $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB)
     WIN_SYSTEM_LIBS = bcrypt.lib advapi32.lib ntdll.lib userenv.lib ws2_32.lib
     LDFLAGS = /link /ignore:4099 /MACHINE:X64
@@ -279,6 +280,10 @@ $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL): | $(DEPS_READY)
 $(BUILD_DIR) $(LIB_DIR):
 	@if not exist "$(subst /,\,$@)" mkdir "$(subst /,\,$@)"
 
+# Keep the runtime beside the public DLL even on an otherwise up-to-date build.
+$(PUBLISHED_TKN20_DLL): $(TKN20_DLL) | $(LIB_DIR)
+	@copy /Y "$(subst /,\,$<)" "$(subst /,\,$@)" >nul
+
 $(OBJ_DIR): | $(BUILD_DIR)
 	@if not exist "$(subst /,\,$@)" mkdir "$(subst /,\,$@)"
 
@@ -294,7 +299,7 @@ $(SHARED_OBJ_DIR)/%.obj: %.cpp $(COMMON_HEADERS) | $(DEPS_READY) $(SHARED_OBJ_DI
 $(MAIN_OBJ): $(MAIN_SRC) $(COMMON_HEADERS) | $(DEPS_READY) $(MAIN_OBJ_DIR)
 	$(CXX) $(CXXFLAGS) /Fo"$(subst /,\,$@)" /c "$(MAIN_SRC)"
 
-static: $(STATIC_LIB)
+static: $(STATIC_LIB) $(PUBLISHED_TKN20_DLL)
 
 $(STATIC_LIB): $(STATIC_OBJS) $(WIN_STATIC_DEPS) Makefile scripts/normalize-msvc-library.ps1 | $(BUILD_DIR) $(LIB_DIR)
 	@if exist "$(subst /,\,$@)" del /Q "$(subst /,\,$@)"
@@ -305,7 +310,7 @@ $(STATIC_LIB): $(STATIC_OBJS) $(WIN_STATIC_DEPS) Makefile scripts/normalize-msvc
 	@copy /Y "$(subst /,\,$@)" "$(subst /,\,$(LIB_DIR))\" >nul
 	@echo Done! Static library: $@
 
-shared: $(SHARED_LIB)
+shared: $(SHARED_LIB) $(PUBLISHED_TKN20_DLL)
 
 $(SHARED_LIB): $(SHARED_OBJS) $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL) Makefile | $(BUILD_DIR) $(LIB_DIR)
 	$(CXX) /nologo /LD /Fe:"$(subst /,\,$@)" $(foreach o,$(SHARED_OBJS),"$(subst /,\,$(o))") $(LDFLAGS) $(foreach l,$(WIN_LINK_DEPS),"$(subst /,\,$(l))") $(WIN_SYSTEM_LIBS) /IMPLIB:"$(subst /,\,$(BUILD_DIR))\libhybrid-pq-cp-abe_dll.lib"
@@ -315,7 +320,7 @@ $(SHARED_LIB): $(SHARED_OBJS) $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL
 	@del /Q "$(subst /,\,$(BUILD_DIR))\*.exp" >nul 2>&1
 	@echo Done! Shared library: $@
 
-executable: $(EXEC)
+executable: $(EXEC) $(PUBLISHED_TKN20_DLL)
 
 $(EXEC): $(MAIN_OBJ) $(STATIC_LIB) $(TKN20_IMPORT_LIB) $(TKN20_DLL) | $(BUILD_DIR)
 	$(CXX) /nologo /Fe:"$(subst /,\,$@)" "$(subst /,\,$(MAIN_OBJ))" $(LDFLAGS) "$(subst /,\,$(STATIC_LIB))" $(foreach l,$(WIN_LINK_DEPS),"$(subst /,\,$(l))") $(WIN_SYSTEM_LIBS)
@@ -329,7 +334,7 @@ clean:
 	@if exist "$(subst /,\,$(TEST_CASE_DIR))" rmdir /S /Q "$(subst /,\,$(TEST_CASE_DIR))"
 	@echo Done! Core build outputs cleared.
 
-test: $(EXEC) $(COVERCRYPT_TEST)
+test: $(EXEC) $(COVERCRYPT_TEST) $(PUBLISHED_TKN20_DLL)
 	@"$(COVERCRYPT_TEST)"
 	@echo ================================================================
 	@echo  Running Tests...

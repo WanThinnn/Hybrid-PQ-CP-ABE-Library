@@ -382,8 +382,6 @@ class Native:
         self._dll_handles = []
         if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
             dll_dirs = [self.path.parent]
-            if self.path.parent.name.lower() == "lib":
-                dll_dirs.append(self.path.parent.parent / "build" / "windows")
             for dll_dir in dll_dirs:
                 if dll_dir.is_dir():
                     self._dll_handles.append(os.add_dll_directory(str(dll_dir)))
@@ -662,7 +660,7 @@ def find_lib(root: Optional[Path], explicit: Optional[str]):
         platform_dir = "windows" if system == "Windows" else "macos" if system == "Darwin" else "linux"
         candidates = [
             root / "lib" / name,
-            root / "build" / platform_dir / name,
+            root / "build/artifacts" / platform_dir / name,
         ]
     for path in candidates:
         if path.exists():

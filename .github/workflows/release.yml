@@ -116,11 +116,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & make tests -j4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          New-Item -ItemType Directory -Force -Path build/windows/tests | Out-Null
-          & cl.exe /nologo /MD /EHsc /utf-8 /Ibuild/deps/windows/include tests/cpp/cryptopp_dll_smoke.cpp /Fobuild/windows/tests/cryptopp_dll_smoke.obj /Febuild/windows/tests/cryptopp_dll_smoke.exe /link /LIBPATH:build/deps/windows/lib/cryptopp
+          & python -m unittest discover -s tests -p test_windows_runtime.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force -Path build/artifacts/windows/tests | Out-Null
+          & cl.exe /nologo /MD /EHsc /utf-8 /Ibuild/deps/windows/include tests/cpp/cryptopp_dll_smoke.cpp /Fobuild/artifacts/windows/tests/cryptopp_dll_smoke.obj /Febuild/artifacts/windows/tests/cryptopp_dll_smoke.exe /link /LIBPATH:build/deps/windows/lib/cryptopp
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:PATH = "$PWD\build\deps\windows\lib\cryptopp;" + $env:PATH
-          & ./build/windows/tests/cryptopp_dll_smoke.exe
+          & ./build/artifacts/windows/tests/cryptopp_dll_smoke.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Package and verify release archive

@@ -283,11 +283,11 @@ int main()
         const char *config =
             R"({"dimensions":[{"name":"admin","attributes":["present","absent"]},{"name":"it","attributes":["present","absent"]},{"name":"hr","attributes":["present","absent"]},{"name":"DPT","attributes":["FIN","HR"]},{"name":"SEC","attributes":["LOW","TOP"],"hierarchical":true}]})";
 #ifdef _WIN32
-        const std::string prefix = "build/windows/covercrypt-api-test";
+        const std::string prefix = "build/artifacts/windows/covercrypt-api-test";
 #elif defined(__APPLE__)
-        const std::string prefix = "build/macos/covercrypt-api-test";
+        const std::string prefix = "build/artifacts/macos/covercrypt-api-test";
 #else
-        const std::string prefix = "build/linux/covercrypt-api-test";
+        const std::string prefix = "build/artifacts/linux/covercrypt-api-test";
 #endif
         std::string configuration = prefix + ".json";
         std::ofstream(configuration) << config;

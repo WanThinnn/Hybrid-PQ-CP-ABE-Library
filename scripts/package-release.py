@@ -117,7 +117,7 @@ def collect_notices(root, package):
 
 def stage_package(root, package, target):
     core, dependencies = required_outputs(target)
-    build = root / "build" / target
+    build = root / "build/artifacts" / target
     deps = root / "build/deps" / target
     for name in core:
         require_file(build / name)
