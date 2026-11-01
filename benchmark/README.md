@@ -20,7 +20,9 @@ Use `--showcase` for the focused public/LinkedIn subset.
 - Isolated AES-256-GCM throughput
 - Policy complexity scaling
 - Payload size scaling
-- Optional Charm-Crypto AC17 primitive reference
+- 4-way ABE key-protection comparison: AC17, TKN20, CoverCrypt Hybridized, and Charm-Crypto AC17
+  - Native schemes protect/recover the same 32-byte key material
+  - Charm-Crypto AC17 remains a GT-element reference
 
 ## Output
 
@@ -29,8 +31,12 @@ Each run creates a timestamped directory containing:
 - raw_samples.csv
 - summary.csv
 - benchmark_results.json
+- covercrypt_config.json
 - report.md
+- charts/00_abe_primitive_comparison.png
+- charts/00_abe_primitive_comparison_log.png
 - charts/01_core_latency.png
+- charts/01_core_latency_log.png
 - charts/02_decrypt_distribution.png
 - charts/03_pqc_overhead.png
 - charts/04_policy_scaling.png
@@ -58,6 +64,14 @@ Charm-Crypto is optional and is intentionally not placed in requirements because
 
 ## Run
 
+Build the benchmark-only native primitive bridge first:
+
+```bash
+make benchmark-bridge
+```
+
+On Windows this compiles only `benchmark/native_primitive_bridge.cpp` and links it against the already-built artifacts under `build/artifacts/windows` and `build/deps/windows`. It does **not** rebuild the core library or dependencies.
+
 Quick smoke benchmark:
 
 python benchmark_full.py --profile quick --no-charm
@@ -68,22 +82,22 @@ python benchmark_full.py --profile standard
 
 Focused showcase benchmark (automatically writes to `published/<date>_<cpu>_<profile>`):
 
-python benchmark_full.py --profile standard --showcase
+python benchmark_full.py --profile standard --showcase --covercrypt-dimensions 4
 
 Use `--output <path>` only when you want to override the automatic published path.
 
-CoverCrypt uses at most two native dimensions: policy terms are ORed within
-each dimension and the dimensions are ANDed together. This is a different
-policy shape from the AC17/TKN20 all-attribute AND policy. Do not interpret
-equal attribute counts as equivalent access policies across these schemes.
-Giving every term its own CoverCrypt dimension causes a combinatorial growth
-in setup work and can make the benchmark appear to hang.
+CoverCrypt defaults to four native dimensions (`--covercrypt-dimensions 4`).
+Logical policy terms are distributed as evenly as possible across them, ORed
+within each dimension, and the dimensions are ANDed together. For the default
+12-term showcase this produces 4 dimensions × 3 values. This is a different
+policy shape from the AC17/TKN20 all-attribute AND policy; equal term counts do
+not mean equivalent access policies. Giving every term its own CoverCrypt
+dimension causes combinatorial growth in the rights universe and setup work.
 
-At startup, check the printed CoverCrypt configuration: the default
-12-attribute showcase should report `2 dimension(s)`. Each new run generates
-its own configuration; after updating the script, stop any older benchmark
-process and start a fresh run. The generated dimensions are also saved in
-`benchmark_results.json`, even after the temporary configuration is removed.
+At startup, check the printed CoverCrypt configuration: the default 12-term
+showcase should report `4 dimension(s)`. Each run persists the exact generated
+configuration as `covercrypt_config.json` in its output directory and records
+the dimensions plus the estimated rights-universe size in `benchmark_results.json`.
 
 Run the configuration and native CoverCrypt showcase regression checks with:
 
@@ -100,6 +114,6 @@ python benchmark_full.py --profile full
 
 ## Interpretation
 
-Charm-Crypto is reported only as a reference primitive. Its AC17 API operates on a GT group element, while this library exposes a byte-oriented hybrid pipeline combining CP-ABE key protection, SHA3-256, and AES-GCM. Do not claim a universal N-times speedup solely from that comparison.
+The public comparison chart uses the benchmark-only primitive bridge for AC17, TKN20, and CoverCrypt. Those three native backends all protect/recover the same 32-byte key material. CoverCrypt runs in hybridized mode (Curve25519 + ML-KEM-768) and its adapter uses the KEM shared secret with AES-GCM to wrap that key material. Charm-Crypto AC17 operates on a GT element, so it remains a reference rather than a byte-for-byte equivalent. Do not claim a universal N-times speedup without this scope note.
 
 For publishable results, run the full profile on multiple machines and publish raw_samples.csv together with build/compiler information.

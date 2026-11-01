@@ -133,42 +133,51 @@ def attrs_for(n: int) -> str:
     return " ".join(attrs)
 
 
-def covercrypt_policy_attrs(n: int) -> tuple[str, str]:
-    """Map N logical policy terms onto two CoverCrypt-native dimensions.
+def covercrypt_distribution(n: int, dimension_count: int) -> list[int]:
+    """Distribute N logical policy terms as evenly as possible across dimensions."""
+    n = max(1, n)
+    dimension_count = max(1, min(dimension_count, n))
+    base, remainder = divmod(n, dimension_count)
+    return [base + (1 if index < remainder else 0) for index in range(dimension_count)]
+
+
+def covercrypt_policy_attrs(n: int, dimension_count: int = 4) -> tuple[str, str]:
+    """Map N logical terms onto CoverCrypt-native policy dimensions.
 
     CoverCrypt dimensions are policy axes, not independent boolean attributes.
     Modeling every AC17/TKN20 attribute as its own {present,absent} dimension
-    makes CoverCrypt's rights universe grow as 3^N. Split the N terms across
-    two axes instead: OR within each axis, AND between axes.
+    makes the rights universe grow combinatorially. The benchmark therefore
+    distributes logical terms across a bounded number of dimensions, OR within
+    each dimension and AND between dimensions.
     """
-    n = max(1, n)
-    left_count = (n + 1) // 2
-    right_count = n // 2
-
-    left_terms = [f"BENCH_A::A{i}" for i in range(1, left_count + 1)]
-    left_policy = left_terms[0] if len(left_terms) == 1 else "(" + " || ".join(left_terms) + ")"
-
-    if right_count == 0:
-        return left_policy, "BENCH_A::A1"
-
-    right_terms = [f"BENCH_B::B{i}" for i in range(1, right_count + 1)]
-    right_policy = right_terms[0] if len(right_terms) == 1 else "(" + " || ".join(right_terms) + ")"
-    return f"{left_policy} && {right_policy}", "BENCH_A::A1 BENCH_B::B1"
+    counts = covercrypt_distribution(n, dimension_count)
+    clauses = []
+    granted = []
+    for dimension_index, count in enumerate(counts, start=1):
+        name = f"BENCH_D{dimension_index}"
+        terms = [f"{name}::V{value_index}" for value_index in range(1, count + 1)]
+        clauses.append(terms[0] if len(terms) == 1 else "(" + " || ".join(terms) + ")")
+        granted.append(terms[0])
+    return " && ".join(clauses), " ".join(granted)
 
 
-def configure_covercrypt(tmp: Path, max_policy_attributes: int) -> Path:
-    left_count = max(1, (max_policy_attributes + 1) // 2)
-    right_count = max_policy_attributes // 2
+def configure_covercrypt(
+    directory: Path,
+    max_policy_attributes: int,
+    dimension_count: int = 4,
+    filename: str = "covercrypt.json",
+) -> Path:
+    counts = covercrypt_distribution(max_policy_attributes, dimension_count)
     dimensions = [
-        {"name": "BENCH_A", "attributes": [f"A{i}" for i in range(1, left_count + 1)]}
+        {
+            "name": f"BENCH_D{dimension_index}",
+            "attributes": [f"V{i}" for i in range(1, count + 1)],
+        }
+        for dimension_index, count in enumerate(counts, start=1)
     ]
-    if right_count:
-        dimensions.append(
-            {"name": "BENCH_B", "attributes": [f"B{i}" for i in range(1, right_count + 1)]}
-        )
-    config_path = tmp / "covercrypt.json"
+    config_path = directory / filename
     config_path.write_text(
-        json.dumps({"dimensions": dimensions}, separators=(",", ":")),
+        json.dumps({"dimensions": dimensions}, indent=2),
         encoding="utf-8",
     )
     os.environ["HCPABE_COVERCRYPT_CONFIG"] = str(config_path.resolve())
@@ -629,12 +638,132 @@ class Native:
         return self.take(out, outl.value)
 
 
+
+class PrimitiveBridge:
+    """Benchmark-only access to scheme-adapter key-protection functions."""
+
+    U8 = ctypes.c_ubyte
+    P8 = ctypes.POINTER(U8)
+
+    def __init__(self, path: Path, native: Native):
+        self.path = path.resolve()
+        self.native = native
+        self._dll_handles = []
+        if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
+            self._dll_handles.append(os.add_dll_directory(str(self.path.parent)))
+        self.lib = ctypes.CDLL(str(self.path))
+        self.bind()
+
+    def bind(self):
+        P8 = self.P8
+        P = ctypes.POINTER
+        S = ctypes.c_size_t
+        I = ctypes.c_int
+        C = ctypes.c_char_p
+        self.lib.hcpabe_bench_setup.argtypes = [I, P(P8), P(S), P(P8), P(S)]
+        self.lib.hcpabe_bench_genkey.argtypes = [I, P8, S, C, P(P8), P(S)]
+        self.lib.hcpabe_bench_protect.argtypes = [I, P8, S, C, P8, S, P(P8), P(S)]
+        self.lib.hcpabe_bench_recover.argtypes = [I, P8, S, P8, S, P(P8), P(S)]
+        self.lib.hcpabe_bench_free.argtypes = [P8]
+        self.lib.hcpabe_bench_free.restype = None
+        for name in (
+            "hcpabe_bench_setup", "hcpabe_bench_genkey",
+            "hcpabe_bench_protect", "hcpabe_bench_recover",
+        ):
+            getattr(self.lib, name).restype = I
+
+    def arr(self, data: bytes):
+        return (self.U8 * max(1, len(data))).from_buffer_copy(data or b"\x00")
+
+    def take(self, ptr, length):
+        try:
+            return ctypes.string_at(ptr, length) if ptr and length else b""
+        finally:
+            if ptr:
+                self.lib.hcpabe_bench_free(ptr)
+
+    def check(self, code, name):
+        self.native.check(code, name)
+
+    def setup(self, scheme):
+        pk, msk = self.P8(), self.P8()
+        pkl, mskl = ctypes.c_size_t(), ctypes.c_size_t()
+        self.check(
+            self.lib.hcpabe_bench_setup(
+                scheme, ctypes.byref(pk), ctypes.byref(pkl),
+                ctypes.byref(msk), ctypes.byref(mskl)
+            ),
+            "primitive_setup",
+        )
+        return self.take(pk, pkl.value), self.take(msk, mskl.value)
+
+    def genkey(self, scheme, msk, attrs):
+        out, outl = self.P8(), ctypes.c_size_t()
+        self.check(
+            self.lib.hcpabe_bench_genkey(
+                scheme, self.arr(msk), len(msk), attrs.encode(),
+                ctypes.byref(out), ctypes.byref(outl)
+            ),
+            "primitive_genkey",
+        )
+        return self.take(out, outl.value)
+
+    def protect(self, scheme, pk, policy, secret):
+        out, outl = self.P8(), ctypes.c_size_t()
+        self.check(
+            self.lib.hcpabe_bench_protect(
+                scheme, self.arr(pk), len(pk), policy.encode(),
+                self.arr(secret), len(secret), ctypes.byref(out), ctypes.byref(outl)
+            ),
+            "primitive_protect",
+        )
+        return self.take(out, outl.value)
+
+    def recover(self, scheme, sk, ciphertext):
+        out, outl = self.P8(), ctypes.c_size_t()
+        self.check(
+            self.lib.hcpabe_bench_recover(
+                scheme, self.arr(sk), len(sk), self.arr(ciphertext), len(ciphertext),
+                ctypes.byref(out), ctypes.byref(outl)
+            ),
+            "primitive_recover",
+        )
+        return self.take(out, outl.value)
+
+
 def lib_name():
     if platform.system() == "Windows":
         return "libhybrid-pq-cp-abe.dll"
     if platform.system() == "Darwin":
         return "libhybrid-pq-cp-abe.dylib"
     return "libhybrid-pq-cp-abe.so"
+
+
+
+def primitive_bridge_name():
+    if platform.system() == "Windows":
+        return "native_primitive_bridge.dll"
+    if platform.system() == "Darwin":
+        return "libnative_primitive_bridge.dylib"
+    return "libnative_primitive_bridge.so"
+
+
+def find_primitive_bridge(root: Optional[Path], explicit: Optional[str]):
+    if explicit:
+        path = Path(explicit).expanduser().resolve()
+        if not path.exists():
+            raise FileNotFoundError(path)
+        return path
+    if not root:
+        raise FileNotFoundError("Repository root is required to locate the primitive benchmark bridge.")
+    system = platform.system()
+    platform_dir = "windows" if system == "Windows" else "macos" if system == "Darwin" else "linux"
+    path = root / "build" / "artifacts" / platform_dir / "benchmark" / primitive_bridge_name()
+    if path.exists():
+        return path.resolve()
+    raise FileNotFoundError(
+        f"Primitive benchmark bridge not found at {path}. Build it with: make benchmark-bridge"
+    )
 
 
 def repo_root(script: Path, explicit: Optional[str]):
@@ -673,6 +802,48 @@ def find_lib(root: Optional[Path], explicit: Optional[str]):
 
 def add(rec, samples, suite, scheme, mode, variant, op, case, payload, attrs, extra=None):
     rec.add(suite, scheme, mode, variant, op, case, payload, attrs, samples, extra)
+
+
+
+def run_native_primitive(bridge, rec, scheme, policy, attrs, policy_count, n, warm, quiet):
+    name = SCHEMES[scheme]
+    secret = bytes(range(32))
+    samples, pair = measure(
+        lambda: bridge.setup(scheme), n, warm, quiet,
+        f"{name} / Primitive / Setup"
+    )
+    add(rec, samples, "primitive_compare", name, "native", "key_protection",
+        "setup", "32-byte key material", len(secret), policy_count)
+    pk, msk = pair
+
+    samples, sk = measure(
+        lambda: bridge.genkey(scheme, msk, attrs), n, warm, quiet,
+        f"{name} / Primitive / KeyGen"
+    )
+    add(rec, samples, "primitive_compare", name, "native", "key_protection",
+        "keygen", "32-byte key material", len(secret), policy_count)
+
+    samples, ct = measure(
+        lambda: bridge.protect(scheme, pk, policy, secret), n, warm, quiet,
+        f"{name} / Primitive / Protect"
+    )
+    extra = {"ciphertext_bytes": len(ct), "key_material_bytes": len(secret)}
+    if scheme == COVERCRYPT:
+        extra.update({
+            "covercrypt_mode": "hybridized",
+            "adapter_semantics": "CoverCrypt KEM + AES-GCM key wrap",
+        })
+    add(rec, samples, "primitive_compare", name, "native", "key_protection",
+        "protect", "32-byte key material", len(secret), policy_count, extra)
+
+    samples, recovered = measure(
+        lambda: bridge.recover(scheme, sk, ct), n, warm, quiet,
+        f"{name} / Primitive / Recover"
+    )
+    if recovered != secret:
+        raise RuntimeError(f"{name} primitive correctness failed")
+    add(rec, samples, "primitive_compare", name, "native", "key_protection",
+        "recover", "32-byte key material", len(secret), policy_count)
 
 
 def run_core_buffer(native, rec, scheme, payload, policy, attrs, policy_count, n, warm, quiet):
@@ -763,14 +934,14 @@ def run_aes(native, rec, sizes, base, warm, quiet):
         add(rec, samples, "aes_gcm", "AES-256-GCM", "native", "primitive", "decrypt", human_bytes(size), size, 0, {"median_throughput_mib_s": thr})
 
 
-def run_policy_scaling(native, rec, sizes, n, warm, quiet):
+def run_policy_scaling(native, rec, sizes, n, warm, quiet, covercrypt_dimensions):
     payload = os.urandom(4096)
     for scheme in NATIVE_SCHEMES:
         name = SCHEMES[scheme]
         pk, msk = native.setup_buffer(scheme)
         for count in sizes:
             policy, attrs = (
-                covercrypt_policy_attrs(count)
+                covercrypt_policy_attrs(count, covercrypt_dimensions)
                 if scheme == COVERCRYPT
                 else (policy_for(count), attrs_for(count))
             )
@@ -783,11 +954,11 @@ def run_policy_scaling(native, rec, sizes, n, warm, quiet):
             add(rec, samples, "policy_scaling", name, "buffer", "standard", "decrypt", f"{count} attrs", len(payload), count)
 
 
-def run_payload_scaling(native, rec, sizes, base, warm, quiet, policy_count, with_pqc):
+def run_payload_scaling(native, rec, sizes, base, warm, quiet, policy_count, with_pqc, covercrypt_dimensions):
     for scheme in NATIVE_SCHEMES:
         name = SCHEMES[scheme]
         policy, attrs = (
-            covercrypt_policy_attrs(policy_count)
+            covercrypt_policy_attrs(policy_count, covercrypt_dimensions)
             if scheme == COVERCRYPT
             else (policy_for(policy_count), attrs_for(policy_count))
         )
@@ -825,18 +996,31 @@ def run_charm(rec, n, warm, policy, count):
     ac17 = AC17CPABE(group_obj=group, assump_size=2)
     attrs = attrs_for(count).split()
 
-    samples, pair = measure(ac17.setup, n, warm, False, "Charm AC17 / Setup")
-    add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "setup", "baseline", 0, count)
+    samples, pair = measure(ac17.setup, n, warm, False, "Charm-Crypto AC17 / Primitive / Setup")
+    add(rec, samples, "primitive_compare", "Charm-Crypto AC17", "python", "GT_reference",
+        "setup", "GT element", 0, count)
     pk, msk = pair
-    samples, sk = measure(lambda: ac17.keygen(pk, msk, attrs), n, warm, False, "Charm AC17 / KeyGen")
-    add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "keygen", "baseline", 0, count)
+    samples, sk = measure(
+        lambda: ac17.keygen(pk, msk, attrs), n, warm, False,
+        "Charm-Crypto AC17 / Primitive / KeyGen"
+    )
+    add(rec, samples, "primitive_compare", "Charm-Crypto AC17", "python", "GT_reference",
+        "keygen", "GT element", 0, count)
     msg = group.random(GT)
-    samples, ct = measure(lambda: ac17.encrypt(pk, msg, policy), n, warm, False, "Charm AC17 / Encrypt")
-    add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "encrypt", "GT element", 0, count)
-    samples, out = measure(lambda: ac17.decrypt(pk, ct, sk), n, warm, False, "Charm AC17 / Decrypt")
+    samples, ct = measure(
+        lambda: ac17.encrypt(pk, msg, policy), n, warm, False,
+        "Charm-Crypto AC17 / Primitive / Protect"
+    )
+    add(rec, samples, "primitive_compare", "Charm-Crypto AC17", "python", "GT_reference",
+        "protect", "GT element", 0, count)
+    samples, out = measure(
+        lambda: ac17.decrypt(pk, ct, sk), n, warm, False,
+        "Charm-Crypto AC17 / Primitive / Recover"
+    )
     if out != msg:
         raise RuntimeError("Charm correctness failed")
-    add(rec, samples, "charm_reference", "AC17", "python", "primitive_reference", "decrypt", "GT element", 0, count)
+    add(rec, samples, "primitive_compare", "Charm-Crypto AC17", "python", "GT_reference",
+        "recover", "GT element", 0, count)
     return True
 
 
@@ -1015,37 +1199,187 @@ def matplotlib_module():
     return plt
 
 
+def _chart_series_data(rows, preferred_series, series_key):
+    data: dict[str, dict[str, float]] = {}
+    for row in rows:
+        label = series_key(row)
+        data.setdefault(label, {})[row.operation] = row.stats["median_ms"]
+
+    series = [label for label in preferred_series if label in data]
+    series.extend(sorted(label for label in data if label not in series))
+    return data, series
+
+
+def _plot_grouped_medians(
+    plt,
+    rows,
+    output_path: Path,
+    title: str,
+    subtitle: str,
+    operations: list[tuple[str, str]],
+    preferred_series: list[str],
+    series_key: Callable[[Any], str],
+    dpi: int = 240,
+    log_scale: bool = False,
+):
+    """Plot only series/operations that actually exist; never synthesize zero bars."""
+    data, series = _chart_series_data(rows, preferred_series, series_key)
+    if not series:
+        return False
+
+    positive_values = [
+        value
+        for label in series
+        for value in data[label].values()
+        if value is not None and math.isfinite(value) and value > 0
+    ]
+    if not positive_values:
+        return False
+
+    x = list(range(len(operations)))
+    width = min(0.8 / len(series), 0.22)
+    fig_width = max(11.0, 2.15 * len(operations) + 0.85 * len(series))
+    fig, ax = plt.subplots(figsize=(fig_width, 6.5))
+
+    for idx, label in enumerate(series):
+        offset = (idx - (len(series) - 1) / 2) * width
+        bar_x = []
+        values = []
+        for op_index, (operation, _) in enumerate(operations):
+            value = data[label].get(operation)
+            if value is None or not math.isfinite(value) or value <= 0:
+                continue
+            bar_x.append(op_index + offset)
+            values.append(value)
+
+        if not values:
+            continue
+
+        bars = ax.bar(bar_x, values, width, label=label)
+        for bar, value in zip(bars, values):
+            ax.annotate(
+                f"{value:.1f}" if value >= 10 else f"{value:.2f}",
+                (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                xytext=(0, 4),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+            )
+
+    ax.set_xticks(x, [label for _, label in operations])
+    ax.set_ylabel("Median latency (ms)")
+    if log_scale:
+        minimum = min(positive_values)
+        maximum = max(positive_values)
+        ax.set_yscale("log")
+        ax.set_ylim(bottom=max(minimum / 1.8, 1e-3), top=maximum * 1.45)
+        ax.set_ylabel("Median latency (ms, log scale)")
+
+    fig.suptitle(title, fontsize=15, y=0.985)
+    if subtitle:
+        fig.text(0.5, 0.945, subtitle, ha="center", va="top", fontsize=8.5)
+
+    ax.legend(fontsize=9)
+    ax.grid(axis="y", alpha=0.2)
+    fig.tight_layout(rect=[0, 0, 1, 0.91])
+    fig.savefig(output_path, dpi=dpi)
+    plt.close(fig)
+    return True
+
+
 def make_charts(rec, out):
     plt = matplotlib_module()
     charts = out / "charts"
     charts.mkdir(exist_ok=True)
 
+    primitive = rec.find(suite="primitive_compare")
+    if primitive:
+        primitive_ops = [
+            ("setup", "Setup"),
+            ("keygen", "KeyGen"),
+            ("protect", "Protect"),
+            ("recover", "Recover"),
+        ]
+        primitive_series = ["AC17", "TKN20", "CoverCrypt", "Charm-Crypto AC17"]
+        primitive_subtitle = (
+            "Native schemes protect 32-byte key material; "
+            "Charm-Crypto AC17 uses a GT-element reference."
+        )
+        _plot_grouped_medians(
+            plt,
+            primitive,
+            charts / "00_abe_primitive_comparison.png",
+            "ABE Key-Protection Primitive Comparison",
+            primitive_subtitle,
+            primitive_ops,
+            primitive_series,
+            lambda row: row.scheme,
+            dpi=240,
+        )
+        _plot_grouped_medians(
+            plt,
+            primitive,
+            charts / "00_abe_primitive_comparison_log.png",
+            "ABE Key-Protection Primitive Comparison",
+            primitive_subtitle + " Log scale exposes low-latency candidates.",
+            primitive_ops,
+            primitive_series,
+            lambda row: row.scheme,
+            dpi=240,
+            log_scale=True,
+        )
+
     core = rec.find(suite="core")
     if core:
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ops = ["setup", "keygen", "encrypt", "decrypt"]
-        series = [(scheme, mode) for scheme in SCHEMES.values() for mode in ("file", "buffer")]
-        x = list(range(4))
-        width = 0.12
-        for idx, (scheme, mode) in enumerate(series):
-            vals = []
-            for op in ops:
-                rows = rec.find(suite="core", scheme=scheme, mode=mode, operation=op)
-                vals.append(rows[0].stats["median_ms"] if rows else 0)
-            offset = (idx - (len(series) - 1) / 2) * width
-            ax.bar([v + offset for v in x], vals, width, label=f"{scheme} {mode}")
-        ax.set_xticks(x, ["Setup", "KeyGen", "Encrypt", "Decrypt"])
-        ax.set_ylabel("Median latency (ms)")
-        ax.set_title("Native CP-ABE Core Performance")
-        ax.legend()
-        ax.grid(axis="y", alpha=0.2)
-        fig.tight_layout()
-        fig.savefig(charts / "01_core_latency.png", dpi=220)
-        plt.close(fig)
+        core_ops = [
+            ("setup", "Setup"),
+            ("keygen", "KeyGen"),
+            ("encrypt", "Encrypt"),
+            ("decrypt", "Decrypt"),
+        ]
+        preferred_core_series = [
+            f"{scheme} {mode}"
+            for scheme in SCHEMES.values()
+            for mode in ("file", "buffer")
+        ]
+        core_subtitle = (
+            "Only series present in this run are shown; missing modes are omitted, "
+            "not plotted as 0 ms."
+        )
+        _plot_grouped_medians(
+            plt,
+            core,
+            charts / "01_core_latency.png",
+            "Native CP-ABE Core Performance",
+            core_subtitle,
+            core_ops,
+            preferred_core_series,
+            lambda row: f"{row.scheme} {row.mode}",
+            dpi=220,
+        )
+        _plot_grouped_medians(
+            plt,
+            core,
+            charts / "01_core_latency_log.png",
+            "Native CP-ABE Core Performance",
+            core_subtitle + " Log scale exposes low-latency candidates.",
+            core_ops,
+            preferred_core_series,
+            lambda row: f"{row.scheme} {row.mode}",
+            dpi=220,
+            log_scale=True,
+        )
+
+        core_series = []
+        for scheme in SCHEMES.values():
+            for mode in ("file", "buffer"):
+                if any(row.scheme == scheme and row.mode == mode for row in core):
+                    core_series.append((scheme, mode))
 
         fig, ax = plt.subplots(figsize=(9, 6))
         groups, labels = [], []
-        for scheme, mode in series:
+        for scheme, mode in core_series:
             rows = rec.find(suite="core", scheme=scheme, mode=mode, operation="decrypt")
             if rows:
                 groups.append(rec.raw_for(rows[0].benchmark_id))
@@ -1091,7 +1425,8 @@ def make_charts(rec, out):
         for scheme in SCHEMES.values():
             for op in ("encrypt", "decrypt"):
                 sub = sorted(rec.find(suite="policy_scaling", scheme=scheme, operation=op), key=lambda r: r.policy_attributes)
-                ax.plot([r.policy_attributes for r in sub], [r.stats["median_ms"] for r in sub], marker="o", label=f"{scheme} {op}")
+                if sub:
+                    ax.plot([r.policy_attributes for r in sub], [r.stats["median_ms"] for r in sub], marker="o", label=f"{scheme} {op}")
         ax.set_xlabel("Distinct attributes in AND policy")
         ax.set_ylabel("Median latency (ms)")
         ax.set_title("Policy Complexity Scaling")
@@ -1233,19 +1568,21 @@ policy complexity scaling, and payload-size scaling.
 - File mode intentionally includes library disk I/O.
 - Buffer mode keeps key/data transfer in memory.
 - Every benchmark family performs a correctness check.
-- Baseline policy contains exactly {config['policy_attributes']} distinct
-  attributes; generated scaling labels therefore match the actual policy.
+- AC17/TKN20/Charm use {config['policy_attributes']} logical terms in the baseline policy.
+- CoverCrypt maps the same logical-term count across {config['covercrypt_dimension_count_effective']} dimensions,
+  OR within each dimension and AND between dimensions; this is not the same policy shape.
 - Baseline payload: {human_bytes(config['payload_bytes'])}.
 
 ## Charm-Crypto reference
 
 {"Charm-Crypto AC17 was available." if charm else "Charm-Crypto was unavailable and skipped."}
 
-Charm-Crypto is reported as a primitive reference, not as an apples-to-apples
-end-to-end equivalent. Charm AC17 encrypts a GT group element. The native
-library exposes a byte-oriented hybrid path that protects a random secret,
-derives an AES key, and encrypts data with AES-GCM. Universal speedup claims
-must not be inferred directly from this comparison.
+Charm-Crypto is reported inside the primitive-comparison suite as a reference,
+not as a byte-for-byte equivalent. Charm AC17 encrypts a GT group element.
+The three native scheme adapters protect the same 32-byte key material.
+CoverCrypt is a KEM, so its adapter uses the hybridized CoverCrypt shared secret
+with AES-GCM to wrap that key material. Universal speedup claims must not be
+inferred without this scope note.
 
 ## Environment
 
@@ -1254,6 +1591,16 @@ must not be inferred directly from this comparison.
 ## Configuration
 
 {json.dumps(config, indent=2)}
+
+## ABE key-protection primitive comparison
+
+{table(rec.find(suite="primitive_compare"))}
+
+Native AC17, TKN20, and CoverCrypt protect/recover the same 32-byte key material.
+CoverCrypt runs in hybridized mode (Curve25519 + ML-KEM-768) and, because it is
+a KEM, its adapter uses the CoverCrypt shared secret with AES-GCM to wrap that
+32-byte key material. Charm-Crypto AC17 is a GT-element reference and is not
+byte-for-byte equivalent.
 
 ## Native core
 
@@ -1279,13 +1626,15 @@ must not be inferred directly from this comparison.
 
 {table(rec.find(suite="payload_scaling"))}
 
-## Charm reference
-
-{table(rec.find(suite="charm_reference"))}
-
 ## Charts
 
+![ABE primitive comparison](charts/00_abe_primitive_comparison.png)
+
+![ABE primitive comparison - log scale](charts/00_abe_primitive_comparison_log.png)
+
 ![Core latency](charts/01_core_latency.png)
+
+![Core latency - log scale](charts/01_core_latency_log.png)
 
 ![Decrypt distribution](charts/02_decrypt_distribution.png)
 
@@ -1341,7 +1690,9 @@ This directory contains a reproducible benchmark snapshot for Hybrid PQ-CP-ABE L
 - Timed iterations: {config.get('iterations')}
 - Warm-up iterations: {config.get('warmup')}
 - Payload: {human_bytes(config.get('payload_bytes', 0))}
-- Policy: {config.get('policy_attributes')} distinct attributes
+- Policy terms: {config.get('policy_attributes')}
+- CoverCrypt dimensions: {config.get('covercrypt_dimension_count_effective')} (requested {config.get('covercrypt_dimension_count_requested')})
+- CoverCrypt rights-universe estimate: {config.get('covercrypt_rights_universe_estimate')}
 - Mode: {'showcase' if showcase else 'comprehensive'}
 
 ## Included artifacts
@@ -1350,6 +1701,7 @@ This directory contains a reproducible benchmark snapshot for Hybrid PQ-CP-ABE L
 - `summary.csv` — aggregated median/mean/p95/p99/CV statistics.
 - `raw_samples.csv` — every recorded timing sample; no outlier removal.
 - `benchmark_results.json` — machine-readable benchmark metadata and aggregate records.
+- `covercrypt_config.json` — persisted CoverCrypt dimensions used by this run.
 - `charts/` — generated benchmark figures.
 
 ## Scope
@@ -1358,14 +1710,14 @@ This directory contains a reproducible benchmark snapshot for Hybrid PQ-CP-ABE L
 
 The PQC measurements cover the end-to-end Sign-then-Encrypt path using ML-DSA-87.
 
-Charm-Crypto AC17 is {'included' if charm else 'not available and therefore skipped'} as an in-memory primitive reference. It is not a strict end-to-end equivalent of the native hybrid pipeline.
+Charm-Crypto AC17 is {'included' if charm else 'not available and therefore skipped'} as the GT-element reference in the primitive-comparison suite. Native AC17/TKN20/CoverCrypt protect the same 32-byte key material.
 
 ## Reproduce
 
 From the repository `benchmark/` directory:
 
 ```bash
-python benchmark_full.py --profile {config.get('profile')}{' --showcase' if showcase else ''}
+python benchmark_full.py --profile {config.get('profile')}{' --showcase' if showcase else ''} --covercrypt-dimensions {config.get('covercrypt_dimension_count_requested')}
 ```
 
 For a broader benchmark including File I/O, scaling tests, AES-GCM, and additional microbenchmarks:
@@ -1380,20 +1732,24 @@ python benchmark_full.py --profile full
 def args():
     p = argparse.ArgumentParser(description="Hybrid PQ-CP-ABE comprehensive benchmark")
     p.add_argument("--profile", choices=PROFILES, default="standard")
-    p.add_argument("--showcase", action="store_true", help="Run focused Buffer/PQC/ML-DSA/Charm showcase only")
+    p.add_argument("--showcase", action="store_true", help="Run focused primitive/Buffer/PQC/ML-DSA/Charm showcase only")
     p.add_argument("--repo-root")
     p.add_argument("--lib")
+    p.add_argument("--primitive-bridge", help="Path to benchmark-only native primitive bridge")
     p.add_argument("--output")
     p.add_argument("--iterations", type=int)
     p.add_argument("--warmup", type=int)
     p.add_argument("--payload-bytes", type=int, default=4096)
     p.add_argument("--policy-attributes", type=int, default=12)
+    p.add_argument("--covercrypt-dimensions", type=int, default=4,
+                   help="Number of CoverCrypt policy dimensions (default: 4)")
     p.add_argument("--seed", type=int, default=2026)
     p.add_argument("--no-file", action="store_true")
     p.add_argument("--no-pqc", action="store_true")
     p.add_argument("--no-micro", action="store_true")
     p.add_argument("--no-scaling", action="store_true")
     p.add_argument("--no-charm", action="store_true")
+    p.add_argument("--no-primitive", action="store_true", help="Skip native primitive comparison suite")
     p.add_argument("--quiet-native", action=argparse.BooleanOptionalAction, default=True)
     return p.parse_args()
 
@@ -1405,8 +1761,8 @@ def main():
         profile["iterations"] = a.iterations
     if a.warmup is not None:
         profile["warmup"] = a.warmup
-    if a.policy_attributes < 1 or a.payload_bytes < 1:
-        raise ValueError("policy attributes and payload bytes must be positive")
+    if a.policy_attributes < 1 or a.payload_bytes < 1 or a.covercrypt_dimensions < 1:
+        raise ValueError("policy attributes, payload bytes, and CoverCrypt dimensions must be positive")
 
     script = Path(__file__).resolve()
     root = repo_root(script, a.repo_root)
@@ -1433,11 +1789,23 @@ def main():
     max_covercrypt_attributes = max(
         [a.policy_attributes] + (profile["policy_sizes"] if not a.no_scaling and not a.showcase else [])
     )
-    covercrypt_config = configure_covercrypt(tmp, max_covercrypt_attributes)
+    covercrypt_config = configure_covercrypt(
+        out, max_covercrypt_attributes, a.covercrypt_dimensions, "covercrypt_config.json"
+    )
     covercrypt_dimensions = json.loads(covercrypt_config.read_text(encoding="utf-8"))["dimensions"]
     # Configure the environment before loading the native library. In particular,
     # Windows DLLs may initialize their C runtime's environment when loaded.
     native = Native(path)
+    primitive_bridge = None
+    primitive_bridge_path = None
+    if not a.no_primitive:
+        try:
+            primitive_bridge_path = find_primitive_bridge(root, a.primitive_bridge)
+            primitive_bridge = PrimitiveBridge(primitive_bridge_path, native)
+        except FileNotFoundError:
+            if a.showcase:
+                raise
+            print("Primitive comparison skipped: build with 'make benchmark-bridge'.")
 
     policy = policy_for(a.policy_attributes)
     attrs = attrs_for(a.policy_attributes)
@@ -1457,9 +1825,17 @@ def main():
         "include_micro": not a.no_micro,
         "include_scaling": (not a.no_scaling) and not a.showcase,
         "include_charm": not a.no_charm,
+        "include_primitive": primitive_bridge is not None,
+        "primitive_bridge": str(primitive_bridge_path) if primitive_bridge_path else None,
+        "primitive_key_material_bytes": 32,
         "covercrypt_mode": "hybridized",
         "covercrypt_config": str(covercrypt_config),
         "covercrypt_dimensions": covercrypt_dimensions,
+        "covercrypt_dimension_count_requested": a.covercrypt_dimensions,
+        "covercrypt_dimension_count_effective": len(covercrypt_dimensions),
+        "covercrypt_rights_universe_estimate": math.prod(
+            len(dimension["attributes"]) + 1 for dimension in covercrypt_dimensions
+        ),
         "covercrypt_policy_shape": "OR within each dimension, AND between dimensions",
         "covercrypt_max_policy_attributes": max_covercrypt_attributes,
         "library_path": str(path),
@@ -1485,10 +1861,27 @@ def main():
     random.Random(a.seed).shuffle(schemes)
 
     try:
-        print("[1/5] Native core")
+        print("[1/6] ABE key-protection primitive comparison")
+        if primitive_bridge is not None:
+            for scheme in schemes:
+                scheme_policy, scheme_attrs = (
+                    covercrypt_policy_attrs(a.policy_attributes, a.covercrypt_dimensions)
+                    if scheme == COVERCRYPT
+                    else (policy, attrs)
+                )
+                run_native_primitive(
+                    primitive_bridge, rec, scheme, scheme_policy, scheme_attrs,
+                    a.policy_attributes, profile["iterations"], profile["warmup"],
+                    a.quiet_native,
+                )
+        charm = False if a.no_charm else run_charm(
+            rec, profile["iterations"], profile["warmup"], policy, a.policy_attributes
+        )
+
+        print("[2/6] Native production core")
         for scheme in schemes:
             scheme_policy, scheme_attrs = (
-                covercrypt_policy_attrs(a.policy_attributes)
+                covercrypt_policy_attrs(a.policy_attributes, a.covercrypt_dimensions)
                 if scheme == COVERCRYPT
                 else (policy, attrs)
             )
@@ -1496,17 +1889,17 @@ def main():
             if not a.no_file and not a.showcase:
                 run_core_file(native, rec, scheme, payload, scheme_policy, scheme_attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native, tmp)
 
-        print("[2/5] PQC Sign-then-Encrypt")
+        print("[3/6] PQC Sign-then-Encrypt")
         if not a.no_pqc:
             for scheme in schemes:
                 scheme_policy, scheme_attrs = (
-                    covercrypt_policy_attrs(a.policy_attributes)
+                    covercrypt_policy_attrs(a.policy_attributes, a.covercrypt_dimensions)
                     if scheme == COVERCRYPT
                     else (policy, attrs)
                 )
                 run_pqc_buffer(native, rec, scheme, payload, scheme_policy, scheme_attrs, a.policy_attributes, profile["iterations"], profile["warmup"], a.quiet_native)
 
-        print("[3/5] Primitive microbenchmarks")
+        print("[4/6] Primitive microbenchmarks")
         if not a.no_micro:
             if not a.no_pqc:
                 mldsa_sizes = [a.payload_bytes] if a.showcase else profile["micro_sizes"]
@@ -1514,14 +1907,12 @@ def main():
             if not a.showcase:
                 run_aes(native, rec, profile["micro_sizes"], profile["micro_iterations"], profile["warmup"], a.quiet_native)
 
-        print("[4/5] Scaling")
+        print("[5/6] Scaling")
         if not a.no_scaling and not a.showcase:
-            run_policy_scaling(native, rec, profile["policy_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native)
-            run_payload_scaling(native, rec, profile["payload_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native, a.policy_attributes, not a.no_pqc)
+            run_policy_scaling(native, rec, profile["policy_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native, a.covercrypt_dimensions)
+            run_payload_scaling(native, rec, profile["payload_sizes"], profile["scale_iterations"], profile["warmup"], a.quiet_native, a.policy_attributes, not a.no_pqc, a.covercrypt_dimensions)
 
-        print("[5/5] Charm reference + outputs")
-        charm = False if a.no_charm else run_charm(rec, profile["iterations"], profile["warmup"], policy, a.policy_attributes)
-
+        print("[6/6] Outputs")
         write_data(rec, out, env, config)
         make_charts(rec, out)
         report(rec, out, env, config, charm)

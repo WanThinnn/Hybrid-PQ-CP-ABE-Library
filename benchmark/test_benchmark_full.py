@@ -20,6 +20,33 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CovercryptBenchmarkTests(unittest.TestCase):
+    def test_chart_series_uses_only_present_records(self):
+        rows = [
+            bench.Record(
+                "core|AC17|buffer|standard|setup|baseline",
+                "core", "AC17", "buffer", "standard", "setup", "baseline",
+                4096, 12, {"median_ms": 10.0}, {},
+            ),
+            bench.Record(
+                "core|CoverCrypt|buffer|standard|setup|baseline",
+                "core", "CoverCrypt", "buffer", "standard", "setup", "baseline",
+                4096, 12, {"median_ms": 2.0}, {},
+            ),
+        ]
+        preferred = [
+            "AC17 file", "AC17 buffer",
+            "TKN20 file", "TKN20 buffer",
+            "CoverCrypt file", "CoverCrypt buffer",
+        ]
+        data, series = bench._chart_series_data(
+            rows, preferred, lambda row: f"{row.scheme} {row.mode}"
+        )
+        self.assertEqual(series, ["AC17 buffer", "CoverCrypt buffer"])
+        self.assertEqual(data["AC17 buffer"]["setup"], 10.0)
+        self.assertEqual(data["CoverCrypt buffer"]["setup"], 2.0)
+        self.assertNotIn("AC17 file", data)
+        self.assertNotIn("TKN20 buffer", data)
+
     def test_policy_terms_fit_bounded_configuration(self):
         with tempfile.TemporaryDirectory() as directory:
             old_config = os.environ.get("HCPABE_COVERCRYPT_CONFIG")
@@ -29,7 +56,7 @@ class CovercryptBenchmarkTests(unittest.TestCase):
                     maximum = max(12, *profile["policy_sizes"])
                     config = json.loads(bench.configure_covercrypt(Path(directory), maximum).read_text())
                     dimensions = config["dimensions"]
-                    self.assertLessEqual(len(dimensions), 2)
+                    self.assertEqual(len(dimensions), min(4, maximum))
                     qualified = {
                         f"{d['name']}::{attribute}"
                         for d in dimensions for attribute in d["attributes"]
@@ -37,7 +64,7 @@ class CovercryptBenchmarkTests(unittest.TestCase):
                     self.assertEqual(len(qualified), maximum)
                     for count in profile["policy_sizes"]:
                         policy, attributes = bench.covercrypt_policy_attrs(count)
-                        terms = set(bench.re.findall(r"BENCH_[AB]::[AB]\d+", policy))
+                        terms = set(bench.re.findall(r"BENCH_D\d+::V\d+", policy))
                         self.assertEqual(len(terms), count)
                         self.assertTrue(terms <= qualified)
                         self.assertTrue(set(attributes.split()) <= terms)
@@ -66,13 +93,17 @@ bench.main()
                 completed = subprocess.run(
                     [sys.executable, "-u", "-c", worker, str(ROOT / "benchmark"),
                      "--profile", profile, "--showcase", "--iterations", "2",
-                     "--warmup", "1", "--no-micro", "--no-charm",
+                     "--warmup", "1", "--no-micro", "--no-charm", "--no-primitive",
                      "--lib", str(library), "--output", directory],
                     cwd=ROOT, capture_output=True, text=True, timeout=30,
                 )
                 self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
                 result = json.loads((Path(directory) / "benchmark_results.json").read_text())
-                self.assertEqual(len(result["config"]["covercrypt_dimensions"]), 2)
+                self.assertEqual(len(result["config"]["covercrypt_dimensions"]), 4)
+                self.assertEqual(result["config"]["covercrypt_rights_universe_estimate"], 256)
+                self.assertTrue((Path(directory) / "covercrypt_config.json").is_file())
+                self.assertTrue((Path(directory) / "charts" / "01_core_latency.png").is_file())
+                self.assertTrue((Path(directory) / "charts" / "01_core_latency_log.png").is_file())
                 records = result["records"]
                 self.assertEqual(len(records), 7)
                 self.assertTrue(all(record["scheme"] == "CoverCrypt" for record in records))

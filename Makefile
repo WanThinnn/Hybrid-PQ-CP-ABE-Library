@@ -68,6 +68,8 @@ CRYPTO_DIR = src/crypto
 LIB_DIR = lib
 TEST_DIR = tests/cpp
 TEST_CASE_DIR = $(TEST_DIR)/cases
+BENCHMARK_BRIDGE_SRC = benchmark/native_primitive_bridge.cpp
+BENCHMARK_BRIDGE_DIR = $(BUILD_DIR)/benchmark
 
 SRCS = $(SCHEMES_DIR)/ac17.cpp \
        $(SCHEMES_DIR)/tkn20.cpp \
@@ -134,6 +136,7 @@ ifeq ($(COMPILER),msvc)
     EXEC = $(BUILD_DIR)/main.exe
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.lib
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test.exe
+    BENCHMARK_BRIDGE = $(BENCHMARK_BRIDGE_DIR)/native_primitive_bridge.dll
 
     WIN_STATIC_DEPS = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.lib $(DEPS_LIB_DIR)/liboqs/liboqs.lib $(DEPS_LIB_DIR)/rabe/librabe_ffi.lib $(COVERCRYPT_LIB)
     TKN20_IMPORT_LIB = $(DEPS_LIB_DIR)/tkn20/libcpabe_tkn20.lib
@@ -171,6 +174,11 @@ else
     EXEC = $(BUILD_DIR)/main
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.a
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test
+    ifeq ($(PLATFORM),macos)
+        BENCHMARK_BRIDGE = $(BENCHMARK_BRIDGE_DIR)/libnative_primitive_bridge.dylib
+    else
+        BENCHMARK_BRIDGE = $(BENCHMARK_BRIDGE_DIR)/libnative_primitive_bridge.so
+    endif
 
     CRYPTOPP_LIB = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.a
     RABE_LIB = $(DEPS_LIB_DIR)/rabe/librabe_ffi.a
@@ -193,7 +201,7 @@ else
 	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(LIB_VERSION)"' '#endif' > "$@"
 endif
 
-.PHONY: all clean deps clean-deps executable shared static help test tests abi-info vault test-vault clean-vault
+.PHONY: all clean deps clean-deps executable shared static benchmark-bridge help test tests abi-info vault test-vault clean-vault
 
 all: static shared executable
 	@echo "================================================================"
@@ -230,6 +238,7 @@ help:
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the CLI"
+	@echo "  make benchmark-bridge Build the benchmark-only primitive bridge"
 	@echo "  make test -j8        Build incrementally and run tests"
 	@echo "  make tests -j8       Alias for make test -j8"
 	@echo "  make vault -j8       Build Vault on Linux against the current shared core"
@@ -325,6 +334,9 @@ $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL): | $(DEPS_READY)
 $(BUILD_DIR) $(LIB_DIR):
 	@if not exist "$(subst /,\,$@)" mkdir "$(subst /,\,$@)"
 
+$(BENCHMARK_BRIDGE_DIR): | $(BUILD_DIR)
+	@if not exist "$(subst /,\,$@)" mkdir "$(subst /,\,$@)"
+
 # Keep the runtime beside the public DLL even on an otherwise up-to-date build.
 $(PUBLISHED_TKN20_DLL): $(TKN20_DLL) | $(LIB_DIR)
 	@copy /Y "$(subst /,\,$<)" "$(subst /,\,$@)" >nul
@@ -366,6 +378,9 @@ $(SHARED_LIB): $(SHARED_OBJS) $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL
 	@echo Done! Shared library: $@
 
 executable: $(EXEC) $(PUBLISHED_TKN20_DLL)
+
+benchmark-bridge:
+	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-benchmark-bridge.ps1
 
 $(EXEC): $(MAIN_OBJ) $(STATIC_LIB) $(TKN20_IMPORT_LIB) $(TKN20_DLL) | $(BUILD_DIR)
 	$(CXX) /nologo /Fe:"$(subst /,\,$@)" "$(subst /,\,$(MAIN_OBJ))" $(LDFLAGS) "$(subst /,\,$(STATIC_LIB))" $(foreach l,$(WIN_LINK_DEPS),"$(subst /,\,$(l))") $(WIN_SYSTEM_LIBS)
@@ -441,6 +456,17 @@ $(SHARED_LIB): $(OBJS) $(STATIC_LIBS_GCC) Makefile
 	@echo Done! Shared library: $(SHARED_LIB)
 
 executable: $(EXEC)
+
+benchmark-bridge: $(BENCHMARK_BRIDGE)
+
+$(BENCHMARK_BRIDGE): $(BENCHMARK_BRIDGE_SRC) $(STATIC_LIB)
+	@mkdir -p $(BENCHMARK_BRIDGE_DIR)
+ifeq ($(PLATFORM),macos)
+	$(CXX) $(CXXFLAGS) -dynamiclib $(BENCHMARK_BRIDGE_SRC) $(STATIC_LIB) -o "$@" $(LDFLAGS)
+else
+	$(CXX) $(CXXFLAGS) -shared $(BENCHMARK_BRIDGE_SRC) $(STATIC_LIB) -o "$@" $(LDFLAGS)
+endif
+	@echo Done! Benchmark primitive bridge: $@
 
 $(EXEC): $(MAIN_OBJ) $(STATIC_LIB) $(STATIC_LIBS_GCC)
 	@mkdir -p $(BUILD_DIR)
