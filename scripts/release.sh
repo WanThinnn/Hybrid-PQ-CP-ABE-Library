@@ -7,7 +7,7 @@ cd "$ROOT"
 
 usage() {
     echo "Usage: ./scripts/release.sh <version> [--dry-run]"
-    echo "Example: ./scripts/release.sh 5.2.1"
+    echo "Example: ./scripts/release.sh 6.0.0"
     echo "GitHub Actions builds Windows, Linux, macOS Intel and macOS Apple Silicon."
 }
 
@@ -25,7 +25,7 @@ for arg in "$@"; do
     esac
 done
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-    echo "A version such as 5.2.1 or 5.2.1-rc1 is required." >&2
+    echo "A version such as 6.0.0 or 6.0.0-rc1 is required." >&2
     usage
     exit 2
 fi
@@ -44,6 +44,7 @@ echo "Release assets (after every CI build and test passes):"
 for platform in win_x86_64 linux_x86_64 macos_x86_64 macos_arm64; do
     echo "  - libhybrid-pq-cp-abe_${platform}_${TAG}.zip"
 done
+echo "  - vault-plugin-abe_linux_x86_64_${TAG}.zip"
 echo "  - SHA256SUMS.txt"
 echo
 if [[ "$DRY_RUN" == true ]]; then
@@ -57,9 +58,10 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 FILE_VERSION="$(tr -d '\r\n' < VERSION)"
-API_VERSION="$(sed -n 's/.*LIB_VERSION = "\([^"]*\)";.*/\1/p' include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h)"
-if [[ "$FILE_VERSION" != "$VERSION" || "$API_VERSION" != "$VERSION" ]]; then
-    echo "Update and commit VERSION and LIB_VERSION to $VERSION before releasing." >&2
+# VERSION is the source of truth. The ignored version.h is generated at build
+# time; release preparation must also work in a fresh clone without that file.
+if [[ "$FILE_VERSION" != "$VERSION" ]]; then
+    echo "Update and commit VERSION to $VERSION before releasing (currently $FILE_VERSION)." >&2
     exit 1
 fi
 if [[ ! -f "release_notes/$TAG.md" ]]; then
@@ -94,4 +96,4 @@ git push origin "$CURRENT_BRANCH"
 git tag -a "$TAG" -m "Release $TAG"
 git push origin "refs/tags/$TAG"
 echo "Tag $TAG pushed. Follow the Release Library workflow in GitHub Actions."
-echo "The release assets will be attached after all four native jobs succeed."
+echo "The release assets will be attached after all four native jobs and Linux Vault checks succeed."

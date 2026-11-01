@@ -394,16 +394,17 @@ Special thanks to [Aya0wind](https://github.com/Aya0wind) for Rabe-ffi, [Cloudfl
 
 Pushing a `v*` tag or publishing a GitHub Release builds and tests Windows x64
 (MSVC), Linux x86_64, macOS Intel, and macOS Apple Silicon on native runners.
-All four ZIP packages and `SHA256SUMS.txt` are attached only after every build
+All four native SDK ZIPs, the Linux Vault ZIP and `SHA256SUMS.txt` are attached only after every build
 and package check succeeds. Running the workflow manually builds downloadable
 Actions artifacts without publishing a release. Packages include the CLI,
 static/shared libraries, headers, dependency libraries, and license notices.
 
 The workflow must be committed before creating the tag/release. Historical
 prebuilt files tracked by Git LFS are not used. Use
-`./scripts/release.sh 5.2.1 --dry-run` to preview the four platform packages.
-After committing the release changes, `./scripts/release.sh 5.2.1` checks version
-metadata and release notes, asks before pushing, then pushes the branch and tag.
+`./scripts/release.sh 6.0.0 --dry-run` to preview the native and Linux Vault packages.
+After committing the release changes, `./scripts/release.sh 6.0.0` checks the
+root `VERSION` file and release notes, asks before pushing, then pushes the branch and tag.
+The public version header is generated during builds and need not exist when tagging.
 It refuses to replace an existing tag. The helper always releases all four
 targets and does not accept per-platform flags.
 
