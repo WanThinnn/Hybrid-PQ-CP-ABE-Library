@@ -254,6 +254,12 @@ chmod +x configure
 . ./build/tools/activate.sh
 ```
 
+For a custom Linux/macOS toolchain with an explicitly controlled `PATH`, use
+`HCPABE_CONFIGURE_DISCOVER_PATHS=0 ./configure`. This disables automatic search
+paths for bundled Go, Cargo and Homebrew; ordinary checks retain discovery by
+default. Configure tests use this mode so runner-installed tools cannot hide
+the missing/old tool versions being tested.
+
 Linux installation supports apt, dnf, pacman and zypper. Go is downloaded from
 the official Go release metadata with SHA256 verification when needed. macOS
 uses Apple Command Line Tools and Homebrew; finish any Apple installer dialog

@@ -46,6 +46,9 @@ make_ok() {
     printf '%s\n' "$version" | awk 'NR==1 {exit !($1=="GNU" && $2=="Make" && $3+0>=4)}'
 }
 refresh_path() {
+    # Custom toolchains and hermetic checks can opt out of implicit host paths.
+    # Keep discovery enabled by default for ordinary fresh-machine setup.
+    if [ "${HCPABE_CONFIGURE_DISCOVER_PATHS:-1}" = 0 ]; then return 0; fi
     PATH="$ROOT/build/tools/go/bin:${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
     if have brew; then PATH="$(brew --prefix)/opt/make/libexec/gnubin:$PATH"; fi
     export PATH

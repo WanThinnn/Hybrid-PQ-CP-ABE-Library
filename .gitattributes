@@ -6,3 +6,6 @@ plugins/vault/Dockerfile text eol=lf
 plugins/vault/tests/*.sh text eol=lf
 scripts/build-vault.go text eol=lf
 scripts/release.sh text eol=lf
+# cmd.exe CALL/label parsing requires CRLF even when CI uses autocrlf=input.
+*.bat text eol=crlf
+*.cmd text eol=crlf

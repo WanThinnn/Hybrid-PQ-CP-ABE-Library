@@ -64,7 +64,14 @@ esac
             else:
                 posix_path = str(path)
             env = dict(os.environ, CONFIGURE_TEST_PATH=posix_path + "/bin:/usr/bin:/bin",
-                       CONFIGURE_TEST_HOME=posix_path, CONFIGURE_TEST_TRACE=posix_path + "/installed")
+                       CONFIGURE_TEST_HOME=posix_path, CONFIGURE_TEST_TRACE=posix_path + "/installed",
+                       HCPABE_CONFIGURE_DISCOVER_PATHS="0")
+            # Simulate a modern host tool found by auto-discovery (as on macOS
+            # runners). Explicit test PATH must still expose the old Go stub.
+            auto = path / ".cargo/bin"
+            auto.mkdir(parents=True)
+            (auto / "go").write_text('#!/bin/sh\necho "go version go9.99.0 test/amd64"\n', newline="\n")
+            (auto / "go").chmod(0o755)
             for system in ("Linux", "Darwin"):
                 with self.subTest(system=system):
                     env["CONFIGURE_TEST_OS"] = system
@@ -124,7 +131,12 @@ esac
             else:
                 posix = str(path)
             env = dict(os.environ, CONFIGURE_TEST_PATH=posix + "/bin", CONFIGURE_TEST_HOME=posix,
-                       CONFIGURE_TEST_TRACE=posix + "/installed", CONFIGURE_TEST_FILE=str(path / "configure"))
+                       CONFIGURE_TEST_TRACE=posix + "/installed", CONFIGURE_TEST_FILE=str(path / "configure"),
+                       HCPABE_CONFIGURE_DISCOVER_PATHS="0")
+            auto = path / ".cargo/bin"
+            auto.mkdir(parents=True)
+            (auto / "cmake").write_text('#!/bin/sh\necho host-cmake\n', newline="\n")
+            (auto / "cmake").chmod(0o755)
             for system, manager in (("Linux", "apt-get"), ("Darwin", "brew")):
                 with self.subTest(system=system):
                     (commands / "cmake").unlink(missing_ok=True)
@@ -132,6 +144,8 @@ esac
                     env["CONFIGURE_TEST_OS"] = system
                     result = self.run_configure("--install", env=env)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertTrue((path / "installed").is_file(),
+                                    "Expected the mocked installer to run:\n" + result.stdout + result.stderr)
                     trace = (path / "installed").read_text()
                     self.assertIn(manager + " install", trace)
                     self.assertNotIn("unexpected-download", trace)
