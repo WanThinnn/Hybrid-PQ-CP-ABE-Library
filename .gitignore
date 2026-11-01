@@ -370,6 +370,8 @@ release_notes/pre-*
 env/
 venv/
 graphify-out/
+/plugins/vault/vault-plugin-abe/build/
+/plugins/vault/vault-plugin-abe/lib/
 bindings/python/test*
 !bindings/python/test_api.py
 test_api

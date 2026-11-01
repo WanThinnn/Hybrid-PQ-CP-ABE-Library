@@ -33,6 +33,18 @@ const char *getVersion(void)
     return HybridCPABE::LIB_VERSION;
 }
 
+int hybrid_cpabe_covercrypt_setupBuffer_from_json(const char *json, int mode,
+    unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return covercrypt_setupBuffer_from_json(json, mode, pkOut, pkLen, mskOut, mskOutLen);
+}
+
+int hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode(const unsigned char *msk, size_t mskLen,
+    const char *json, int mode, unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return covercrypt_add_dimensionBuffer_with_mode(msk, mskLen, json, mode, pkOut, pkLen, mskOut, mskOutLen);
+}
+
 int hybrid_cpabe_covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen,
     const char *dimension, const char *attribute, const char *after, unsigned char **pkOut,
     size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)

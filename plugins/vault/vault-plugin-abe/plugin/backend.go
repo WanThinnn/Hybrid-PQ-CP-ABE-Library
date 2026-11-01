@@ -3,6 +3,7 @@ package abe
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -11,6 +12,7 @@ import (
 // abeBackend defines the object for our backend
 type abeBackend struct {
 	*framework.Backend
+	authorityMu sync.RWMutex
 }
 
 // Factory creates a new backend instance
@@ -31,11 +33,12 @@ func backend() *abeBackend {
 		PathsSpecial: &logical.Paths{
 			SealWrapStorage: []string{
 				"config",
-				"msk",
+				"msk/",
 			},
 		},
 		Paths: []*framework.Path{
 			pathSetup(&b),
+			pathAddDimension(&b),
 			pathGenKey(&b),
 			pathEncrypt(&b),
 			pathDecrypt(&b),

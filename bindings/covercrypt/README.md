@@ -32,6 +32,13 @@ unused output names and leave the input authority unchanged. Keep both returned
 keys together and issue new user keys using the updated MSK.
 See [upstream update_msk](https://docs.rs/cosmian_cover_crypt/latest/cosmian_cover_crypt/struct.Covercrypt.html#method.update_msk).
 
+Server callers can use the public core functions
+`hybrid_cpabe_covercrypt_setupBuffer_from_json` and
+`hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode` with explicit JSON and
+mode (0=classic, 1=post_quantum, 2=hybridized). They never read or modify process
+environment, allowing independent Vault mounts. The existing environment-based
+CLI/API remains available for standalone clients.
+
 Both `cc_genkey` and `cc_genkey_ephemeral` use restricted user-key generation:
 dimensions omitted from a user policy grant no attributes. For example, a user
 key for `Department::IT` cannot decrypt `Department::IT && Level::ADMIN`, but can

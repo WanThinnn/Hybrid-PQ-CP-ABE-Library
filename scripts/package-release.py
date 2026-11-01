@@ -16,6 +16,7 @@ import zipfile
 LIBRARY = "libhybrid-pq-cp-abe"
 TARGETS = (("linux", "x86_64"), ("windows", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64"))
+VAULT_TARGETS = (("linux", "x86_64"),)
 
 
 def version_string(value):
@@ -28,6 +29,12 @@ def version_string(value):
 def archive_name(target, arch, version):
     label = "win" if target == "windows" else target
     return f"{LIBRARY}_{label}_{arch}_v{version_string(version)}"
+
+
+def vault_archive_name(arch, version):
+    if ("linux", arch) not in VAULT_TARGETS:
+        raise ValueError(f"Unsupported Vault release architecture: {arch}")
+    return f"vault-plugin-abe_linux_{arch}_v{version_string(version)}"
 
 
 def require_file(path):
@@ -70,7 +77,7 @@ def license_files(source, destination):
                 shutil.copy2(item, output)
 
 
-def collect_notices(root, package):
+def collect_notices(root, package, include_vault=False):
     license_files(root / "vendor", package / "vendor")
     cargo = ["cargo"]
     fingerprint = root / "build/deps/windows/lib/rabe/.fingerprint"
@@ -98,8 +105,11 @@ def collect_notices(root, package):
                 shutil.copy2(license, destination / license.name)
         inventory.append({"ecosystem": "rust", "name": dependency["name"],
                           "version": dependency["version"], "license": dependency.get("license")})
-    modules = subprocess.check_output(["go", "list", "-m", "-json", "all"],
-                                      cwd=root / "bindings/tkn20", text=True, encoding="utf-8")
+    module_dirs = [root / "bindings/tkn20"]
+    if include_vault:
+        module_dirs.append(root / "plugins/vault/vault-plugin-abe")
+    modules = "\n".join(subprocess.check_output(["go", "list", "-m", "-json", "all"],
+                       cwd=directory, text=True, encoding="utf-8") for directory in module_dirs)
     decoder = json.JSONDecoder()
     while modules.strip():
         module, offset = decoder.raw_decode(modules.lstrip())
@@ -108,7 +118,8 @@ def collect_notices(root, package):
             continue
         resolved = module.get("Replace", module)
         if resolved.get("Dir"):
-            license_files(Path(resolved["Dir"]), package / "licenses/go" / module["Path"])
+            version = resolved.get("Version") or module.get("Version") or "local"
+            license_files(Path(resolved["Dir"]), package / "licenses/go" / module["Path"] / version)
         inventory.append({"ecosystem": "go", "name": module["Path"], "version": module.get("Version")})
     (package / "licenses").mkdir(exist_ok=True)
     (package / "licenses/dependencies.json").write_text(
@@ -148,6 +159,41 @@ def stage_package(root, package, target):
         "On Windows, link libhybrid-pq-cp-abe_dll.lib for the DLL or libhybrid-pq-cp-abe.lib for static use. Keep libcpabe_tkn20.dll beside the consuming executable. The MSVC runtime is required.\n"
         "On Linux/macOS, static consumers also link the platform system libraries shown in the repository Makefile; shared consumers configure their library search path.\n",
         encoding="utf-8")
+
+
+def stage_vault_package(root, package):
+    artifacts = root / "build/artifacts/linux/vault"
+    files = [require_file(artifacts / name) for name in ("vault-plugin-abe", f"{LIBRARY}.so")]
+    package.mkdir(parents=True)
+    for source in files:
+        shutil.copy2(source, package / source.name)
+    for name in ("LICENSE", "NOTICE", "VERSION"):
+        shutil.copy2(require_file(root / name), package / name)
+    for name in ("README.md", "TESTING.md"):
+        shutil.copy2(require_file(root / "plugins/vault" / name), package / name)
+    (package / "config").mkdir()
+    shutil.copy2(require_file(root / "scripts/covercrypt-demo.json"), package / "config/covercrypt-demo.json")
+    (package / "PACKAGE.md").write_text(
+        "# Vault plugin for Linux\n\n"
+        "Keep vault-plugin-abe and libhybrid-pq-cp-abe.so together in Vault's plugin_directory.\n"
+        "Register the executable's SHA-256 in the Vault plugin catalog.\n"
+        "Initialize with vault write abe/setup scheme=covercrypt config_json=@config/covercrypt-demo.json mode=hybridized.\n"
+        "JSON is sent by the client and stored per mount; no server-side configuration file is required.\n"
+        "Add dimensions through abe/add_dimension dimension_json=@dimension.json; retain the returned updated public key.\n"
+        "This is a native Linux package; match the CPU architecture and use a compatible glibc.\n"
+        "Third-party notices are included under vendor/ and licenses/.\n", encoding="utf-8")
+
+
+def verify_vault_runtime(root, archive):
+    # Loading the extracted package in a service container proves that no
+    # workspace library path or unshipped dependency is needed at runtime.
+    with tempfile.TemporaryDirectory(prefix="verify-vault-", dir=archive.parent) as directory:
+        with zipfile.ZipFile(archive) as zipped:
+            zipped.extractall(directory)
+        package = Path(directory) / archive.stem
+        (package / "vault-plugin-abe").chmod(0o755)
+        subprocess.run([os.sys.executable, str(root / "plugins/vault/tests/test_vault.py"),
+                        "--docker", "--artifact-dir", str(package.resolve())], cwd=root, check=True)
 
 
 def verify_runtime(archive, target):
@@ -203,6 +249,8 @@ def main():
     parser.add_argument("--arch", choices=("x86_64", "arm64"))
     parser.add_argument("--version")
     parser.add_argument("--verify-assets", type=Path)
+    parser.add_argument("--vault", action="store_true", help="Package the Linux Vault plugin instead of the native SDK")
+    parser.add_argument("--include-vault", action="store_true", help="Require Vault as well when verifying release assets")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     version = args.version or (os.environ.get("GITHUB_REF_NAME") if os.environ.get("GITHUB_REF_TYPE") == "tag"
@@ -210,11 +258,14 @@ def main():
     version = version_string(version)
     if args.verify_assets:
         expected = {archive_name(target, arch, version) + ".zip" for target, arch in TARGETS}
+        if args.include_vault:
+            expected.update(vault_archive_name(arch, version) + ".zip" for _, arch in VAULT_TARGETS)
         actual = {path.name for path in args.verify_assets.glob("*.zip")}
         if actual != expected:
             raise ValueError(f"Release assets mismatch: missing={expected - actual}, unexpected={actual - expected}")
         return
-    if (args.platform, args.arch) not in TARGETS:
+    targets = VAULT_TARGETS if args.vault else TARGETS
+    if (args.platform, args.arch) not in targets:
         parser.error("Specify a supported --platform and --arch")
     arch = {"AMD64": "x86_64", "aarch64": "arm64"}.get(host_platform.machine(), host_platform.machine())
     system = {"Windows": "windows", "Linux": "linux", "Darwin": "macos"}.get(host_platform.system())
@@ -222,15 +273,21 @@ def main():
         raise ValueError(f"Native runner mismatch: {(system, arch)} != {(args.platform, args.arch)}")
     output = root / "build/release"
     output.mkdir(parents=True, exist_ok=True)
-    name = archive_name(args.platform, args.arch, version)
+    name = vault_archive_name(args.arch, version) if args.vault else archive_name(args.platform, args.arch, version)
     with tempfile.TemporaryDirectory(prefix="stage-", dir=output) as directory:
         package = Path(directory) / name
-        stage_package(root, package, args.platform)
-        collect_notices(root, package)
-        prepare_shared_libraries(package, args.platform)
+        if args.vault:
+            stage_vault_package(root, package)
+        else:
+            stage_package(root, package, args.platform)
+            prepare_shared_libraries(package, args.platform)
+        collect_notices(root, package, include_vault=args.vault)
         archive = output / (name + ".zip")
         write_archive(package, archive)
-    verify_runtime(archive, args.platform)
+    if args.vault:
+        verify_vault_runtime(root, archive)
+    else:
+        verify_runtime(archive, args.platform)
     print(f"Verified release archive: {archive}")
 
 

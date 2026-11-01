@@ -35,12 +35,20 @@ extern "C"
      * Build configuration: Curve25519 provider + ML-KEM-768.
      */
     int cc_setup(const char *dimensions_json, int mode, cc_buffer *msk, cc_buffer *mpk);
+    /* Add a new dimension to the same authority. JSON is a single dimension:
+     * {"name":"E","attributes":["present","absent"],"hierarchical":false}.
+     * Persist both returned master keys. Existing USKs retain old rights;
+     * issue a new authorized USK to grant access to new attributes. */
+    int cc_add_dimension(const uint8_t *msk, size_t msk_len, const char *dimension_json,
+                         int mode, cc_buffer *updated_msk, cc_buffer *updated_mpk);
     /* Adds one attribute to an existing authority and returns the updated MSK/MPK.
      * after_or_null is only relevant for hierarchical dimensions; pass NULL otherwise. */
     int cc_add_attribute(const uint8_t *msk, size_t msk_len,
                          const char *dimension, const char *attribute, int mode,
                          const char *after_or_null, cc_buffer *updated_msk, cc_buffer *updated_mpk);
-    /* Persist updated_msk on success: key generation updates upstream authority state. */
+    /* User policies grant only explicitly named dimensions (including hierarchy
+     * inheritance). Omitted dimensions grant no attributes, never a wildcard.
+     * Persist updated_msk on success: generation updates authority state. */
     int cc_genkey(const uint8_t *msk, size_t msk_len, const char *policy,
                   cc_buffer *updated_msk, cc_buffer *usk);
     /* Stateless key generation for the existing Buffer API only. The input MSK

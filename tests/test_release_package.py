@@ -95,5 +95,41 @@ class ReleasePackageTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
 
 
+    def test_vault_package_requires_the_shared_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inputs = ["build/artifacts/linux/vault/vault-plugin-abe", "LICENSE", "NOTICE", "VERSION",
+                      "plugins/vault/README.md", "plugins/vault/TESTING.md", "scripts/covercrypt-demo.json"]
+            for name in inputs:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"fixture-package-input")
+            with self.assertRaises(FileNotFoundError):
+                PACKAGE.stage_vault_package(root, root / "package")
+            library = root / "build/artifacts/linux/vault/libhybrid-pq-cp-abe.so"
+            library.write_bytes(b"fixture-library")
+            package = root / "package"
+            PACKAGE.stage_vault_package(root, package)
+            for name in ("vault-plugin-abe", library.name, "config/covercrypt-demo.json", "PACKAGE.md"):
+                self.assertTrue((package / name).is_file(), name)
+
+    def test_publish_requires_linux_named_vault_asset_when_enabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            command = [sys.executable, str(SCRIPT), "--verify-assets", str(output),
+                       "--include-vault", "--version", "v6.0.0"]
+            for target, arch in PACKAGE.TARGETS:
+                (output / (PACKAGE.archive_name(target, arch, "6.0.0") + ".zip")).touch()
+            self.assertNotEqual(subprocess.run(command, capture_output=True).returncode, 0)
+            name = PACKAGE.vault_archive_name("x86_64", "6.0.0") + ".zip"
+            self.assertEqual(name, "vault-plugin-abe_linux_x86_64_v6.0.0.zip")
+            asset = output / name
+            asset.touch()
+            result = subprocess.run(command, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            asset.rename(output / name.replace("_linux_", "_windows_"))
+            self.assertNotEqual(subprocess.run(command, capture_output=True).returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

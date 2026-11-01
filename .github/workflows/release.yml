@@ -46,8 +46,10 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: bindings/tkn20/go.mod
-          cache-dependency-path: bindings/tkn20/go.sum
+          go-version-file: ${{ matrix.platform == 'linux' && 'plugins/vault/vault-plugin-abe/go.mod' || 'bindings/tkn20/go.mod' }}
+          cache-dependency-path: |
+            bindings/tkn20/go.sum
+            plugins/vault/vault-plugin-abe/go.sum
 
       - name: Install Linux build tools
         if: runner.os == 'Linux'
@@ -102,6 +104,11 @@ jobs:
       - name: Test release packaging checks
         run: python -m unittest discover -s tests -p test_release_package.py
 
+      - name: Build and test Linux Vault plugin
+        if: runner.os == 'Linux'
+        # Compilation uses the runner toolchain. Docker only runs Vault service.
+        run: make test-vault -j4
+
       - name: Test configure without installing host packages
         run: python -m unittest discover -s tests -p test_configure.py -v
 
@@ -140,10 +147,22 @@ jobs:
           python -m unittest discover -s tests -p test_version_header.py -v
           python scripts/package-release.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
 
+      - name: Package and verify Linux Vault archive
+        if: runner.os == 'Linux'
+        # Naming includes _linux_; verification loads the extracted archive in Vault.
+        run: python scripts/package-release.py --vault --platform linux --arch ${{ matrix.arch }}
+
       - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.platform }}-${{ matrix.arch }}
-          path: build/release/*.zip
+          path: build/release/libhybrid-pq-cp-abe_*.zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Linux'
+        with:
+          name: release-vault_linux_${{ matrix.arch }}
+          path: build/release/vault-plugin-abe_linux_*.zip
           if-no-files-found: error
 
   publish:
@@ -164,12 +183,12 @@ jobs:
           path: build/release
           merge-multiple: true
 
-      - name: Verify all four packages and prepare checksums
+      - name: Verify all four native packages plus Linux Vault and prepare checksums
         id: notes
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          python scripts/package-release.py --verify-assets build/release --version "$RELEASE_TAG"
+          python scripts/package-release.py --verify-assets build/release --include-vault --version "$RELEASE_TAG"
           cd build/release
           sha256sum *.zip > SHA256SUMS.txt
           cd ../..

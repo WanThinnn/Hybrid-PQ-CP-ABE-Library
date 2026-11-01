@@ -10,7 +10,6 @@ import "C"
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"unsafe"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -28,7 +27,7 @@ func pathGenKey(b *abeBackend) *framework.Path {
 			},
 			"scheme": {
 				Type:        framework.TypeString,
-				Description: "ABE Scheme (ac17 or tkn20)",
+				Description: "ABE Scheme (ac17, tkn20 or covercrypt)",
 				Default:     "ac17",
 			},
 		},
@@ -43,6 +42,8 @@ func pathGenKey(b *abeBackend) *framework.Path {
 }
 
 func (b *abeBackend) pathGenKeyWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	b.authorityMu.RLock()
+	defer b.authorityMu.RUnlock()
 	attributes := data.Get("attributes").(string)
 	schemeStr := data.Get("scheme").(string)
 
@@ -50,25 +51,22 @@ func (b *abeBackend) pathGenKeyWrite(ctx context.Context, req *logical.Request, 
 		return logical.ErrorResponse("attributes are required"), nil
 	}
 
-	var cScheme C.CPABEScheme
-	if schemeStr == "tkn20" {
-		cScheme = C.CPABE_SCHEME_TKN20
-	} else if schemeStr == "ac17" {
-		cScheme = C.CPABE_SCHEME_AC17
-	} else {
-		return logical.ErrorResponse("unsupported scheme. Use 'ac17' or 'tkn20'"), nil
+	cScheme, err := nativeScheme(schemeStr)
+	if err != nil {
+		return logical.ErrorResponse(err.Error()), nil
 	}
-
-	// Read MSK from storage
-	storageEntry, err := req.Storage.Get(ctx, "msk/abe")
+	state, err := loadAuthority(ctx, req.Storage)
 	if err != nil {
 		return nil, err
 	}
-	if storageEntry == nil || len(storageEntry.Value) == 0 {
+	if state == nil || len(state.MSK) == 0 {
 		return logical.ErrorResponse("MSK not found. Please run setup first."), nil
 	}
+	if state.Scheme != "" && state.Scheme != schemeStr {
+		return logical.ErrorResponse("scheme differs from the stored authority; use " + state.Scheme), nil
+	}
 
-	mskBytes := storageEntry.Value
+	mskBytes := state.MSK
 	mskBuffer := (*C.uchar)(C.CBytes(mskBytes))
 	defer C.free(unsafe.Pointer(mskBuffer))
 
@@ -85,7 +83,7 @@ func (b *abeBackend) pathGenKeyWrite(ctx context.Context, req *logical.Request, 
 		cScheme)
 
 	if res != C.HCPABE_SUCCESS {
-		return nil, errors.New("failed to generate ABE secret key")
+		return logical.ErrorResponse(nativeError("genkey", res).Error()), nil
 	}
 
 	defer FreeCBytes(skBuffer)

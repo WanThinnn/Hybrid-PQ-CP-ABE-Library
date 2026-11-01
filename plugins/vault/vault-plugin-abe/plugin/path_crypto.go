@@ -10,8 +10,6 @@ import "C"
 import (
 	"context"
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"unsafe"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -39,7 +37,7 @@ func pathEncrypt(b *abeBackend) *framework.Path {
 			},
 			"scheme": {
 				Type:        framework.TypeString,
-				Description: "ABE Scheme (ac17 or tkn20)",
+				Description: "ABE Scheme (ac17, tkn20 or covercrypt)",
 				Default:     "ac17",
 			},
 			"pqc_private_key": {
@@ -87,6 +85,8 @@ func pathDecrypt(b *abeBackend) *framework.Path {
 }
 
 func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	b.authorityMu.RLock()
+	defer b.authorityMu.RUnlock()
 	ptBase64 := data.Get("plaintext").(string)
 	policy := data.Get("policy").(string)
 	pkBase64 := data.Get("public_key").(string)
@@ -97,13 +97,9 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 		return logical.ErrorResponse("plaintext, policy, and public_key are required"), nil
 	}
 
-	var cScheme C.CPABEScheme
-	if schemeStr == "tkn20" {
-		cScheme = C.CPABE_SCHEME_TKN20
-	} else if schemeStr == "ac17" {
-		cScheme = C.CPABE_SCHEME_AC17
-	} else {
-		return logical.ErrorResponse("unsupported scheme. Use 'ac17' or 'tkn20'"), nil
+	cScheme, err := nativeScheme(schemeStr)
+	if err != nil {
+		return logical.ErrorResponse(err.Error()), nil
 	}
 
 	ptBytes, err := base64.StdEncoding.DecodeString(ptBase64)
@@ -130,9 +126,12 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 
 	var pqcSkBytes []byte
 	if pqcSkBase64 == "" {
-		storageEntry, err := req.Storage.Get(ctx, "msk/pqc")
-		if err == nil && storageEntry != nil {
-			pqcSkBytes = storageEntry.Value
+		state, err := loadAuthority(ctx, req.Storage)
+		if err != nil {
+			return nil, err
+		}
+		if state != nil {
+			pqcSkBytes = state.PQCSecret
 		}
 	} else {
 		var err error
@@ -163,12 +162,7 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 	}
 
 	if res != C.HCPABE_SUCCESS {
-		pkPreview := "invalid_or_short"
-		if len(pkBytes) > 10 {
-			pkPreview = string(pkBytes[:10])
-		}
-		b.Logger().Error("encryption failed in C++ backend", "res", int(res), "len_pt", len(ptBytes), "len_pqc_sk", len(pqcSkBytes), "len_pk", len(pkBytes), "pk_preview", pkPreview, "policy", policy)
-		return logical.ErrorResponse(fmt.Sprintf("encryption failed with error code: %d", int(res))), nil
+		return logical.ErrorResponse(nativeError("encrypt", res).Error()), nil
 	}
 
 	defer FreeCBytes(ctBuffer)
@@ -231,7 +225,7 @@ func (b *abeBackend) pathDecryptWrite(ctx context.Context, req *logical.Request,
 	}
 
 	if res != C.HCPABE_SUCCESS {
-		return nil, errors.New("decryption failed or unauthorized access")
+		return logical.ErrorResponse(nativeError("decrypt", res).Error()), nil
 	}
 
 	defer FreeCBytes(ptBuffer)

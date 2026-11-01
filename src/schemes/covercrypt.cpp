@@ -246,7 +246,8 @@ int grow_file(const char *mskFile, const char *outPrefix, Operation operation)
 }
 } // namespace
 
-int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
+int covercrypt_setupBuffer_from_json(const char *json, int mode, unsigned char **pkBuffer, size_t *pkLen,
+                                     unsigned char **mskBuffer, size_t *mskLen)
 {
     if (!pkBuffer || !pkLen || !mskBuffer || !mskLen || pkBuffer == mskBuffer || pkLen == mskLen)
         return HCPABE_ERR_INVALID_PARAM;
@@ -255,21 +256,29 @@ int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned cha
     *mskBuffer = nullptr;
     *mskLen = 0;
     return run([&] {
-        const char *configuration = std::getenv("HCPABE_COVERCRYPT_CONFIG");
-        if (!configuration || !*configuration)
-            throw Error{HCPABE_ERR_INVALID_PARAM};
-        std::string json;
-        if (!LoadFile(configuration, json, "Original"))
-            throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-        int mode = configured_mode();
         Buffer secret, public_key;
-        check(cc_setup(json.c_str(), mode, &secret.value, &public_key.value));
+        check(cc_setup(json, mode, &secret.value, &public_key.value));
         auto pk = copy(public_key.value.data, public_key.value.len);
         auto msk = copy(secret.value.data, secret.value.len);
         *pkLen = public_key.value.len;
         *mskLen = secret.value.len;
         *pkBuffer = pk.release();
         *mskBuffer = msk.release();
+    });
+}
+
+int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
+{
+    if (!pkBuffer || !pkLen || !mskBuffer || !mskLen || pkBuffer == mskBuffer || pkLen == mskLen)
+        return HCPABE_ERR_INVALID_PARAM;
+    *pkBuffer = nullptr; *pkLen = 0; *mskBuffer = nullptr; *mskLen = 0;
+    return run([&] {
+        const char *path = std::getenv("HCPABE_COVERCRYPT_CONFIG");
+        if (!path || !*path) throw Error{HCPABE_ERR_INVALID_PARAM};
+        std::string json;
+        if (!LoadFile(path, json, "Original")) throw Error{HCPABE_ERR_FILE_NOT_FOUND};
+        int status = covercrypt_setupBuffer_from_json(json.c_str(), configured_mode(), pkBuffer, pkLen, mskBuffer, mskLen);
+        if (status != HCPABE_SUCCESS) throw Error{status};
     });
 }
 
@@ -451,9 +460,18 @@ int covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen, cons
     });
 }
 
+int covercrypt_add_dimensionBuffer_with_mode(const unsigned char *msk, size_t mskLen, const char *json, int mode,
+    unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+{
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
+        return cc_add_dimension(msk, mskLen, json, mode, secret, pub);
+    });
+}
+
 int covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen, const char *json,
     unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
 {
+    // Keep the environment-based CLI/legacy API while servers use explicit mode.
     return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
         return cc_add_dimension(msk, mskLen, json, configured_mode(), secret, pub);
     });

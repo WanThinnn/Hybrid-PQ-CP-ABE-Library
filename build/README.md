@@ -7,6 +7,7 @@ directly into `build/`:
 | --- | --- |
 | `deps/<platform>/` | Staged dependency headers/libraries, ready marker and dependency build cache |
 | `artifacts/<platform>/` | Project binaries, object files and platform tests |
+| `artifacts/linux/vault/` | Linux-built Vault plugin and its shared native runtime |
 | `logs/` | Build, test and diagnostic logs; older logs are under `logs/archive/` |
 | `reports/covercrypt/` | CoverCrypt cost and KeyGen measurements |
 | `reports/benchmarks/` | Local benchmark verification runs |
@@ -20,5 +21,5 @@ output subdirectories when needed.
 
 `make deps -j8` owns dependency setup. Normal core builds reuse the existing
 ready marker. `make clean` removes project core/object output;
-`make deps-clean` removes dependency output for the current platform. Neither
+`make clean-deps` removes dependency output for the current platform. Neither
 command is intended to remove archived logs, reports or release packages.

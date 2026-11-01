@@ -212,8 +212,17 @@ extern "C"
     LIB_API int ml_dsa_87_verify(const unsigned char *msg, size_t msg_len, const unsigned char *sig, size_t sig_len, const unsigned char *pk);
 
     // ========================================================================
-    // CoverCrypt Authority Growth
+    // CoverCrypt JSON Configuration and Authority Growth
     // ========================================================================
+    // Explicit configuration APIs never read or modify process environment.
+    // mode: 0=classic, 1=post_quantum, 2=hybridized. JSON is text, not a path.
+    // Returned buffers are owned by this library; release using freeBuffer.
+    LIB_API int hybrid_cpabe_covercrypt_setupBuffer_from_json(
+        const char *configJson, int mode, unsigned char **pkOut, size_t *pkLen,
+        unsigned char **mskOut, size_t *mskOutLen);
+    LIB_API int hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode(
+        const unsigned char *msk, size_t mskLen, const char *dimensionJson, int mode,
+        unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
     // Grow a CoverCrypt authority without running setup again. Input MSK is
     // unchanged. Both updated PK and MSK must be retained. New user rights
     // require a newly issued authorized user key; old keys keep old rights.

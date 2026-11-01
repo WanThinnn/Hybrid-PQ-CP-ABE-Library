@@ -320,7 +320,7 @@ The native C++ library, Crypto++, and liboqs use the dynamic MSVC runtime (`/MD`
 
 After `make`, the build prints the exact include, dependency-library, native-library, shared-library, runtime-DLL, and CLI output paths. `include/` and `lib/` at the repository root are project-only: `include/hybrid_pq_cp_abe/` contains the public Hybrid-CP-ABE API, while `lib/` contains the project static and shared libraries side by side. All third-party headers/libraries stay exclusively under `build/deps/<platform>/`.
 
-Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make deps-clean` to remove the complete dependency output for the current platform.
+Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make clean-deps` to remove the complete dependency output for the current platform.
 
 See [build/README.md](build/README.md) for the output layout. Keep logs under
 `build/logs/`, local reports under `build/reports/`, and temporary fixtures under
@@ -328,13 +328,16 @@ See [build/README.md](build/README.md) for the output layout. Keep logs under
 
 **Available Make Commands:**
 - `make deps -j8`: Build/check the five native dependencies and print their final include/library layout.
-- `make -j8`: Build the native C++ core directly from the existing dependency output. It only auto-builds dependencies when the ready marker is missing (fresh clone or after `make deps-clean`).
-- `make deps-clean`: Remove `build/deps/<platform>/`.
+- `make -j8`: Build the native C++ core directly from the existing dependency output. It only auto-builds dependencies when the ready marker is missing (fresh clone or after `make clean-deps`).
+- `make clean-deps`: Remove `build/deps/<platform>/`.
 - `make static`: Build only the project static library.
 - `make shared`: Build only the project shared library.
 - `make executable`: Build only the CLI executable.
 - `make test -j8`: Incrementally build and run the tests.
 - `make tests -j8`: Alias for `make test -j8`.
+- `make vault -j8`: Build the Vault plugin on Linux against the current shared core.
+- `make test-vault -j8`: Build/test on Linux, then run HTTP tests with only the Vault service in Docker.
+- `make clean-vault`: Remove only the Linux Vault plugin output under `build/artifacts/linux/vault/`.
 - `make abi-info`: Show the platform ABI/toolchain policy.
 - `make clean`: Remove only project core/object output.
 

@@ -64,6 +64,8 @@ int tkn20_load_sk(const char *file, unsigned char **skData, size_t *skLen);
 
 int covercrypt_setup(const char *path);
 int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen);
+int covercrypt_setupBuffer_from_json(const char *json, int mode, unsigned char **pkOut, size_t *pkLen,
+                                     unsigned char **mskOut, size_t *mskOutLen);
 int covercrypt_genkey(const char *mskFile, const char *attrs, const char *skFile);
 int covercrypt_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer,
                             size_t *skLen);
@@ -82,6 +84,8 @@ int covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen, cons
                                   size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
 int covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen, const char *dimensionJson,
                                   unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
+int covercrypt_add_dimensionBuffer_with_mode(const unsigned char *msk, size_t mskLen, const char *json, int mode,
+                                            unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen);
 int covercrypt_add_attribute(const char *mskFile, const char *dimension, const char *attribute,
                             const char *after, const char *outPrefix);
 int covercrypt_add_dimension(const char *mskFile, const char *dimensionJson, const char *outPrefix);
