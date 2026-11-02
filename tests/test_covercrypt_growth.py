@@ -87,6 +87,11 @@ class CovercryptGrowthTests(unittest.TestCase):
             config.write_text(json.dumps({'dimensions': [
                 {'name': name, 'attributes': ['present', 'absent']} for name in 'ABCD'
             ]}))
+            # This test requires E regardless of edits to the interactive demo.
+            dimension = root / 'add-e.json'
+            dimension.write_text(json.dumps({
+                'name': 'E', 'attributes': ['present', 'absent'], 'hierarchical': False
+            }))
             env = dict(os.environ, HCPABE_COVERCRYPT_CONFIG=str(config), HCPABE_COVERCRYPT_MODE='hybridized')
             old, grown = root / 'old', root / 'grown'
             self.call('setup', '--scheme', 'covercrypt', '--pqc', old, env=env)
@@ -98,7 +103,7 @@ class CovercryptGrowthTests(unittest.TestCase):
             plain.write_bytes(b'Existing encrypted data\x00\xff')
             self.call('encrypt', '--scheme', 'covercrypt', old_pk, plain, 'A::present && B::present', before, env=env)
             self.call('add_dimension', '--scheme', 'covercrypt', old_msk,
-                      ROOT / 'scripts/covercrypt-add-e.json', grown, env=env)
+                      dimension, grown, env=env)
             new_msk, new_pk = Path(str(grown) + '_msk.key'), Path(str(grown) + '_pk.key')
             self.assertTrue(new_msk.is_file() and new_pk.is_file())
             for path, value in original.items():
@@ -124,9 +129,9 @@ class CovercryptGrowthTests(unittest.TestCase):
             # Duplicate dimensions and reused output names fail without touching files.
             pair = {path: path.read_bytes() for path in (new_msk, new_pk)}
             self.call('add_dimension', '--scheme', 'covercrypt', old_msk,
-                      ROOT / 'scripts/covercrypt-add-e.json', grown, env=env, allowed=False)
+                      dimension, grown, env=env, allowed=False)
             self.call('add_dimension', '--scheme', 'covercrypt', new_msk,
-                      ROOT / 'scripts/covercrypt-add-e.json', root / 'invalid', env=env, allowed=False)
+                      dimension, root / 'invalid', env=env, allowed=False)
             self.assertFalse((root / 'invalid_msk.key').exists())
             for path, value in pair.items():
                 self.assertEqual(path.read_bytes(), value)

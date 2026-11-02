@@ -144,6 +144,8 @@ jobs:
 
       - name: Package and verify release archive
         # Both platform build steps above have completed before these CLI checks.
+        # bash -e also stops Windows on any failed Python test, not just the last command.
+        shell: bash
         run: |
           python -m unittest discover -s tests -p test_cli_covercrypt_demo.py -v
           python -m unittest discover -s tests -p test_covercrypt_boolean.py -v
