@@ -6,16 +6,20 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 usage() {
-    echo "Usage: ./scripts/release.sh <version> [--dry-run]"
+    echo "Usage: ./scripts/release.sh <version> [--dry-run] [--replace-tag]"
     echo "Example: ./scripts/release.sh 6.0.0"
+    echo "Retry an unpublished release: ./scripts/release.sh 6.0.0 --replace-tag"
+    echo "--replace-tag removes existing local/origin tags after confirmation."
     echo "GitHub Actions builds Windows, Linux, macOS Intel and macOS Apple Silicon."
 }
 
 VERSION=""
 DRY_RUN=false
+REPLACE_TAG=false
 for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=true ;;
+        --replace-tag) REPLACE_TAG=true ;;
         --help|-h) usage; exit 0 ;;
         --*) echo "Unknown option: $arg. Releases always build all platforms." >&2; usage; exit 2 ;;
         *)
@@ -48,6 +52,9 @@ echo "  - vault-plugin-abe_linux_x86_64_${TAG}.zip"
 echo "  - SHA256SUMS.txt"
 echo
 if [[ "$DRY_RUN" == true ]]; then
+    if [[ "$REPLACE_TAG" == true ]]; then
+        echo "Would replace existing local/origin tag $TAG at the current commit after confirmation."
+    fi
     echo "Dry run: no files, commits, tags, or remotes were changed."
     exit 0
 fi
@@ -68,16 +75,22 @@ if [[ ! -f "release_notes/$TAG.md" ]]; then
     echo "Missing release notes: release_notes/$TAG.md" >&2
     exit 1
 fi
+LOCAL_TAG=false
 if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
+    LOCAL_TAG=true
+fi
+if [[ "$LOCAL_TAG" == true && "$REPLACE_TAG" != true ]]; then
     echo "Local tag $TAG already exists; refusing to replace it." >&2
+    echo "To retry an unpublished release, use --replace-tag." >&2
     exit 1
 fi
 if ! REMOTE_TAG="$(git ls-remote --tags origin "refs/tags/$TAG")"; then
     echo "Could not check origin for an existing release tag." >&2
     exit 1
 fi
-if [[ -n "$REMOTE_TAG" ]]; then
+if [[ -n "$REMOTE_TAG" && "$REPLACE_TAG" != true ]]; then
     echo "Remote tag $TAG already exists; refusing to replace it." >&2
+    echo "To retry an unpublished release, use --replace-tag." >&2
     exit 1
 fi
 if ! CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD)"; then
@@ -85,7 +98,13 @@ if ! CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD)"; then
     exit 1
 fi
 
-read -r -p "Push branch $CURRENT_BRANCH and release tag $TAG? (y/n): " -n 1 REPLY
+if [[ "$REPLACE_TAG" == true && ( "$LOCAL_TAG" == true || -n "$REMOTE_TAG" ) ]]; then
+    echo "Existing tag $TAG will be removed and recreated at $(git rev-parse --short HEAD)."
+    echo "Use a new version instead if this release has already been distributed."
+    read -r -p "Replace tag $TAG and push branch $CURRENT_BRANCH? (y/n): " -n 1 REPLY
+else
+    read -r -p "Push branch $CURRENT_BRANCH and release tag $TAG? (y/n): " -n 1 REPLY
+fi
 echo
 if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
     echo "Release cancelled."
@@ -93,6 +112,17 @@ if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
 fi
 
 git push origin "$CURRENT_BRANCH"
+if [[ "$REPLACE_TAG" == true ]]; then
+    if [[ -n "$REMOTE_TAG" ]]; then
+        # Delete only the exact tag inspected in preflight; concurrent updates
+        # must stop this release rather than silently deleting somebody's tag.
+        REMOTE_OID="${REMOTE_TAG%%[[:space:]]*}"
+        git push --force-with-lease="refs/tags/$TAG:$REMOTE_OID" origin ":refs/tags/$TAG"
+    fi
+    if [[ "$LOCAL_TAG" == true ]]; then
+        git tag -d "$TAG"
+    fi
+fi
 git tag -a "$TAG" -m "Release $TAG"
 git push origin "refs/tags/$TAG"
 echo "Tag $TAG pushed. Follow the Release Library workflow in GitHub Actions."

@@ -81,7 +81,7 @@ if [ "$INSTALL" = 1 ]; then
         refresh_path
     else
         missing=0
-        for tool in make cmake gcc g++ git curl python3 tar; do
+        for tool in make cmake gcc g++ gcc-ar git curl python3 tar; do
             have "$tool" || missing=1
         done
         if [ "$missing" = 1 ]; then
@@ -158,7 +158,7 @@ fi
 missing=0
 echo "Toolchain check: $OS"
 tools='make cmake git curl python3 cargo rustc rustup'
-if [ "$OS" = Darwin ]; then tools="$tools clang++"; else tools="$tools gcc g++"; fi
+if [ "$OS" = Darwin ]; then tools="$tools clang++"; else tools="$tools gcc g++ gcc-ar"; fi
 for tool in $tools; do
     if have "$tool" && "$tool" --version >/dev/null 2>&1; then
         echo "[OK] $tool: $(command -v "$tool")"

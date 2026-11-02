@@ -52,7 +52,7 @@ case "$name" in
   *) echo test-tool ;;
 esac
 """
-            for name in ("uname", "go", "make", "brew", "cmake", "gcc", "g++",
+            for name in ("uname", "go", "make", "brew", "cmake", "gcc", "g++", "gcc-ar",
                          "clang++", "git", "curl", "python3", "cargo", "rustc",
                          "rustup", "apt-get", "sudo"):
                 file = commands / name
@@ -115,7 +115,7 @@ case "$name" in
 esac
 """
             for name in ("uname", "id", "go", "make", "xcode-select", "apt-get", "brew",
-                         "gcc", "g++", "clang++", "git", "curl", "python3", "cargo", "rustc", "rustup", "tar"):
+                         "gcc", "g++", "gcc-ar", "clang++", "git", "curl", "python3", "cargo", "rustc", "rustup", "tar"):
                 file = commands / name
                 file.write_text(stub, encoding="utf-8", newline="\n")
                 file.chmod(0o755)

@@ -437,7 +437,10 @@ else
 	  "addlib $(OQS_LIB)" \
 	  "addlib $(CRYPTOPP_LIB)" \
 	  "save" "end" > $(BUILD_DIR)/merge.mri
-	ar -M < $(BUILD_DIR)/merge.mri
+	# gcc-ar selects GCC's plugin explicitly. Plain ar may auto-load an old
+	# LLVMgold plugin which claims Rust objects, fails to read their newer
+	# embedded LLVM bitcode, and silently omits native symbols from the index.
+	gcc-ar -M < $(BUILD_DIR)/merge.mri
 	@rm -f $(BUILD_DIR)/merge.mri
 endif
 
