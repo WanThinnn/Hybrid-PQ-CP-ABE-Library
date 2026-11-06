@@ -170,55 +170,88 @@ before encryption.
 
 ### Published Benchmark Snapshot
 
-A reproducible benchmark snapshot is published under [`benchmark/published/2026-10-25_i5-12450HX_standard/`](benchmark/published/2026-10-25_i5-12450HX_standard/).
+A reproducible v6.0.0 benchmark snapshot is published under
+[`benchmark/published/2026-11-01_i5-12450HX_standard/`](benchmark/published/2026-11-01_i5-12450HX_standard/).
 
 Benchmark environment:
 
 - **CPU:** Intel Core i5-12450HX
-- **Library:** v5.2.0
+- **OS:** Windows 10
+- **Library:** v6.0.0
 - **Profile:** Standard
 - **Timed iterations:** 100 after 5 warm-up iterations
 - **Payload:** 4 KiB
-- **Policy:** 12 distinct attributes
+- **Policy:** 12 terms; CoverCrypt uses 4 dimensions in Hybridized mode
 - **Primary metric:** Median latency
 - **Outlier policy:** No samples removed
 
-| Implementation | Setup | KeyGen | Encrypt | Decrypt |
-| --- | ---: | ---: | ---: | ---: |
-| **AC17 Buffer** | 24.165 ms | 144.200 ms | 148.099 ms | **38.539 ms** |
-| **TKN20 Buffer** | **14.710 ms** | 310.463 ms | **122.048 ms** | **30.654 ms** |
-| **Charm-Crypto AC17** | 90.553 ms | 207.685 ms | 136.268 ms | 303.351 ms |
+Native Buffer API median latency:
 
 <p align="center">
-  <img src="benchmark/published/2026-10-25_i5-12450HX_standard/charts/01_core_buffer_vs_charm.png" alt="AC17, TKN20 and Charm-Crypto AC17 benchmark" width="900"/>
+  <img src="benchmark/published/2026-11-01_i5-12450HX_standard/charts/01_core_latency.png" alt="Native AC17, TKN20 and CoverCrypt core latency" width="900"/>
 </p>
 
-The largest separation in this run appears in **decryption latency**: AC17 Buffer measured **38.539 ms**, TKN20 Buffer **30.654 ms**, and Charm-Crypto AC17 **303.351 ms**. TKN20 also produced the lowest setup and encryption medians in this test, while its KeyGen operation was the most expensive of the three.
+| Scheme | Setup | KeyGen | Encrypt | Decrypt |
+| --- | ---: | ---: | ---: | ---: |
+| **AC17 Buffer** | 27.184 ms | 146.720 ms | 155.622 ms | 39.902 ms |
+| **TKN20 Buffer** | **10.639 ms** | 248.388 ms | 110.973 ms | **32.720 ms** |
+| **CoverCrypt Buffer** | 34.372 ms | **1.101 ms** | **12.529 ms** | 92.342 ms |
+
+These are 4 KiB payload measurements. CoverCrypt ran in Hybridized mode
+(Curve25519 + ML-KEM-768); its 12-term policy spans four dimensions, with OR
+within each dimension and AND between dimensions.
+
+The primitive comparison measures protection and recovery of 32-byte key
+material. Charm-Crypto AC17 is included as a GT-element reference, not as a
+byte-for-byte equivalent:
+
+| Implementation | Setup | KeyGen | Protect | Recover |
+| --- | ---: | ---: | ---: | ---: |
+| **AC17** | 23.650 ms | 148.970 ms | 147.055 ms | 36.620 ms |
+| **TKN20** | **8.071 ms** | 253.420 ms | 114.548 ms | **29.901 ms** |
+| **CoverCrypt** | 40.511 ms | **1.921 ms** | **18.991 ms** | 72.000 ms |
+| **Charm-Crypto AC17** | 85.063 ms | 204.176 ms | 142.135 ms | 293.191 ms |
+
+<p align="center">
+  <img src="benchmark/published/2026-11-01_i5-12450HX_standard/charts/00_abe_primitive_comparison.png" alt="ABE key-protection primitive comparison" width="900"/>
+</p>
 
 ### Post-Quantum Signature Cost
 
-ML-DSA-87 primitive measurements for the same published run:
+ML-DSA-87 primitive measurements for a 4 KiB message:
 
 | Operation | Median |
 | --- | ---: |
-| KeyGen | 0.404 ms |
-| Sign | 0.783 ms |
-| Verify | 0.276 ms |
+| KeyGen | 0.552 ms |
+| Sign | 1.135 ms |
+| Verify | 0.644 ms |
 
-In the end-to-end Sign-then-Encrypt benchmark, the measured differences between the standard and ML-DSA-87 paths were smaller than the normal CP-ABE run-to-run variation. The primitive results are therefore the more useful signal for the actual cost of the post-quantum signature layer.
+The benchmark also measures the end-to-end ML-DSA-87 Sign-then-Encrypt path.
+Those timings include the ABE and payload operations, so they should not be
+interpreted as isolated signature cost. See the snapshot report for per-scheme
+results and variability.
+
+<p align="center">
+  <img src="benchmark/published/2026-11-01_i5-12450HX_standard/charts/03_pqc_overhead.png" alt="ML-DSA-87 Sign-then-Encrypt overhead by scheme" width="900"/>
+</p>
 
 ### Reproducibility
 
 The published snapshot includes:
 
-- [`report.md`](benchmark/published/2026-10-25_i5-12450HX_standard/report.md) — methodology, environment, results, and interpretation notes.
-- [`summary.csv`](benchmark/published/2026-10-25_i5-12450HX_standard/summary.csv) — median, mean, p95, p99, standard deviation, and coefficient of variation.
-- [`raw_samples.csv`](benchmark/published/2026-10-25_i5-12450HX_standard/raw_samples.csv) — every recorded timing sample.
-- [`benchmark_results.json`](benchmark/published/2026-10-25_i5-12450HX_standard/benchmark_results.json) — machine-readable results and benchmark metadata.
+- [`report.md`](benchmark/published/2026-11-01_i5-12450HX_standard/report.md) — methodology, environment, results, and interpretation notes.
+- [`summary.csv`](benchmark/published/2026-11-01_i5-12450HX_standard/summary.csv) — median, mean, p95, p99, standard deviation, and coefficient of variation.
+- [`raw_samples.csv`](benchmark/published/2026-11-01_i5-12450HX_standard/raw_samples.csv) — every recorded timing sample.
+- [`benchmark_results.json`](benchmark/published/2026-11-01_i5-12450HX_standard/benchmark_results.json) — machine-readable results and benchmark metadata.
+- [`charts/`](benchmark/published/2026-11-01_i5-12450HX_standard/charts/) — generated benchmark figures.
 - [`benchmark/`](benchmark/) — scripts and instructions required to reproduce the tests.
 
 > [!IMPORTANT]
-> **Benchmark comparison scope:** the native AC17/TKN20 measurements use the library's in-memory Buffer API and its byte-oriented hybrid pipeline. Charm-Crypto AC17 is also measured in memory, but its API operates directly on a GT group element. Charm is therefore included as a useful reference implementation rather than a strict end-to-end equivalent. The published results should not be interpreted as a universal speedup ratio across all workloads.
+> **Benchmark comparison scope:** native AC17/TKN20 use the in-memory Buffer
+> API and byte-oriented hybrid pipeline. CoverCrypt uses its shared KEM secret
+> with AES-GCM to wrap key material. Charm-Crypto AC17 operates on a GT group
+> element, so it is a reference rather than a strict equivalent. Results are
+> specific to this machine and workload, not universal speedup claims.
 
 > [!NOTE]
 > This library provides native C/C++ integrations for **AC17**, **TKN20**, and
