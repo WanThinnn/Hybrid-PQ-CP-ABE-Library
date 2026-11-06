@@ -3,10 +3,18 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 
 
 > [!NOTE]
-> This library natively includes **Post-Quantum Cryptography (PQC)** integration using `liboqs` (specifically ML-DSA-87 signatures). It introduces a secure "Sign-then-Encrypt" architecture to prevent Surreptitious Forwarding attacks.
+> This library provides two distinct PQC capabilities: optional **ML-DSA-87**
+> signatures in the Sign-then-Encrypt flow through `liboqs`, and native
+> **CoverCrypt** key encapsulation with **ML-KEM-768** in `hybridized` or
+> `post_quantum` mode. ML-DSA-87 signatures alone do not make AC17 or TKN20
+> quantum-resistant.
 
 > [!IMPORTANT]
-> AC17 and TKN20 remain classical pairing-based ABE. The current source also integrates native CoverCrypt with Curve25519 + ML-KEM-768 (Hybridized by default). ML-DSA-87 signing is optional for every scheme. Historical v5.2 benchmark results below describe AC17/TKN20 only.
+> AC17 and TKN20 remain classical pairing-based ABE. CoverCrypt uses
+> Curve25519 + ML-KEM-768 by default (`hybridized` mode), or can be configured
+> for `post_quantum` or `classic` mode. ML-DSA-87 signing is optional and
+> independent of the CoverCrypt mode. Historical v5.2 benchmark results below
+> describe AC17/TKN20 only.
 
 ## Native interface and source layout
 
@@ -38,8 +46,12 @@ each prefixed with its scheme name. The public library interface remains in
 
 For CoverCrypt setup, set `HCPABE_COVERCRYPT_CONFIG` to the path of a JSON
 configuration. Set `HCPABE_COVERCRYPT_MODE` to `hybridized` (default),
-`post_quantum` or `classic`. Applications load their own `.env` files and map
-their scheme setting to the enum; the library reads the process environment.
+`post_quantum` or `classic`. `hybridized` combines Curve25519 with ML-KEM-768;
+`post_quantum` uses the post-quantum mode, while `classic` selects the
+classical mode. This setting controls CoverCrypt's key-encapsulation
+confidentiality; it is separate from the optional ML-DSA-87 signing flag.
+Applications load their own `.env` files and map their scheme setting to the
+enum; the library reads the process environment.
 
 ```json
 {"dimensions":[{"name":"admin","attributes":["present","absent"]},{"name":"it","attributes":["present","absent"]}]}
@@ -56,6 +68,26 @@ with `Department::{IT,HR}` and `Level::{USER,ADMIN}`. Run `main --help` for CMD,
 PowerShell and Linux/macOS environment commands and a setup/keygen/encrypt/decrypt
 example. The demo contains only attribute definitions, not keys. Setup requires
 `HCPABE_COVERCRYPT_CONFIG`; the CLI does not automatically read `.env` files.
+
+### Native PQC with CoverCrypt
+
+CoverCrypt's native PQC mode protects the ABE key-encapsulation path with
+ML-KEM-768. It does not require the `--pqc` signing option. For example, on
+Linux/macOS:
+
+```sh
+export HCPABE_COVERCRYPT_CONFIG=scripts/covercrypt-demo.json
+export HCPABE_COVERCRYPT_MODE=hybridized
+mkdir -p keys
+build/artifacts/linux/main setup --scheme covercrypt ./keys/demo
+build/artifacts/linux/main genkey --scheme covercrypt ./keys/demo_msk.key "Department::IT Level::ADMIN" ./keys/user.key
+```
+
+Use `post_quantum` to select CoverCrypt's post-quantum mode or `classic` for
+its classical mode. The default is `hybridized`. The optional `--pqc` flag is
+a separate feature: it adds ML-DSA-87 signing/verification to the
+Sign-then-Encrypt flow for any scheme. AC17 and TKN20 remain classical ABE
+schemes regardless of that flag.
 
 User keys grant only the named dimensions and their hierarchy inheritance. A
 `Department::IT` key can decrypt that department's policy, but cannot decrypt
@@ -119,7 +151,12 @@ old revisions). Growth does not revoke previously issued keys.
 
 ## Performance & Benchmarks
 
-The library uses a **hybrid KEM/DEM-style architecture**: CP-ABE protects a randomly generated secret under the access policy, SHA3-256 derives the AES-256 key, and AES-GCM handles the bulk payload. The optional post-quantum path adds **ML-DSA-87 Sign-then-Encrypt** before the payload enters the hybrid encryption pipeline.
+The library uses a **hybrid KEM/DEM-style architecture**: ABE protects a
+randomly generated secret under the access policy, SHA3-256 derives the
+AES-256 key, and AES-GCM handles the bulk payload. CoverCrypt's `hybridized`
+or `post_quantum` mode uses ML-KEM-768 in the ABE encapsulation path.
+Separately, the optional `--pqc` path adds **ML-DSA-87 Sign-then-Encrypt**
+before the payload enters the hybrid encryption pipeline.
 
 For the current binary format, AES-GCM authenticates the header as AAD:
 
@@ -184,7 +221,9 @@ The published snapshot includes:
 > **Benchmark comparison scope:** the native AC17/TKN20 measurements use the library's in-memory Buffer API and its byte-oriented hybrid pipeline. Charm-Crypto AC17 is also measured in memory, but its API operates directly on a GT group element. Charm is therefore included as a useful reference implementation rather than a strict end-to-end equivalent. The published results should not be interpreted as a universal speedup ratio across all workloads.
 
 > [!NOTE]
-> This library is specialized around **AC17** and **TKN20** CP-ABE with a native C/C++ integration surface. For projects that need a broader research-oriented collection of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.
+> This library provides native C/C++ integrations for **AC17**, **TKN20**, and
+> **CoverCrypt**. For projects that need a broader research-oriented collection
+> of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.
 
 ## Repository Layout
 
@@ -213,9 +252,9 @@ build/artifacts/        Core build output grouped by platform
 - [CryptoPP Library](https://github.com/weidai11/cryptopp)
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
 - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2020/733) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
-- [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - required for PQC Signatures)
+- [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - used for optional ML-DSA-87 signatures)
 - [HashiCorp Vault Secrets Engine](plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
-- [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (vendored for the optional post-quantum integration; see `vendor/cover_crypt/`)
+- [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (native ABE integration with Classic, PostQuantum and Hybridized modes; see `vendor/cover_crypt/`)
 
 > [!NOTE]
 >
@@ -377,7 +416,14 @@ main encrypt --scheme tkn20 "test_case/cpabe_pk.key" "test_case/plaintext.txt" "
 main decrypt "test_case/cpabe_sk.key" "test_case/ciphertext.txt" "test_case/recovertext.txt"
 ```
 
-Example commands (Post-Quantum Mode):
+Example commands (Optional ML-DSA-87 Signatures):
+
+The `--pqc` option enables ML-DSA-87 Sign-then-Encrypt signatures; it does not
+change the ABE scheme's confidentiality properties. AC17 and TKN20 remain
+classical. To use native post-quantum key encapsulation, select CoverCrypt and
+set `HCPABE_COVERCRYPT_MODE` to `hybridized` (default) or `post_quantum` as
+described above.
+
 ```sh
 main setup --scheme tkn20 --pqc test_case
 main genkey --scheme tkn20 "test_case/cpabe_msk.key" "A B C" "test_case/cpabe_sk.key"
