@@ -37,6 +37,7 @@ func backend() *abeBackend {
 			},
 		},
 		Paths: []*framework.Path{
+			pathAuthority(&b),
 			pathSetup(&b),
 			pathAddDimension(&b),
 			pathGenKey(&b),

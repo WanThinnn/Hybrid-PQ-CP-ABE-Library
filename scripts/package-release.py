@@ -169,7 +169,7 @@ def stage_vault_package(root, package):
         shutil.copy2(source, package / source.name)
     for name in ("LICENSE", "NOTICE", "VERSION"):
         shutil.copy2(require_file(root / name), package / name)
-    for name in ("README.md", "TESTING.md"):
+    for name in ("README.md", "TESTING.md", "AUTHORITY.md"):
         shutil.copy2(require_file(root / "plugins/vault" / name), package / name)
     (package / "config").mkdir()
     shutil.copy2(require_file(root / "scripts/covercrypt-demo.json"), package / "config/covercrypt-demo.json")
@@ -177,7 +177,8 @@ def stage_vault_package(root, package):
         "# Vault plugin for Linux\n\n"
         "Keep vault-plugin-abe and libhybrid-pq-cp-abe.so together in Vault's plugin_directory.\n"
         "Register the executable's SHA-256 in the Vault plugin catalog.\n"
-        "Initialize with vault write abe/setup scheme=covercrypt config_json=@config/covercrypt-demo.json mode=hybridized.\n"
+        "Initialize with vault write abe/setup scheme=covercrypt config_json=@config/covercrypt-demo.json mode=hybridized create_only=true.\n"
+        "Read AUTHORITY.md for compact public keys, recovery, storage compatibility and rollback.\n"
         "JSON is sent by the client and stored per mount; no server-side configuration file is required.\n"
         "Add dimensions through abe/add_dimension dimension_json=@dimension.json; retain the returned updated public key.\n"
         "This is a native Linux package; match the CPU architecture and use a compatible glibc.\n"
@@ -193,7 +194,7 @@ def verify_vault_runtime(root, archive):
         package = Path(directory) / archive.stem
         (package / "vault-plugin-abe").chmod(0o755)
         subprocess.run([os.sys.executable, str(root / "plugins/vault/tests/test_vault.py"),
-                        "--docker", "--artifact-dir", str(package.resolve())], cwd=root, check=True)
+                        "--docker", "--raft", "--artifact-dir", str(package.resolve())], cwd=root, check=True)
 
 
 def verify_runtime(archive, target):

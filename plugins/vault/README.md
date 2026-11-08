@@ -59,7 +59,8 @@ the same library's `freeBuffer` function.
 
 `make test-vault` first runs backend tests with real native cryptography, then
 starts an isolated Vault development service in Docker, registers the already
-built Linux plugin and tests its HTTP endpoints. The runtime image contains
+built Linux plugin and tests its HTTP endpoints against single-node Raft with
+default entry/request limits. The runtime image contains
 Vault and runtime dependencies only: it has no compiler and never builds the
 plugin. The test mounts the Linux artifacts read-only, uses a random localhost
 port and a unique container name, and removes only its own container afterward.
@@ -69,6 +70,12 @@ See [TESTING.md](TESTING.md) for test coverage and manual HTTP testing.
 
 ## Covercrypt configuration and API
 
+For large authorities, compact public-key transport, create-only provisioning,
+encryption metadata and safe recovery, see the [authority contract](AUTHORITY.md).
+New provisioning clients should pass `create_only=true`. Small public keys still
+default to Base64; `auto` transport returns a fingerprint-bound reference above
+256 KiB of raw key data. Both forms work with the existing encrypt endpoint.
+
 Send JSON text directly with `config_json`. With Vault CLI, `@file` reads a
 file on the **client**, not on the Vault server. No Covercrypt file, environment
 variable or JSON volume mount is required on the server. Each mount stores its
@@ -76,7 +83,7 @@ own JSON and mode alongside its keys. Modes are `classic`, `post_quantum`, and
 `hybridized` (default); `pqc=true` independently enables ML-DSA.
 
 ```sh
-vault write abe/setup scheme=covercrypt config_json=@scripts/covercrypt-demo.json mode=hybridized pqc=true
+vault write abe/setup scheme=covercrypt config_json=@scripts/covercrypt-demo.json mode=hybridized pqc=true create_only=true
 vault write abe/genkey scheme=covercrypt attributes="Department::IT Level::ADMIN"
 vault write abe/encrypt scheme=covercrypt public_key="<BASE64_PK>" plaintext="aGVsbG8=" policy="Department::IT && Level::ADMIN"
 vault write abe/decrypt secret_key="<BASE64_SK>" ciphertext="<BASE64_CT>" pqc_public_key="<BASE64_PQC_PK>"
@@ -109,8 +116,9 @@ to grant E:
 vault write abe/genkey scheme=covercrypt attributes="Department::IT Level::ADMIN E::present"
 ```
 
-The MSK, PK, JSON and mode are committed in one seal-wrapped Vault record;
-signing keys are retained. Malformed JSON, duplicate dimensions or failed
+The MSK, PK, JSON and mode are committed together through one seal-wrapped
+record or a manifest pointing to immutable chunks; signing keys are retained.
+Malformed JSON, duplicate dimensions or failed
 storage writes leave the existing authority unchanged. Backend reloads read
 the saved state without any configuration file.
 
@@ -120,6 +128,9 @@ remain readable for existing genkey/signing operations. That layout did not
 save JSON/mode, so growth on a legacy authority returns an explicit error;
 it never guesses settings or recreates its master keys. Existing authorities
 are not automatically migrated or replaced by upgrading the plugin.
+The retired CPQA chunked layout is also readable without rewriting its state;
+new large writes use the library's versioned format. See the authority guide
+before upgrading or rolling back a deployment with existing chunked storage.
 
 ## Deploy an existing build
 

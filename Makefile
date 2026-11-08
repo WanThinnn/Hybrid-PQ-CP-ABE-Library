@@ -300,7 +300,7 @@ vault: shared
 
 test-vault: shared
 	go run scripts/build-vault.go -test
-	python3 plugins/vault/tests/test_vault.py --docker
+	python3 plugins/vault/tests/test_vault.py --docker --raft
 
 clean-vault:
 	@echo "Removing Vault output: $(BUILD_DIR)/vault"

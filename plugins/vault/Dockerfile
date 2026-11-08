@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     grep " vault_${VAULT_VERSION}_linux_${TARGETARCH}.zip$" "vault_${VAULT_VERSION}_SHA256SUMS" | sha256sum -c - && \
     unzip "vault_${VAULT_VERSION}_linux_${TARGETARCH}.zip" vault -d /usr/local/bin && \
     rm -f /tmp/vault_* && rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /vault/plugins /vault/config && \
+RUN mkdir -p /vault/plugins /vault/config /tmp/hcpabe-raft-test && \
     printf 'plugin_directory = "/vault/plugins"\n' > /vault/config/server.hcl
+COPY tests/raft.hcl /vault/config/raft.hcl
 CMD ["vault", "server", "-dev", "-config=/vault/config/server.hcl", "-dev-listen-address=0.0.0.0:8200", "-dev-root-token-id=root"]

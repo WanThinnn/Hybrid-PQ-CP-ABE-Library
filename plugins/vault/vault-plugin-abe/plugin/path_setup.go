@@ -7,6 +7,7 @@ package abe
 import "C"
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -21,10 +22,12 @@ func pathSetup(b *abeBackend) *framework.Path {
 	return &framework.Path{
 		Pattern: "setup",
 		Fields: map[string]*framework.FieldSchema{
-			"scheme":      {Type: framework.TypeString, Description: "ac17, tkn20 or covercrypt", Default: "ac17"},
-			"pqc":         {Type: framework.TypeBool, Description: "Enable ML-DSA signatures", Default: false},
-			"config_json": {Type: framework.TypeString, Description: "Covercrypt JSON text containing a dimensions array; CLI: config_json=@file.json"},
-			"mode":        {Type: framework.TypeString, Description: "Covercrypt mode: classic, post_quantum or hybridized", Default: "hybridized"},
+			"scheme":            {Type: framework.TypeString, Description: "ac17, tkn20 or covercrypt", Default: "ac17"},
+			"pqc":               {Type: framework.TypeBool, Description: "Enable ML-DSA signatures", Default: false},
+			"config_json":       {Type: framework.TypeString, Description: "Covercrypt JSON text containing a dimensions array; CLI: config_json=@file.json"},
+			"mode":              {Type: framework.TypeString, Description: "Covercrypt mode: classic, post_quantum or hybridized", Default: "hybridized"},
+			"create_only":       {Type: framework.TypeBool, Description: "Refuse to replace any existing authority", Default: false},
+			"public_key_format": {Type: framework.TypeString, Description: "auto, base64 or reference", Default: "auto"},
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.UpdateOperation: &framework.PathOperation{Callback: b.pathSetupWrite},
@@ -37,6 +40,23 @@ func pathSetup(b *abeBackend) *framework.Path {
 func (b *abeBackend) pathSetupWrite(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	b.authorityMu.Lock()
 	defer b.authorityMu.Unlock()
+	format := data.Get("public_key_format").(string)
+	if !validPublicKeyFormat(format) {
+		return logical.ErrorResponse("public_key_format must be auto, base64 or reference"), nil
+	}
+	if data.Get("create_only").(bool) {
+		// Also refuse partial legacy state. Missing public metadata is not proof
+		// that no master/signing key has already been persisted.
+		for _, key := range []string{authorityKey, "msk/abe", "msk/pqc", "config/abe"} {
+			entry, err := req.Storage.Get(ctx, key)
+			if err != nil {
+				return nil, err
+			}
+			if entry != nil {
+				return logical.ErrorResponse("authority already exists or is incomplete; inspect authority instead of repeating setup"), nil
+			}
+		}
+	}
 	scheme := data.Get("scheme").(string)
 	signed := data.Get("pqc").(bool)
 	cScheme, err := nativeScheme(scheme)
@@ -49,6 +69,13 @@ func (b *abeBackend) pathSetupWrite(ctx context.Context, req *logical.Request, d
 		if config == "" || !json.Valid([]byte(config)) {
 			return logical.ErrorResponse("Covercrypt requires valid config_json text with a dimensions array"), nil
 		}
+		// json.RawMessage is compacted on storage encoding. Return that same
+		// representation on first setup and later read-only recovery.
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, []byte(config)); err != nil {
+			return logical.ErrorResponse("invalid config_json"), nil
+		}
+		config = compact.String()
 	} else if config != "" {
 		return logical.ErrorResponse("config_json is only supported for covercrypt"), nil
 	}
@@ -102,5 +129,5 @@ func (b *abeBackend) pathSetupWrite(ctx context.Context, req *logical.Request, d
 	if err := saveAuthority(ctx, req.Storage, state); err != nil {
 		return nil, err
 	}
-	return state.publicResponse(), nil
+	return state.publicResponseWithFormat(format), nil
 }

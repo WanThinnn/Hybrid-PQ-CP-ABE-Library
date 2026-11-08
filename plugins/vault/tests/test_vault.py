@@ -29,7 +29,7 @@ def api(path, data=None, *, address=None, token=None, method=None):
                                      data=None if data is None else json.dumps(data).encode(),
                                      method=method or ('GET' if data is None else 'PUT'),
                                      headers={'X-Vault-Token': token, 'Content-Type': 'application/json'})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=180) as response:
         body = response.read()
         return json.loads(body) if body else {}
 
@@ -87,6 +87,65 @@ class VaultHTTPTests(unittest.TestCase):
             if not denied:
                 self.assertEqual(result['plaintext'], 'aGVsbG8=')
 
+    def test_large_authority_recovery_and_explicit_signatures(self):
+        # Same dimension cardinalities as the reported 47.9-MB Base64 public
+        # key failure. No external JSON, keys, environment or application DB.
+        wrong_verifier = self.call('setup', {'scheme': 'ac17', 'pqc': True})['pqc_public_key']
+        config = json.dumps({'dimensions': [
+            {'name': f'D{i}', 'attributes': [f'v{j}' for j in range(size)]}
+            for i, size in enumerate((4, 3, 6, 4, 5, 6))
+        ]})
+        setup = self.call('setup', {'scheme': 'covercrypt', 'config_json': config,
+                                    'pqc': True, 'mode': 'hybridized'})
+        self.assertEqual(setup['contract_version'], 1)
+        self.assertEqual(setup['public_key_format'], 'vault-authority-sha256-v1')
+        self.assertEqual(setup['public_key'], 'vault-authority-sha256:' + setup['public_key_fingerprint'])
+        self.assertEqual(len(setup['public_key']), 87)
+        self.assertLess(len(json.dumps(setup)), 32768)
+        mount = os.environ.get('VAULT_ABE_MOUNT', 'abe').strip('/')
+        recovered = api(f'{mount}/authority')['data']
+        self.assertEqual(recovered, setup)
+        # A lost setup response must be recovered by read, never replacement.
+        self.call('setup', {'scheme': 'covercrypt', 'config_json': config,
+                            'pqc': True, 'create_only': True}, denied=True, error_code=None)
+        self.assertEqual(api(f'{mount}/authority')['data'], setup)
+        attributes = ' '.join(f'D{i}::v0' for i in range(6))
+        user = self.call('genkey', {'scheme': 'covercrypt', 'attributes': attributes})
+        wrong = self.call('genkey', {'scheme': 'covercrypt', 'attributes': 'D0::v0'})
+        plain = base64.b64encode(b'Large-authority isolated round trip\x00\xff').decode()
+        for signed in (False, True):
+            with self.subTest(large_authority=True, signed=signed):
+                params = {'scheme': 'covercrypt', 'public_key': setup['public_key'],
+                          'plaintext': plain, 'policy': 'D0::v0 && D1::v0', 'sign': signed}
+                self.assertLess(len(json.dumps(params)), 4096)
+                encrypted = self.call('encrypt', params)
+                metadata = encrypted['crypto_metadata']
+                self.assertEqual(metadata['scheme'], 'covercrypt')
+                self.assertEqual(metadata['format'], 'hybrid-v2')
+                self.assertEqual(metadata['pqc_signed'], signed)
+                self.assertEqual(metadata['keyset_id'], setup['public_key_fingerprint'])
+                self.assertEqual(metadata['authority_revision'], setup['revision'])
+                data = {'secret_key': user['secret_key'], 'ciphertext': encrypted['ciphertext']}
+                if signed:
+                    data['pqc_public_key'] = setup['pqc_public_key']
+                self.assertEqual(self.call('decrypt', data)['plaintext'], plain)
+                data['secret_key'] = wrong['secret_key']
+                self.call('decrypt', data, denied=True)
+                if signed:
+                    data['secret_key'] = user['secret_key']
+                    data['pqc_public_key'] = wrong_verifier
+                    self.call('decrypt', data, denied=True, error_code='-9')
+                    data['pqc_public_key'] = setup['pqc_public_key']
+                    raw = bytearray(base64.b64decode(data['ciphertext']))
+                    raw[-1] ^= 1
+                    data['ciphertext'] = base64.b64encode(raw).decode()
+                    self.call('decrypt', data, denied=True, error_code='-4')
+        self.call('encrypt', {'scheme': 'covercrypt', 'public_key': 'vault-authority-sha256:' + '0'*64,
+                              'plaintext': plain, 'policy': 'D0::v0'}, denied=True, error_code=None)
+        # Real plugin process reload must preserve keys and compact identity.
+        api('sys/plugins/reload/backend', {'plugin': 'vault-plugin-abe'})
+        self.assertEqual(api(f'{mount}/authority')['data'], setup)
+
     def test_json_setup_and_dimension_growth(self):
         self.call('setup', {'scheme': 'covercrypt'}, denied=True, error_code=None)
         for mode in ('classic', 'post_quantum', 'hybridized'):
@@ -127,7 +186,7 @@ class VaultHTTPTests(unittest.TestCase):
 
 
 @contextmanager
-def docker_service(version, runtime_base, artifact=None):
+def docker_service(version, runtime_base, artifact=None, raft=False):
     artifact = (artifact or ROOT / 'build/artifacts/linux/vault').resolve()
     plugin = artifact / 'vault-plugin-abe'
     library = artifact / 'libhybrid-pq-cp-abe.so'
@@ -144,22 +203,41 @@ def docker_service(version, runtime_base, artifact=None):
     original = {key: os.environ.get(key) for key in ('VAULT_ADDR', 'VAULT_TOKEN', 'VAULT_ABE_MOUNT')}
     try:
         # No Covercrypt JSON file or environment is mounted into the service.
-        subprocess.run(['docker', 'run', '-d', '--rm', '--name', name,
-                        '-p', '127.0.0.1::8200',
-                        '--mount', f'type=bind,source={artifact},target=/vault/plugins,readonly',
-                        image], check=True)
+        command = ['docker', 'run', '-d', '--name', name,
+                   '-p', '127.0.0.1::8200',
+                   '--mount', f'type=bind,source={artifact},target=/vault/plugins,readonly', image]
+        if raft:
+            command += ['vault', 'server', '-config=/vault/config/server.hcl',
+                        '-config=/vault/config/raft.hcl']
+        subprocess.run(command, check=True)
         port = subprocess.check_output(['docker', 'port', name, '8200/tcp'], text=True).strip().rsplit(':', 1)[1]
         address = f'http://127.0.0.1:{port}'
         os.environ.update(VAULT_ADDR=address, VAULT_TOKEN='root', VAULT_ABE_MOUNT='abe')
         deadline = time.monotonic() + 45
         while True:
             try:
-                api('sys/health')
+                api('sys/seal-status')
                 break
             except (OSError, urllib.error.URLError):
                 if time.monotonic() >= deadline:
                     raise RuntimeError('Vault service did not become ready')
                 time.sleep(0.5)
+        if raft:
+            # Only this disposable single-node fixture is initialized/unsealed.
+            # Keep shares/root token in memory; never print or persist them.
+            initialized = api('sys/init', {'secret_shares': 1, 'secret_threshold': 1})
+            api('sys/unseal', {'key': initialized['keys'][0]})
+            os.environ['VAULT_TOKEN'] = initialized['root_token']
+            del initialized
+            deadline = time.monotonic() + 45
+            while True:
+                try:
+                    api('sys/health')
+                    break
+                except (OSError, urllib.error.URLError):
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError('Raft fixture did not elect an active node')
+                    time.sleep(0.5)
         checksum = hashlib.sha256(plugin.read_bytes()).hexdigest()
         api('sys/plugins/catalog/secret/vault-plugin-abe', {'sha256': checksum, 'command': 'vault-plugin-abe'})
         api('sys/mounts/abe', {'type': 'vault-plugin-abe'})
@@ -181,16 +259,19 @@ def docker_service(version, runtime_base, artifact=None):
 def run():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--docker', action='store_true')
+    parser.add_argument('--raft', action='store_true', help='Use isolated real Raft storage with default entry/request limits (requires --docker)')
     parser.add_argument('--vault-version', default='2.0.4')
     parser.add_argument('--runtime-base', default=os.environ.get('VAULT_RUNTIME_BASE', 'ubuntu:24.04'))
     parser.add_argument('--artifact-dir', type=Path, help='Test an extracted release package instead of build output')
     args = parser.parse_args()
+    if args.raft and not args.docker:
+        parser.error('--raft requires --docker; it never initializes an external Vault')
 
     def suite():
         return unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(VaultHTTPTests)).wasSuccessful()
 
     if args.docker:
-        with docker_service(args.vault_version, args.runtime_base, args.artifact_dir):
+        with docker_service(args.vault_version, args.runtime_base, args.artifact_dir, args.raft):
             return suite()
     return suite()
 

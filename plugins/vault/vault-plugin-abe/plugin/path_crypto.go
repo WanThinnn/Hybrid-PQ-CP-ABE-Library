@@ -8,8 +8,12 @@ package abe
 import "C"
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"strings"
 	"unsafe"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -32,7 +36,7 @@ func pathEncrypt(b *abeBackend) *framework.Path {
 			},
 			"public_key": {
 				Type:        framework.TypeString,
-				Description: "Base64 encoded ABE Public Key",
+				Description: "Base64 ABE public key or exact vault-authority-sha256 reference returned by this mount",
 				Required:    true,
 			},
 			"scheme": {
@@ -44,6 +48,10 @@ func pathEncrypt(b *abeBackend) *framework.Path {
 				Type:        framework.TypeString,
 				Description: "Base64 encoded PQC ML-DSA Secret Key for signing (optional)",
 			},
+			"sign": {
+				Type:        framework.TypeBool,
+				Description: "Optional signature selection. Omit for authority default; true requires a signing key; false disables signing",
+			},
 		},
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.UpdateOperation: &framework.PathOperation{
@@ -51,7 +59,7 @@ func pathEncrypt(b *abeBackend) *framework.Path {
 			},
 		},
 		HelpSynopsis:    "Encrypts data using an ABE policy.",
-		HelpDescription: "Optionally signs the ciphertext if a PQC private key is provided.",
+		HelpDescription: "Uses the stored signing key or an explicit key by default. The optional sign field selects signed/unsigned output explicitly. Returns ciphertext and metadata from this encryption operation.",
 	}
 }
 
@@ -106,9 +114,21 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 	if err != nil {
 		return logical.ErrorResponse("plaintext must be base64 encoded"), nil
 	}
-	pkBytes, err := base64.StdEncoding.DecodeString(pkBase64)
+	state, err := loadAuthority(ctx, req.Storage)
 	if err != nil {
-		return logical.ErrorResponse("public_key must be base64 encoded"), nil
+		return nil, err
+	}
+	var pkBytes []byte
+	if strings.HasPrefix(pkBase64, publicKeyReferencePrefix) {
+		if state == nil || len(state.PK) == 0 || state.Scheme != schemeStr || pkBase64 != state.publicKeyReference() {
+			return logical.ErrorResponse("public_key reference differs from the stored authority"), nil
+		}
+		pkBytes = state.PK
+	} else {
+		pkBytes, err = base64.StdEncoding.DecodeString(pkBase64)
+		if err != nil || len(pkBytes) == 0 {
+			return logical.ErrorResponse("public_key must be non-empty base64 or a matching authority reference"), nil
+		}
 	}
 
 	cPt := (*C.uchar)(C.CBytes(ptBytes))
@@ -126,10 +146,6 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 
 	var pqcSkBytes []byte
 	if pqcSkBase64 == "" {
-		state, err := loadAuthority(ctx, req.Storage)
-		if err != nil {
-			return nil, err
-		}
 		if state != nil {
 			pqcSkBytes = state.PQCSecret
 		}
@@ -138,6 +154,17 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 		pqcSkBytes, err = base64.StdEncoding.DecodeString(pqcSkBase64)
 		if err != nil {
 			return logical.ErrorResponse("pqc_private_key must be base64 encoded"), nil
+		}
+	}
+	if value, present := data.GetOk("sign"); present {
+		if value.(bool) && len(pqcSkBytes) == 0 {
+			return logical.ErrorResponse("sign=true requires an authority or explicit signing key"), nil
+		}
+		if !value.(bool) {
+			if pqcSkBase64 != "" {
+				return logical.ErrorResponse("sign=false conflicts with pqc_private_key"), nil
+			}
+			pqcSkBytes = nil
 		}
 	}
 
@@ -168,10 +195,25 @@ func (b *abeBackend) pathEncryptWrite(ctx context.Context, req *logical.Request,
 	defer FreeCBytes(ctBuffer)
 	ctBytes := C.GoBytes(unsafe.Pointer(ctBuffer), C.int(ctLen))
 	ctBase64 := base64.StdEncoding.EncodeToString(ctBytes)
+	// New native encryption always emits the existing v2 envelope. Do not
+	// infer historical signature state from an opaque ciphertext header.
+	tag := map[string]byte{"ac17": 0, "tkn20": 1, "covercrypt": 2}[schemeStr]
+	if len(ctBytes) < 2 || ctBytes[0] != 2 || ctBytes[1] != tag {
+		return logical.ErrorResponse("native encryption returned an unsupported ciphertext format"), nil
+	}
+	fingerprint := sha256.Sum256(pkBytes)
+	metadata := map[string]interface{}{
+		"schema": 1, "scheme": schemeStr, "backend": "vault", "format": "hybrid-v2",
+		"pqc_signed": len(pqcSkBytes) != 0, "keyset_id": hex.EncodeToString(fingerprint[:]),
+	}
+	if state != nil && state.Scheme == schemeStr && bytes.Equal(state.PK, pkBytes) {
+		metadata["authority_revision"] = state.Revision
+	}
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"ciphertext": ctBase64,
+			"ciphertext":      ctBase64,
+			"crypto_metadata": metadata,
 		},
 	}, nil
 }

@@ -99,7 +99,7 @@ class ReleasePackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             inputs = ["build/artifacts/linux/vault/vault-plugin-abe", "LICENSE", "NOTICE", "VERSION",
-                      "plugins/vault/README.md", "plugins/vault/TESTING.md", "scripts/covercrypt-demo.json"]
+                      "plugins/vault/README.md", "plugins/vault/TESTING.md", "plugins/vault/AUTHORITY.md", "scripts/covercrypt-demo.json"]
             for name in inputs:
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -110,7 +110,7 @@ class ReleasePackageTests(unittest.TestCase):
             library.write_bytes(b"fixture-library")
             package = root / "package"
             PACKAGE.stage_vault_package(root, package)
-            for name in ("vault-plugin-abe", library.name, "config/covercrypt-demo.json", "PACKAGE.md"):
+            for name in ("vault-plugin-abe", library.name, "config/covercrypt-demo.json", "PACKAGE.md", "AUTHORITY.md"):
                 self.assertTrue((package / name).is_file(), name)
 
     def test_publish_requires_linux_named_vault_asset_when_enabled(self):
