@@ -78,6 +78,36 @@ func TestAllSchemesAndSignatures(t *testing.T) {
 				wrong := request(t, b, storage, "genkey", map[string]interface{}{"scheme": tc.scheme, "attributes": tc.denied}, false)
 				plain := base64.StdEncoding.EncodeToString([]byte("Vault real crypto\x00\xff"))
 				cipher := request(t, b, storage, "encrypt", map[string]interface{}{"scheme": tc.scheme, "public_key": setup["public_key"], "plaintext": plain, "policy": tc.policy}, false)
+				meta := cipher["crypto_metadata"].(map[string]interface{})
+				internal := map[string]interface{}{
+					"ciphertext": cipher["ciphertext"], "attributes": tc.attributes, "scheme": tc.scheme,
+					"format": meta["format"], "keyset_id": meta["keyset_id"],
+					"authority_revision": "1", "signature_mode": "unsigned",
+				}
+				if signed {
+					internal["signature_mode"] = "required"
+				}
+				out := request(t, b, storage, "decrypt_with_attributes", internal, false)
+				if len(out) != 1 || out["plaintext"] != plain {
+					t.Fatal("internal decrypt returned an unexpected response")
+				}
+				for field, value := range map[string]string{
+					"attributes": tc.denied, "keyset_id": "other-keyset", "authority_revision": "2",
+					"format": "invalid", "signature_mode": "unknown",
+				} {
+					valid := internal[field]
+					internal[field] = value
+					out := request(t, b, storage, "decrypt_with_attributes", internal, true)
+					if out["plaintext"] != nil || out["secret_key"] != nil {
+						t.Fatal("failed internal decrypt exposed output")
+					}
+					internal[field] = valid
+				}
+				if !signed {
+					internal["signature_mode"] = "required"
+					request(t, b, storage, "decrypt_with_attributes", internal, true)
+					internal["signature_mode"] = "unsigned"
+				}
 				data := map[string]interface{}{"ciphertext": cipher["ciphertext"], "secret_key": key["secret_key"]}
 				if signed {
 					data["pqc_public_key"] = setup["pqc_public_key"]
@@ -101,6 +131,8 @@ func TestAllSchemesAndSignatures(t *testing.T) {
 					data["secret_key"] = key["secret_key"]
 					data["ciphertext"] = base64.StdEncoding.EncodeToString(raw)
 					request(t, b, storage, "decrypt", data, true)
+					internal["ciphertext"] = data["ciphertext"]
+					request(t, b, storage, "decrypt_with_attributes", internal, true)
 				}
 			})
 		}

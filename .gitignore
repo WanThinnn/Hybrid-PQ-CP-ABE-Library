@@ -373,6 +373,7 @@ graphify-out/
 /plugins/vault/vault-plugin-abe/build/
 /plugins/vault/vault-plugin-abe/lib/
 bindings/python/test*
+/lib/wasm/
 !bindings/python/test_api.py
 test_api
 

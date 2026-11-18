@@ -1,0 +1,76 @@
+# Linux -> WebAssembly. Native builds continue to use Makefile.
+SHELL := /bin/bash
+.DEFAULT_GOAL := all
+BUILD_DIR := build/artifacts/wasm
+DEPS_DIR := build/deps/wasm
+LIB_DIR := lib/wasm
+CXX := em++
+AR := emar
+JOBS ?= 8
+CPPFLAGS := -Iinclude -I$(DEPS_DIR)/include -I$(DEPS_DIR)/include/liboqs -Ibindings/wasm
+CXXFLAGS := -O2 -std=c++17 -fexceptions -MMD -MP
+SRCS := src/hybrid-pq-cp-abe.cpp $(wildcard src/core/*.cpp src/schemes/*.cpp src/crypto/*.cpp) bindings/wasm/tkn20.cpp
+OBJS := $(patsubst %.cpp,$(BUILD_DIR)/obj/%.o,$(SRCS))
+DEPS := $(DEPS_DIR)/lib/cryptopp/libcryptopp.a $(DEPS_DIR)/lib/rabe/librabe_ffi.a $(DEPS_DIR)/lib/covercrypt/libcovercrypt_ffi.a $(DEPS_DIR)/lib/liboqs/liboqs.a
+HEADERS := $(wildcard include/hybrid_pq_cp_abe/*.h) src/core/abe-internal.h
+MODULE := $(BUILD_DIR)/hybrid-pq-cp-abe.mjs
+STATIC := $(BUILD_DIR)/libhybrid-pq-cp-abe.a
+READY := $(DEPS_DIR)/lib/.ready
+LINKFLAGS := -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createHybridCPABE -sENVIRONMENT=web,node \
+ -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=8388608 -sFORCE_FILESYSTEM=1 \
+ -sEXPORTED_RUNTIME_METHODS='["ccall","cwrap","FS","ENV","callMain","UTF8ToString","HEAPU8","HEAPU32"]' \
+ -sEXPORTED_FUNCTIONS=@$(BUILD_DIR)/exports.json -sINVOKE_RUN=0
+
+.PHONY: all deps static shared executable test clean clean-deps help publish
+all: static shared
+	@echo 'WASM build complete: $(BUILD_DIR)'
+	@echo 'Published archive and JS/WASM runtime: $(LIB_DIR)'
+deps:
+	@bash scripts/build-wasm-deps.sh $(JOBS)
+$(READY):
+	@bash scripts/build-wasm-deps.sh $(JOBS)
+
+include/hybrid_pq_cp_abe/version.h: VERSION
+	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(shell cat VERSION)"' '#endif' > $@
+
+$(BUILD_DIR)/obj/%.o: %.cpp $(HEADERS) include/hybrid_pq_cp_abe/version.h | $(READY)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(DEPS): | $(READY)
+	@test -f $@
+
+static: $(LIB_DIR)/libhybrid-pq-cp-abe.a
+$(LIB_DIR)/libhybrid-pq-cp-abe.a: $(STATIC)
+	@mkdir -p $(LIB_DIR)
+	cp $< $@
+$(STATIC): $(OBJS) $(DEPS) Makefile.wasm
+	@mkdir -p $(BUILD_DIR)
+	@printf '%s\n' 'create $@' $(foreach a,$(DEPS),'addlib $(a)') $(foreach o,$(OBJS),'addmod $(o)') 'save' 'end' | $(AR) -M
+
+$(BUILD_DIR)/exports.json: include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h scripts/wasm-exports.py Makefile.wasm
+	@mkdir -p $(BUILD_DIR)
+	python3 scripts/wasm-exports.py $< $@
+
+$(MODULE): $(STATIC) $(BUILD_DIR)/obj/src/main.o $(BUILD_DIR)/exports.json Makefile.wasm
+	$(CXX) $(CXXFLAGS) $(BUILD_DIR)/obj/src/main.o $(STATIC) $(LINKFLAGS) -o $@
+
+# The CLI uses the same module; callMain runs after both runtimes are ready.
+shared executable: publish
+publish: $(MODULE) bindings/wasm/loader.mjs | $(READY)
+	@mkdir -p $(LIB_DIR)
+	install -m 644 $(MODULE) $(BUILD_DIR)/hybrid-pq-cp-abe.wasm $(DEPS_DIR)/lib/tkn20/tkn20.wasm $(DEPS_DIR)/lib/tkn20/wasm_exec.js bindings/wasm/loader.mjs $(LIB_DIR)/
+
+test: all
+	node tests/wasm/smoke.mjs
+
+clean:
+	rm -rf $(BUILD_DIR) $(LIB_DIR)
+clean-deps:
+	rm -rf $(DEPS_DIR)
+help:
+	@echo 'make -f Makefile.wasm -j8 [all|deps|static|shared|executable|test|clean|clean-deps]'
+	@echo 'Requires Linux, Emscripten, Rust nightly + rust-src, Go (see go.mod), Python 3, CMake, Node.js.'
+	@echo 'JOBS=8 controls dependency compiler jobs. Outputs: build/artifacts/wasm and lib/wasm.'
+
+-include $(OBJS:.o=.d) $(BUILD_DIR)/obj/src/main.d

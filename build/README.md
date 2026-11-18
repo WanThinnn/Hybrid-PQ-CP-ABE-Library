@@ -7,6 +7,8 @@ directly into `build/`:
 | --- | --- |
 | `deps/<platform>/` | Staged dependency headers/libraries, ready marker and dependency build cache |
 | `artifacts/<platform>/` | Project binaries, object files and platform tests |
+| `deps/wasm/` | Emscripten headers, dependency archives and Go WASM runtime |
+| `artifacts/wasm/` | WASM objects, static archive and JavaScript/WASM module |
 | `artifacts/linux/vault/` | Linux-built Vault plugin and its shared native runtime |
 | `logs/` | Build, test and diagnostic logs; older logs are under `logs/archive/` |
 | `reports/covercrypt/` | CoverCrypt cost and KeyGen measurements |

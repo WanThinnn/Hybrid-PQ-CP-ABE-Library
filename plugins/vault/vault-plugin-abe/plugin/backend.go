@@ -43,6 +43,7 @@ func backend() *abeBackend {
 			pathGenKey(&b),
 			pathEncrypt(&b),
 			pathDecrypt(&b),
+			pathDecryptWithAttributes(&b),
 		},
 		BackendType: logical.TypeLogical,
 	}

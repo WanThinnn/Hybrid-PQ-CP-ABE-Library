@@ -18,6 +18,12 @@ Hybrid Post-Quantum Ciphertext-Policy Attribute-Based Encryption Library for C/C
 
 ## Native interface and source layout
 
+For a complete WebAssembly build on Linux (AC17, TKN20, CoverCrypt, AES-GCM and
+ML-DSA-87), run `make wasm -j8` and `make wasm-test -j8` after installing the
+toolchains in [bindings/wasm/README.md](bindings/wasm/README.md). The standalone
+`Makefile.wasm` builds the static archive and browser/Node.js package separately
+from native DLL/SO outputs.
+
 The v5.2 public function names and parameters remain unchanged. Select
 `CPABE_SCHEME_AC17`, `CPABE_SCHEME_TKN20` or `CPABE_SCHEME_COVERCRYPT` in the existing
 `*_with_scheme` functions. Decryption reads the scheme from the ciphertext.

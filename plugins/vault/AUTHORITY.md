@@ -154,3 +154,18 @@ pre-upgrade storage snapshot; old plugins do not understand format 3. This
 guide does not authorize a live reset or automatic key rotation. Adding a
 dimension preserves existing rights; revocation/rotation is a separate
 operation requiring explicit key/ciphertext lifecycle planning.
+# Decrypt with attributes
+
+Send `PUT /v1/<mount>/decrypt_with_attributes` with `ciphertext` (Base64),
+`attributes`, `scheme`, `format`, `keyset_id` (public key SHA-256),
+`authority_revision` (decimal string), and `signature_mode` (`required` or
+`unsigned`). The caller must supply mode from trusted version metadata.
+`required` uses the mounted authority's verifier. The native envelope header
+does not identify the signing mode.
+
+The handler checks scheme, format and authority identity before generating an
+ephemeral user key, using the authority read lock throughout the operation.
+It uses the key directly in native memory and clears the returned key buffer
+before freeing it. The response contains only Base64 `plaintext`; intermediate
+keys are never serialized by this endpoint. Internal crypto-library copies are
+subject to the native implementation's buffer lifecycle.
