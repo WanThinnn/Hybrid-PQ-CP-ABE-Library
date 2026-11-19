@@ -33,6 +33,8 @@ jobs:
           - {runner: windows-2022, platform: windows, arch: x86_64}
           - {runner: macos-15-intel, platform: macos, arch: x86_64}
           - {runner: macos-15, platform: macos, arch: arm64}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'macos' && '12.0' || '' }}
 
     steps:
       - name: Checkout project sources
@@ -44,7 +46,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.platform == 'macos' && '3.14' || '3.12' }}
 
       - name: Check release tag and VERSION
         shell: bash
@@ -68,12 +70,6 @@ jobs:
           PQ_CP_ABE_WHEEL_ARCH: ${{ matrix.arch }}
         run: python -m build --wheel bindings/python
 
-      - name: Validate macOS wheel architecture tag
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          python -c "import glob; p=glob.glob('bindings/python/dist/*.whl'); assert len(p)==1, p; w=p[0]; assert 'universal2' not in w and '_${{ matrix.arch }}.whl' in w, w; print('Wheel tag OK:', w)"
-
       - name: Repair Linux wheel for manylinux
         if: runner.os == 'Linux'
         run: |
@@ -89,6 +85,21 @@ jobs:
           lipo -archs bindings/python/pq_cp_abe/_libs/libhybrid-pq-cp-abe.dylib
           delocate-listdeps bindings/python/dist/*.whl
           delocate-wheel --require-archs=${{ matrix.arch }} -v -w bindings/python/repaired bindings/python/dist/*.whl
+
+      - name: Validate repaired macOS wheel tag
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          WHEEL_ARCH: ${{ matrix.arch }}
+        run: |
+          shopt -s nullglob
+          wheels=(bindings/python/repaired/*.whl)
+          platform_tag="macosx_${MACOSX_DEPLOYMENT_TARGET//./_}_${WHEEL_ARCH}"
+          if [[ ${#wheels[@]} != 1 || ${wheels[0]} != *-py3-none-"$platform_tag".whl ]]; then
+            echo "Expected one wheel with platform tag $platform_tag, found: ${wheels[*]}" >&2
+            exit 1
+          fi
+          echo "Wheel tag OK: ${wheels[0]}"
 
       - name: Copy Windows wheel to final directory
         if: runner.os == 'Windows'

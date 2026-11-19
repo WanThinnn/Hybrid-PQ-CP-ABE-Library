@@ -279,6 +279,24 @@ def prepare_shared_libraries(package, target):
             subprocess.run(["codesign", "--force", "--sign", "-", str(library)], check=True)
 
 
+def verify_macos_deployment_target(package, arch, deployment_target):
+    expected = tuple(int(part) for part in deployment_target.split("."))
+    expected += (0,) * (3 - len(expected))
+    cli = package / "bin/main"
+    library = package / "lib" / f"{LIBRARY}.dylib"
+    for binary in (cli, *sorted((package / "lib").rglob("*.dylib"))):
+        slices = subprocess.check_output(["lipo", "-archs", str(binary)], text=True).split()
+        if slices != [arch]:
+            raise ValueError(f"{binary.name}: expected {arch}, got {slices}")
+        info = subprocess.check_output(["xcrun", "vtool", "-show-build", str(binary)], text=True)
+        match = re.search(r"^\s*(?:minos|version)\s+(\d+)\.(\d+)(?:\.(\d+))?\s*$", info, re.M)
+        if not match:
+            raise ValueError(f"{binary.name}: missing Mach-O deployment target")
+        actual = tuple(int(part or 0) for part in match.groups())
+        if actual > expected or (binary in (cli, library) and actual != expected):
+            raise ValueError(f"{binary.name}: unexpected deployment target {match[0].strip()} (target {deployment_target})")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", choices=("windows", "linux", "macos"))
@@ -341,6 +359,9 @@ def main():
         else:
             stage_package(root, package, args.platform)
             prepare_shared_libraries(package, args.platform)
+            deployment_target = os.environ.get("MACOSX_DEPLOYMENT_TARGET")
+            if args.platform == "macos" and deployment_target:
+                verify_macos_deployment_target(package, args.arch, deployment_target)
         collect_notices(root, package, include_vault=args.vault)
         archive = output / (name + ".zip")
         write_archive(package, archive)

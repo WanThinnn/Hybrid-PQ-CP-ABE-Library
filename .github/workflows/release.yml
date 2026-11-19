@@ -30,6 +30,7 @@ jobs:
     env:
       CARGO_TERM_COLOR: never
       JOBS: '4'
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'macos' && '12.0' || '' }}
     steps:
       - name: Keep shell scripts in LF format
         run: git config --global core.autocrlf input
