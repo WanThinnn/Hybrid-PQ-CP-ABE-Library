@@ -1,12 +1,13 @@
 import os
 import sys
 
-# Ensure module in the same directory can be imported
+# Import the local package without requiring an editable install.
 script_dir = os.path.dirname(os.path.abspath(__file__))
-if script_dir not in sys.path:
-    sys.path.insert(0, script_dir)
+python_root = os.path.dirname(script_dir)
+if python_root not in sys.path:
+    sys.path.insert(0, python_root)
 
-import hybrid_cpabe as abe
+import pq_cp_abe as abe
 import base64
 
 def load_base64_key(file_path):

@@ -372,9 +372,14 @@ venv/
 graphify-out/
 /plugins/vault/vault-plugin-abe/build/
 /plugins/vault/vault-plugin-abe/lib/
-bindings/python/test*
+bindings/python/tests/test_data_*/
+bindings/python/pq_cp_abe/_libs/*
+!bindings/python/pq_cp_abe/_libs/.gitkeep
+!bindings/python/pq_cp_abe/_libs/__init__.py
+bindings/python/dist/
+bindings/python/build/
+bindings/python/*.egg-info/
 /lib/wasm/
-!bindings/python/test_api.py
 test_api
 
 !/build/deps/

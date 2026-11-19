@@ -1,0 +1,116 @@
+name: Build Python Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish verified wheels to PyPI (requires configured Trusted Publisher)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: Wheel ${{ matrix.platform }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-22.04, platform: linux, arch: x86_64}
+          - {runner: windows-2022, platform: windows, arch: x86_64}
+          - {runner: macos-15-intel, platform: macos, arch: x86_64}
+          - {runner: macos-15, platform: macos, arch: arm64}
+
+    steps:
+      - name: Checkout project sources
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          lfs: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Check release tag and VERSION
+        shell: bash
+        run: |
+          python -c "from pathlib import Path; v=Path('VERSION').read_text().strip(); assert v and not v.startswith('v'); print('GitHub Release: v'+v)"
+
+      - name: Test release downloader validation (offline)
+        run: python -m unittest discover -s bindings/python/tests -p test_release_staging.py -v
+
+      - name: Download verified native GitHub Release
+        run: python bindings/python/stage_native.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
+
+      - name: Test all 33 public C ABI exports and new Python wrappers
+        run: python -m unittest discover -s bindings/python/tests -p test_public_exports.py -v
+
+      - name: Install Python wheel build tools
+        run: python -m pip install --upgrade build
+
+      - name: Build platform-specific Python wheel
+        run: python -m build --wheel bindings/python
+
+      - name: Repair Linux wheel for manylinux
+        if: runner.os == 'Linux'
+        run: |
+          python -m pip install auditwheel
+          sudo apt-get update
+          sudo apt-get install -y patchelf
+          auditwheel show bindings/python/dist/*.whl
+          auditwheel repair --plat manylinux_2_35_x86_64 --wheel-dir bindings/python/repaired bindings/python/dist/*.whl
+
+      - name: Repair macOS wheel dependencies
+        if: runner.os == 'macOS'
+        run: |
+          python -m pip install delocate
+          delocate-listdeps bindings/python/dist/*.whl
+          delocate-wheel -w bindings/python/repaired bindings/python/dist/*.whl
+
+      - name: Copy Windows wheel to final directory
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path bindings/python/repaired -Force | Out-Null
+          Copy-Item bindings/python/dist/*.whl bindings/python/repaired/
+
+      - name: Test wheel in isolated installation (all ABE schemes)
+        run: python bindings/python/verify_wheel.py --wheel-dir bindings/python/repaired
+
+      - name: Upload tested wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-${{ matrix.platform }}-${{ matrix.arch }}
+          path: bindings/python/repaired/*.whl
+          if-no-files-found: error
+
+  publish:
+    name: Publish all verified wheels to PyPI
+    needs: wheels
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pq-cp-abe
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download platform wheels
+        uses: actions/download-artifact@v8
+        with:
+          pattern: python-wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Upload wheels using Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
