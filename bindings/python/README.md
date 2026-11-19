@@ -213,7 +213,7 @@ separate, optional signature layer. See the
 
 ## Native GitHub Release as the binary source
 
-`.github/workflows/publish-pypi.yml` uses *already published* native ZIPs from the exact `v<VERSION>` GitHub Release. It does **not** build C++, Rust or Go and does **not** use local `lib/` or `build/artifacts/` output. `stage_native.py` verifies the archive against the release's `SHA256SUMS.txt` and stages the runtime binaries and license files.
+The standard path in `.github/workflows/publish-pypi.yml` uses *already published* native ZIPs from the exact `v<VERSION>` GitHub Release. `stage_native.py` verifies the archive against the release's `SHA256SUMS.txt` and stages the runtime binaries and license files.
 
 | OS | Architecture | Required runtime |
 | --- | --- | --- |
@@ -244,6 +244,17 @@ from the verified native release. The wheel ships those files in its
 The verifier installs the wheel outside the source checkout, checks its internal native files and version, and runs AC17/TKN20/CoverCrypt setup, user key generation and encrypt/decrypt roundtrips. **Do not use a local cached binary to judge a GitHub Release.**
 
 ## Publishing
+
+To prepare the Monterey SDKs and wheels for `6.0.2`, run **Build Python Wheels**
+with `macos12_backfill=true` and `publish=false`. The workflow builds from tag
+`v6.0.2` with deployment target `12.0` and produces a native ZIP and a wheel for
+each architecture.
+
+On matching Intel and Apple Silicon systems running macOS 12, extract each
+native ZIP and run `bin/main version`, then install its wheel and run
+`python -m pq_cp_abe --test`. With `publish=true`, the same mode adds
+`libhybrid-pq-cp-abe_macos12_<arch>_v6.0.2.zip` and `SHA256SUMS-macos12.txt`
+to the GitHub Release and publishes the two `macosx_12_0` wheels to PyPI.
 
 From GitHub Actions, run **Build Python Wheels** with the `publish` input set to `false` to build/test/download the wheel artifacts only.
 

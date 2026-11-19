@@ -4,16 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Attach verified wheels to the GitHub Release and publish to PyPI"
+        description: "Publish wheels to PyPI and attach the corresponding GitHub Release assets"
         required: true
+        type: boolean
+        default: false
+      macos12_backfill:
+        description: "Build the macOS 12 native SDKs and wheels for v6.0.2"
         type: boolean
         default: false
 
 permissions:
   contents: read
 
+env:
+  MACOS12_BACKFILL_TAG: v6.0.2
+
 jobs:
   wheels:
+    if: ${{ !inputs.macos12_backfill }}
     name: Wheel ${{ matrix.platform }} ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
@@ -168,3 +176,222 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
+
+  macos12-artifacts:
+    name: macOS 12 SDK and wheel (${{ matrix.arch }})
+    if: ${{ inputs.macos12_backfill }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: macos-15-intel, arch: x86_64}
+          - {runner: macos-15, arch: arm64}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '12.0'
+      GOTOOLCHAIN: local
+      PQ_CP_ABE_WHEEL_ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Check out the original release source
+        uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ env.MACOS12_BACKFILL_TAG }}
+          persist-credentials: false
+          lfs: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: bindings/tkn20/go.mod
+          cache-dependency-path: bindings/tkn20/go.sum
+
+      - name: Set up macOS build tools
+        shell: bash
+        run: |
+          brew install cmake ninja make
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Build the native SDK for Monterey
+        shell: bash
+        run: |
+          test "v$(cat VERSION)" = "$MACOS12_BACKFILL_TAG"
+          make deps -j4
+          make -j4
+          make test -j4
+
+      - name: Package and verify the native SDK, then stage the Python files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import runpy
+          import shutil
+          import subprocess
+          import tempfile
+          from pathlib import Path
+
+          root = Path.cwd()
+          packager = runpy.run_path(str(root / "scripts/package-release.py"))
+          arch = os.environ["PQ_CP_ABE_WHEEL_ARCH"]
+          tag = os.environ["MACOS12_BACKFILL_TAG"]
+          name = f"libhybrid-pq-cp-abe_macos12_{arch}_{tag}"
+          output = root / "build/release"
+          output.mkdir(parents=True, exist_ok=True)
+          with tempfile.TemporaryDirectory(prefix="stage-macos12-", dir=output) as directory:
+              package = Path(directory) / name
+              archive = output / f"{name}.zip"
+              packager["stage_package"](root, package, "macos")
+              packager["prepare_shared_libraries"](package, "macos")
+              packager["collect_notices"](root, package)
+              cli = package / "bin/main"
+              binary = package / "lib/libhybrid-pq-cp-abe.dylib"
+              for item in (cli, *sorted((package / "lib").rglob("*.dylib"))):
+                  slices = subprocess.check_output(["lipo", "-archs", item], text=True).split()
+                  if slices != [arch]:
+                      raise RuntimeError(f"{item.name}: expected {arch}, got {slices}")
+                  info = subprocess.check_output(["xcrun", "vtool", "-show-build", item], text=True)
+                  match = re.search(r"^\s*(?:minos|version)\s+(\d+)\.(\d+)(?:\.(\d+))?\s*$", info, re.M)
+                  if not match:
+                      raise RuntimeError(f"{item.name}: missing Mach-O deployment target")
+                  target = tuple(int(part or 0) for part in match.groups())
+                  if target > (12, 0, 0) or (item in (cli, binary) and target != (12, 0, 0)):
+                      raise RuntimeError(f"{item.name}: unexpected deployment target {target}")
+                  print(f"{item.name}: {arch}, minos {'.'.join(map(str, target))}")
+              packager["write_archive"](package, archive)
+              packager["verify_runtime"](archive, "macos")
+
+              runtime = root / "bindings/python/pq_cp_abe/_libs"
+              runtime.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(binary, runtime / binary.name)
+              licenses = root / "bindings/python/release-licenses"
+              licenses.mkdir()
+              for basename in ("LICENSE", "NOTICE"):
+                  shutil.copy2(package / basename, licenses / basename)
+              for folder in ("vendor", "licenses"):
+                  shutil.copytree(package / folder, licenses / folder)
+          PY
+
+      - name: Build and verify the macOS 12 wheel
+        shell: bash
+        run: |
+          python -m pip install --upgrade build delocate
+          python -m build --wheel bindings/python
+          delocate-wheel --require-archs="$PQ_CP_ABE_WHEEL_ARCH" -v \
+            -w bindings/python/repaired bindings/python/dist/*.whl
+          wheel="bindings/python/repaired/pq_cp_abe-$(cat VERSION)-py3-none-macosx_12_0_$PQ_CP_ABE_WHEEL_ARCH.whl"
+          test -f "$wheel"
+          python bindings/python/verify_wheel.py --wheel-dir bindings/python/repaired
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-macos12-wheel-${{ matrix.arch }}
+          path: bindings/python/repaired/*.whl
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-macos12-${{ matrix.arch }}
+          path: build/release/libhybrid-pq-cp-abe_macos12_*_*.zip
+          if-no-files-found: error
+
+  attach-macos12-native:
+    name: Add the native macOS 12 SDKs to GitHub Release
+    needs: macos12-artifacts
+    if: ${{ inputs.macos12_backfill && inputs.publish }}
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: macos12-native-backfill
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: native-macos12-*
+          path: dist
+          merge-multiple: true
+
+      - name: Attach the Monterey ZIPs and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cd dist
+          shopt -s nullglob
+          files=(*)
+          test "${#files[@]}" -eq 2
+          archives=()
+          for arch in x86_64 arm64; do
+            name="libhybrid-pq-cp-abe_macos12_${arch}_${MACOS12_BACKFILL_TAG}.zip"
+            test -f "$name"
+            archives+=("$name")
+          done
+
+          existing="$(gh release view "$MACOS12_BACKFILL_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name')"
+          pending=()
+          for archive in "${archives[@]}"; do
+            if ! grep -Fxq -- "$archive" <<< "$existing"; then
+              pending+=("$archive")
+            fi
+          done
+          if (( ${#pending[@]} > 0 )); then
+            gh release upload "$MACOS12_BACKFILL_TAG" "${pending[@]}" --repo "$GITHUB_REPOSITORY"
+          fi
+
+          # Use the digests of the uploaded assets, including ones from a prior run.
+          assets="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$MACOS12_BACKFILL_TAG" --jq '.assets')"
+          sums=SHA256SUMS-macos12.txt
+          for archive in "${archives[@]}"; do
+            digest="$(jq -er --arg name "$archive" '.[] | select(.name == $name) | .digest' <<< "$assets")"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+            printf '%s  %s\n' "${digest#sha256:}" "$archive"
+          done > "$sums"
+          if grep -Fxq -- "$sums" <<< "$existing"; then
+            gh release download "$MACOS12_BACKFILL_TAG" --repo "$GITHUB_REPOSITORY" \
+              --pattern "$sums" --dir "$RUNNER_TEMP"
+            cmp "$sums" "$RUNNER_TEMP/$sums"
+          else
+            gh release upload "$MACOS12_BACKFILL_TAG" "$sums" --repo "$GITHUB_REPOSITORY"
+          fi
+
+  publish-macos12:
+    name: Add the two macOS 12 wheels to PyPI
+    needs: [macos12-artifacts, attach-macos12-native]
+    if: ${{ inputs.macos12_backfill && inputs.publish }}
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pq-cp-abe
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: python-macos12-wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Require exactly the two backfill wheel files
+        shell: bash
+        run: |
+          shopt -s nullglob
+          wheels=(dist/*)
+          test "${#wheels[@]}" -eq 2
+          for arch in x86_64 arm64; do
+            test -f "dist/pq_cp_abe-${MACOS12_BACKFILL_TAG#v}-py3-none-macosx_12_0_$arch.whl"
+          done
+
+      - name: Upload macOS 12 wheels using Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          skip-existing: true
