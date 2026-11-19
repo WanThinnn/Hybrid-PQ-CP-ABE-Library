@@ -4,6 +4,7 @@ The Python API is interpreter-independent, but its shared libraries are NOT
 platform-independent. Never emit py3-none-any for this package.
 """
 
+import os
 import platform
 import shutil
 import subprocess
@@ -13,6 +14,7 @@ from setuptools.command.build_py import build_py
 from setuptools import Distribution, setup
 from setuptools.errors import SetupError
 from wheel.bdist_wheel import bdist_wheel
+from wheel.macosx_libfile import calculate_macosx_platform_tag
 
 PACKAGE = Path(__file__).resolve().parent / "pq_cp_abe" / "_libs"
 EXTENSIONS = {"Windows": "dll", "Linux": "so", "Darwin": "dylib"}
@@ -60,7 +62,8 @@ class PlatformWheel(bdist_wheel):
             # python.org CPython can report universal2 even when our bundled
             # release dylib has exactly one architecture. A universal2 tag
             # falsely promises both slices and causes delocate to fail.
-            arch = platform.machine().lower()
+            arch = os.environ.get("PQ_CP_ABE_WHEEL_ARCH", platform.machine()).lower()
+            arch = {"amd64": "x86_64", "aarch64": "arm64"}.get(arch, arch)
             if arch not in ("x86_64", "arm64"):
                 raise SetupError(f"Unsupported macOS wheel architecture: {arch}")
             dylib = PACKAGE / "libhybrid-pq-cp-abe.dylib"
@@ -69,10 +72,17 @@ class PlatformWheel(bdist_wheel):
                 raise SetupError(f"Native dylib lacks host architecture {arch}: {slices}")
             if len(slices) != 1:
                 raise SetupError(f"Expected single-arch macOS dylib, found: {slices}")
-            # delocate will increase the macOS minimum deployment target if
-            # the native binary requires a newer version.
-            platform_tag = ("macosx_11_0_arm64" if arch == "arm64"
-                            else "macosx_10_15_x86_64")
+            # Derive the minimum macOS deployment target from the actual
+            # Mach-O files bundled in the package. The interpreter's platform
+            # tag only supplies a floor; wheel.macosx_libfile raises it when
+            # the dylib requires a newer macOS version.
+            parts = platform_tag.split("_")
+            if len(parts) < 4 or parts[0] != "macosx":
+                raise SetupError(f"Unexpected macOS platform tag: {platform_tag}")
+            base_major, base_minor = parts[1], parts[2]
+            platform_tag = calculate_macosx_platform_tag(
+                PACKAGE, f"macosx-{base_major}.{base_minor}-{arch}"
+            )
         return "py3", "none", platform_tag
 
 
