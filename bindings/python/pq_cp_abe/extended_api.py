@@ -126,15 +126,17 @@ def ml_dsa_87_verify(message: bytes, signature: bytes, public_key: bytes):
     return True
 
 def aes_gcm_encrypt(key: bytes, iv: bytes, plaintext: bytes, aad: bytes = b""):
-    if len(key) != 32 or len(iv) != 12:
-        raise ValueError("Use a 32-byte AES-256 key and a 12-byte GCM nonce")
+    """Encrypt with AES-256-GCM using a unique nonce of at least 12 bytes."""
+    if len(key) != 32 or len(iv) < 12:
+        raise ValueError("Use a 32-byte AES-256 key and a GCM nonce of at least 12 bytes")
     return _run_outputs(abe_lib.aes_gcm_encrypt, _data(key), len(key),
                         _data(iv), len(iv), _data(plaintext), len(plaintext),
                         _data(aad), len(aad))
 
 def aes_gcm_decrypt(key: bytes, iv: bytes, ciphertext: bytes, aad: bytes = b""):
-    if len(key) != 32 or len(iv) != 12:
-        raise ValueError("Use a 32-byte AES-256 key and a 12-byte GCM nonce")
+    """Decrypt with the same nonce and AAD used for encryption."""
+    if len(key) != 32 or len(iv) < 12:
+        raise ValueError("Use a 32-byte AES-256 key and a GCM nonce of at least 12 bytes")
     return _run_outputs(abe_lib.aes_gcm_decrypt, _data(key), len(key),
                         _data(iv), len(iv), _data(ciphertext), len(ciphertext),
                         _data(aad), len(aad))

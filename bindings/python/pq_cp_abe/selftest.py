@@ -88,6 +88,15 @@ class CompleteNativeSelfTest(unittest.TestCase):
                 self.assertEqual(extended_api.aes_gcm_decrypt(key, nonce, ct, b"aad"), b"plaintext")
                 with self.assertRaises(RuntimeError):
                     extended_api.aes_gcm_decrypt(key, nonce, ct, b"wrong-aad")
+                long_nonce = bytes(range(24, 48))
+                long_ct = extended_api.aes_gcm_encrypt(key, long_nonce, b"plaintext", b"aad")
+                self.assertEqual(extended_api.aes_gcm_decrypt(key, long_nonce, long_ct, b"aad"), b"plaintext")
+                with self.assertRaises(RuntimeError):
+                    extended_api.aes_gcm_decrypt(key, nonce, long_ct, b"aad")
+                with self.assertRaises(ValueError):
+                    extended_api.aes_gcm_encrypt(key, nonce[:11], b"plaintext")
+                with self.assertRaises(ValueError):
+                    extended_api.aes_gcm_decrypt(key, nonce[:11], ct)
                 print("  PASS AES-GCM")
 
                 # Standalone ML-DSA-87 including tamper detection.
