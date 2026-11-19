@@ -6,6 +6,7 @@ platform-independent. Never emit py3-none-any for this package.
 
 import platform
 import shutil
+import subprocess
 from pathlib import Path
 
 from setuptools.command.build_py import build_py
@@ -55,6 +56,23 @@ class PlatformWheel(bdist_wheel):
         _python_tag, _abi_tag, platform_tag = super().get_tag()
         if platform_tag == "any":
             raise SetupError("Refusing to package native binaries as a universal wheel")
+        if platform.system() == "Darwin":
+            # python.org CPython can report universal2 even when our bundled
+            # release dylib has exactly one architecture. A universal2 tag
+            # falsely promises both slices and causes delocate to fail.
+            arch = platform.machine().lower()
+            if arch not in ("x86_64", "arm64"):
+                raise SetupError(f"Unsupported macOS wheel architecture: {arch}")
+            dylib = PACKAGE / "libhybrid-pq-cp-abe.dylib"
+            slices = subprocess.check_output(["lipo", "-archs", str(dylib)], text=True).split()
+            if arch not in slices:
+                raise SetupError(f"Native dylib lacks host architecture {arch}: {slices}")
+            if len(slices) != 1:
+                raise SetupError(f"Expected single-arch macOS dylib, found: {slices}")
+            # delocate will increase the macOS minimum deployment target if
+            # the native binary requires a newer version.
+            platform_tag = ("macosx_11_0_arm64" if arch == "arm64"
+                            else "macosx_10_15_x86_64")
         return "py3", "none", platform_tag
 
 

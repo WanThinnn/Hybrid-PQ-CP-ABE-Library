@@ -61,16 +61,16 @@ jobs:
       - name: Repair Linux wheel for manylinux
         if: runner.os == 'Linux'
         run: |
-          python -m pip install auditwheel
-          sudo apt-get update
-          sudo apt-get install -y patchelf
+          python -m pip install --upgrade auditwheel 'patchelf>=0.17'
+          patchelf --version
           auditwheel show bindings/python/dist/*.whl
           auditwheel repair --plat manylinux_2_35_x86_64 --wheel-dir bindings/python/repaired bindings/python/dist/*.whl
 
       - name: Repair macOS wheel dependencies
         if: runner.os == 'macOS'
         run: |
-          python -m pip install delocate
+          python -m pip install --upgrade delocate
+          lipo -archs bindings/python/pq_cp_abe/_libs/libhybrid-pq-cp-abe.dylib
           delocate-listdeps bindings/python/dist/*.whl
           delocate-wheel -w bindings/python/repaired bindings/python/dist/*.whl
 
