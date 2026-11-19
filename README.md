@@ -38,20 +38,28 @@ On Windows, run `bin\main.exe version`. The archive includes headers and
 libraries for C/C++ integration. See the [CLI examples](docs/cli.md) and
 [build guide](docs/build.md) for source builds and toolchain setup.
 
-### WebAssembly
+### Node.js (WebAssembly)
 
-Download the `libhybrid-pq-cp-abe_wasm_*.zip` asset from the same release. Extract it
-and keep the JavaScript and WASM runtime files in `lib/wasm/` together:
+Install the WebAssembly SDK with npm on Node.js 18 or newer.
+
+```sh
+npm install @wanthinnn/pq-cp-abe
+```
+
+Save this example as `demo.mjs` and run `node demo.mjs` to check the version.
 
 ```js
-import createHybridCPABE from './lib/wasm/loader.mjs';
+import createHybridCPABE from '@wanthinnn/pq-cp-abe';
 
 const abe = await createHybridCPABE();
 console.log(abe.ccall('getVersion', 'string', [], []));
 ```
 
-For local builds, browser hosting, and C/C++ linking, see the
-[WebAssembly guide](bindings/wasm/README.md).
+Run the bundled self-test with `npx @wanthinnn/pq-cp-abe --test`.
+
+See the [Node.js SDK guide](bindings/npm/README.md) for CLI commands and a
+CoverCrypt example, and the [WebAssembly guide](bindings/wasm/README.md) for
+source builds, browser hosting, and C/C++ linking.
 
 ## Build from source
 
