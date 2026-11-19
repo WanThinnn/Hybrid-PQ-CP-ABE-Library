@@ -1,5 +1,17 @@
 # PQ-CP-ABE Python SDK
 
+Encrypt data under a policy such as `role::admin && department::finance`.
+Only a user whose key grants the admin role in the finance department can
+decrypt it. This is
+**ciphertext-policy attribute-based encryption (CP-ABE)**.
+
+The default scheme, **CoverCrypt**, brings **post-quantum protection to ABE
+key encapsulation**. Its default `hybridized` mode combines Curve25519 and
+ML-KEM-768 to protect the secret used for AES-256-GCM payload encryption.
+Optional ML-DSA-87 signatures authenticate the sender and signed data.
+AC17 and TKN20 use classical ABE key protection, including when signing
+is enabled.
+
 - PyPI distribution: `pq-cp-abe`
 - Import: `import pq_cp_abe`
 - The repository root `VERSION` is the sole build version; installed packages read the embedded distribution metadata.
@@ -16,77 +28,143 @@ with `python -m pip install <downloaded-wheel.whl>`.
 python -m pip install pq-cp-abe
 ```
 
-### Basic CLI commands
+### Post-quantum ABE from the CLI
 
 Run `python -m pq_cp_abe` to list commands and `python -m pq_cp_abe --test`
-to run the full self-test. CoverCrypt is the default for the CLI and Python
-wrappers, and setup requires a dimensions JSON file. The examples below
-explicitly select AC17 so they can run in a new working directory without a
-CoverCrypt configuration file.
+to run the full self-test. The demo uses CoverCrypt in its default
+`hybridized` mode. Here, **hybrid means Curve25519 and ML-KEM-768 each
+contribute a shared secret to the same key encapsulation**. CoverCrypt uses
+both components to recover the protected secret, while AES-256-GCM encrypts
+the file itself. For ML-KEM-768-only encapsulation, see
+[how to choose `post_quantum`](#choose-hybrid-or-pqc-only-key-encapsulation).
+
+In a new working directory, create a file named `attributes-dimensions.json`:
+
+```json
+{
+  "dimensions": [
+    {"name": "role", "attributes": ["admin", "analyst"]},
+    {"name": "department", "attributes": ["finance", "engineering"]}
+  ]
+}
+```
+
+Set `HCPABE_COVERCRYPT_CONFIG` in the terminal where you will run the demo.
+Set `HCPABE_COVERCRYPT_MODE` to `hybridized` if the terminal already uses
+another mode.
+
+- Bash: `export HCPABE_COVERCRYPT_CONFIG=./attributes-dimensions.json`
+- PowerShell: `$env:HCPABE_COVERCRYPT_CONFIG = (Resolve-Path ./attributes-dimensions.json).Path`
+- CMD: `set "HCPABE_COVERCRYPT_CONFIG=%CD%\attributes-dimensions.json"`
 
 ```sh
 mkdir keys
 python -c "from pathlib import Path; Path('message.txt').write_text('Hello from PQ-CP-ABE', encoding='utf-8')"
-python -m pq_cp_abe --scheme ac17 setup keys
-python -m pq_cp_abe --scheme ac17 genkey keys/cpabe_msk.key "admin it" keys/user.key
-python -m pq_cp_abe --scheme ac17 encrypt keys/cpabe_pk.key message.txt "admin and it" message.enc
+python -m pq_cp_abe setup keys
+python -m pq_cp_abe genkey keys/cpabe_msk.key "role::admin department::finance" keys/user.key
+python -m pq_cp_abe encrypt keys/cpabe_pk.key message.txt "role::admin && department::finance" message.enc
 python -m pq_cp_abe decrypt keys/user.key message.enc recovered.txt
 python -c "from pathlib import Path; print(Path('recovered.txt').read_text(encoding='utf-8'))"
 ```
 
-The policy requires both attributes. Setup creates the authority's master
+CoverCrypt writes each attribute as `dimension::value`. Pass a
+space-separated list to `genkey` and join required attributes with `&&`
+in the encryption policy. Setup creates the authority's master
 secret key (`cpabe_msk.key`) and public key (`cpabe_pk.key`). Use the master
 secret key to issue user keys, and share the public key with encryptors.
 
-For optional ML-DSA-87 signing and verification, use a separate key directory
-and the same `message.txt`.
+To add ML-DSA-87 signing and verification to the same post-quantum ABE flow,
+use a separate key directory and the same `message.txt`.
 
 ```sh
 mkdir signed-keys
-python -m pq_cp_abe --scheme ac17 setup-pqc signed-keys
-python -m pq_cp_abe --scheme ac17 genkey signed-keys/cpabe_msk.key "admin it" signed-keys/user.key
-python -m pq_cp_abe --scheme ac17 encrypt-pqc signed-keys/cpabe_pk.key signed-keys/pqc_sk.key message.txt "admin and it" signed.enc
+python -m pq_cp_abe setup-pqc signed-keys
+python -m pq_cp_abe genkey signed-keys/cpabe_msk.key "role::admin department::finance" signed-keys/user.key
+python -m pq_cp_abe encrypt-pqc signed-keys/cpabe_pk.key signed-keys/pqc_sk.key message.txt "role::admin && department::finance" signed.enc
 python -m pq_cp_abe decrypt-pqc signed-keys/user.key signed-keys/pqc_pk.key signed.enc verified.txt
 ```
 
-### Run a Python example
+### Run a post-quantum ABE example in Python
 
 Copy this into `demo.py` and run `python demo.py`. It creates an authority,
-issues a user key, and encrypts and decrypts a message in memory using the
-default CoverCrypt scheme.
+issues a user key with `role::admin` and `department::finance`, and encrypts
+and decrypts a message in memory using CoverCrypt in hybridized mode.
+It also checks that a user key from the engineering department cannot
+decrypt the same ciphertext.
+Each step reports `OK` or `FAILED`. A failure prints the error and exits with
+status 1.
 
 ```python
 import json
 import os
+import sys
+from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pq_cp_abe as abe
 
 
+@contextmanager
+def step(number, label):
+    prefix = f"[{number}/7] {label}"
+    print(f"{prefix} ...", flush=True)
+    try:
+        yield
+    except Exception as error:
+        print(f"{prefix}: FAILED ({error})", file=sys.stderr, flush=True)
+        raise SystemExit(1) from None
+    print(f"{prefix}: OK", flush=True)
+
+
 def main():
-    attributes = "admin it"
-    policy = "admin and it"
+    mode = "hybridized"
+    attributes = "role::admin department::finance"
+    policy = "role::admin && department::finance"
     message = b"Hello from PQ-CP-ABE"
 
-    with TemporaryDirectory() as directory:
-        config = Path(directory) / "covercrypt.json"
-        config.write_text(json.dumps({"dimensions": [
-            {"name": "admin", "attributes": ["present", "absent"]},
-            {"name": "it", "attributes": ["present", "absent"]},
-        ]}), encoding="utf-8")
-        os.environ["HCPABE_COVERCRYPT_CONFIG"] = str(config)
-
-        public_key, master_key = abe.setup_buffer()
-        user_key = abe.genkey_buffer(master_key, attributes)
-        ciphertext = abe.call_hybrid_cpabe_encryptBuffer(public_key, message, policy)
-        recovered = abe.call_hybrid_cpabe_decryptBuffer(user_key, ciphertext)
-    if recovered != message:
-        raise RuntimeError("The decrypted message does not match the original")
-
     print(f"Native library version: {abe.get_version()}")
-    print(f"Ciphertext size: {len(ciphertext)} bytes")
-    print(recovered.decode("utf-8"))
+    print(f"Scheme: CoverCrypt ({mode})")
+
+    with TemporaryDirectory() as directory:
+        with step(1, "Write the CoverCrypt configuration"):
+            config = Path(directory) / "attributes-dimensions.json"
+            config.write_text(json.dumps({"dimensions": [
+                {"name": "role", "attributes": ["admin", "analyst"]},
+                {"name": "department", "attributes": ["finance", "engineering"]},
+            ]}), encoding="utf-8")
+            os.environ["HCPABE_COVERCRYPT_CONFIG"] = str(config)
+            os.environ["HCPABE_COVERCRYPT_MODE"] = mode
+
+        with step(2, "Create authority keys"):
+            public_key, master_key = abe.setup_buffer()
+
+        with step(3, f"Issue a user key for {attributes}"):
+            user_key = abe.genkey_buffer(master_key, attributes)
+
+        with step(4, f"Encrypt under policy {policy}"):
+            ciphertext = abe.call_hybrid_cpabe_encryptBuffer(public_key, message, policy)
+            print(f"    Ciphertext size: {len(ciphertext)} bytes")
+
+        with step(5, "Decrypt with the user key"):
+            recovered = abe.call_hybrid_cpabe_decryptBuffer(user_key, ciphertext)
+
+        with step(6, "Compare the recovered message with the original"):
+            if recovered != message:
+                raise ValueError("The decrypted message does not match the original")
+            print(f"    Recovered message: {recovered.decode('utf-8')}")
+
+        with step(7, "Check that a user from engineering is denied"):
+            other_attributes = "role::admin department::engineering"
+            other_key = abe.genkey_buffer(master_key, other_attributes)
+            try:
+                abe.call_hybrid_cpabe_decryptBuffer(other_key, ciphertext)
+            except RuntimeError as error:
+                if "Attributes do not satisfy policy" not in str(error):
+                    raise
+                print(f"    Access denied as expected for {other_attributes}")
+            else:
+                raise RuntimeError("The engineering user unexpectedly decrypted the message")
 
 
 if __name__ == "__main__":
@@ -95,9 +173,39 @@ if __name__ == "__main__":
 
 For existing AC17 or TKN20 keys, pass `scheme=abe.CPABE_SCHEME_AC17` or
 `scheme=abe.CPABE_SCHEME_TKN20` to setup, key generation and encryption.
-Decryption detects the scheme from the ciphertext. For CoverCrypt CLI setup,
-set `HCPABE_COVERCRYPT_CONFIG` to a dimensions JSON file and omit `--scheme`.
-See the [scheme guide](../../docs/architecture.md#native-pqc-with-covercrypt).
+Decryption detects the scheme from the ciphertext.
+See the [scheme guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/architecture.md#native-pqc-with-covercrypt).
+
+### Choose hybrid or PQC-only key encapsulation
+
+CoverCrypt supports three modes for protecting the secret behind the access
+policy. Choose one with `HCPABE_COVERCRYPT_MODE` before setup.
+
+| Mode | CoverCrypt key encapsulation |
+| --- | --- |
+| `hybridized` (default) | Combines a classical Curve25519-based shared secret and an ML-KEM-768 shared secret in the same encapsulation. Decapsulation uses both components. |
+| `post_quantum` | Uses ML-KEM-768 alone for key encapsulation. |
+| `classic` | Uses the classical Curve25519-based component alone. |
+
+For a **PQC-only ABE/KEM demo**, select `post_quantum` and run setup in a
+fresh key directory. Keep `HCPABE_COVERCRYPT_CONFIG` set to the dimensions file
+from the CLI example above.
+
+- Bash: `export HCPABE_COVERCRYPT_MODE=post_quantum`
+- PowerShell: `$env:HCPABE_COVERCRYPT_MODE = 'post_quantum'`
+- CMD: `set "HCPABE_COVERCRYPT_MODE=post_quantum"`
+
+In `demo.py`, change the mode to `"post_quantum"` before calling
+`abe.setup_buffer()`. Setup applies the selected mode to the configured
+attributes. Encryption uses the mode encoded in the public key for the
+selected rights. To switch modes for an existing demo, generate a new authority
+and issue new user keys. Changing the environment variable alone leaves
+existing keys and ciphertext unchanged.
+
+All three modes use AES-256-GCM for payload encryption. ML-DSA-87 is a
+separate, optional signature layer. See the
+[C++ mode selector](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/src/schemes/covercrypt.cpp) and the
+[CoverCrypt encapsulation implementation](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/vendor/cover_crypt/src/abe/core/primitives.rs).
 
 ## Layout
 
