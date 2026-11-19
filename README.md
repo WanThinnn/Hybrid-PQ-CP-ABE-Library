@@ -38,6 +38,9 @@ On Windows, run `bin\main.exe version`. The archive includes headers and
 libraries for C/C++ integration. See the [CLI examples](docs/cli.md) and
 [build guide](docs/build.md) for source builds and toolchain setup.
 
+The prebuilt Linux x86_64 SDK and Python wheel require glibc 2.34 or newer and
+libstdc++ with `GLIBCXX_3.4.29`. Check your glibc with `getconf GNU_LIBC_VERSION`.
+
 ### Node.js (WebAssembly)
 
 Install the WebAssembly SDK with npm on Node.js 18 or newer.
