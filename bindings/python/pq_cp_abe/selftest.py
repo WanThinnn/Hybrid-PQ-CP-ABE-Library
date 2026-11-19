@@ -1,4 +1,4 @@
-"""Complete runnable self-test of the 33 native v6.0.1 exports.
+"""Complete runnable self-test of the 33 native C exports.
 
 Runs exclusively in TemporaryDirectory. Instrumented calls record which DLL
 symbols Python actually invoked (not merely whether the symbols were declared).
@@ -103,7 +103,7 @@ class CompleteNativeSelfTest(unittest.TestCase):
                 # Legacy file operations (default AC17) and default PQC file calls.
                 legacy = root / "legacy"
                 legacy.mkdir()
-                self.assertEqual(api.call_setup(str(legacy)), 0)
+                self.assertEqual(api.call_setup(str(legacy), scheme=api.CPABE_SCHEME_AC17), 0)
                 msk = legacy / "cpabe_msk.key"
                 pk = legacy / "cpabe_pk.key"
                 user = legacy / "user.key"
@@ -111,21 +111,21 @@ class CompleteNativeSelfTest(unittest.TestCase):
                 plain.write_bytes(data)
                 cipher = legacy / "enc.bin"
                 recover = legacy / "recover.bin"
-                self.assertEqual(api.call_generate_secret_key(str(msk), "admin it", str(user)), 0)
-                self.assertEqual(api.call_hybrid_cpabe_encrypt(str(pk), str(plain), policy, str(cipher)), 0)
+                self.assertEqual(api.call_generate_secret_key(str(msk), "admin it", str(user), scheme=api.CPABE_SCHEME_AC17), 0)
+                self.assertEqual(api.call_hybrid_cpabe_encrypt(str(pk), str(plain), policy, str(cipher), scheme=api.CPABE_SCHEME_AC17), 0)
                 self.assertEqual(api.call_hybrid_cpabe_decrypt(str(user), str(cipher), str(recover)), 0)
                 self.assertEqual(recover.read_bytes(), data)
                 key_pk = _read_key(pk)
                 key_sk = _read_key(user)
-                buffer_ct = api.call_hybrid_cpabe_encryptBuffer(key_pk, data, policy)
+                buffer_ct = api.call_hybrid_cpabe_encryptBuffer(key_pk, data, policy, scheme=api.CPABE_SCHEME_AC17)
                 self.assertEqual(api.call_hybrid_cpabe_decryptBuffer(key_sk, buffer_ct), data)
 
                 legacy_pqc = root / "legacy-pqc"
                 legacy_pqc.mkdir()
-                self.assertEqual(api.call_hybrid_cpabe_setup_with_pqc(str(legacy_pqc)), 0)
+                self.assertEqual(api.call_hybrid_cpabe_setup_with_pqc(str(legacy_pqc), scheme=api.CPABE_SCHEME_AC17), 0)
                 pqc_user = legacy_pqc / "user.key"
                 self.assertEqual(api.call_generate_secret_key(
-                    str(legacy_pqc / "cpabe_msk.key"), "admin it", str(pqc_user)), 0)
+                    str(legacy_pqc / "cpabe_msk.key"), "admin it", str(pqc_user), scheme=api.CPABE_SCHEME_AC17), 0)
                 pqc_plain = legacy_pqc / "plain.bin"
                 pqc_plain.write_bytes(data)
                 pqc_cipher = legacy_pqc / "signed.bin"
@@ -134,12 +134,12 @@ class CompleteNativeSelfTest(unittest.TestCase):
                 pqc_private = legacy_pqc / "pqc_sk.key"
                 self.assertEqual(api.call_hybrid_cpabe_encrypt_and_sign(
                     str(legacy_pqc / "cpabe_pk.key"), str(pqc_private), str(pqc_plain),
-                    policy, str(pqc_cipher)), 0)
+                    policy, str(pqc_cipher), scheme=api.CPABE_SCHEME_AC17), 0)
                 self.assertEqual(api.call_hybrid_cpabe_decrypt_and_verify(
                     str(pqc_user), str(pqc_public), str(pqc_cipher), str(pqc_recovered)), 0)
                 self.assertEqual(pqc_recovered.read_bytes(), data)
                 signed = api.call_hybrid_cpabe_encryptBuffer_and_sign(
-                    _read_key(legacy_pqc / "cpabe_pk.key"), _read_key(pqc_private), data, policy)
+                    _read_key(legacy_pqc / "cpabe_pk.key"), _read_key(pqc_private), data, policy, scheme=api.CPABE_SCHEME_AC17)
                 self.assertEqual(api.call_hybrid_cpabe_decryptBuffer_and_verify(
                     _read_key(pqc_user), _read_key(pqc_public), signed), data)
                 print("  PASS legacy AC17 file / buffer / PQC")
@@ -152,41 +152,43 @@ class CompleteNativeSelfTest(unittest.TestCase):
                                       '{"name":"it","attributes":["present","absent"]}]}', encoding="utf-8")
                     settings = _covercrypt_settings(config) if scheme == 2 else contextlib.nullcontext()
                     with settings:
+                        scheme_options = {} if scheme == api.CPABE_SCHEME_COVERCRYPT else {"scheme": scheme}
                         # Setup and keygen from file, also signing.
                         self.assertEqual(api.call_hybrid_cpabe_setup_with_pqc_scheme(
-                            str(directory), scheme), 0)
+                            str(directory), **scheme_options), 0)
                         master = directory / "cpabe_msk.key"
                         public = directory / "cpabe_pk.key"
                         userkey = directory / "user.key"
                         self.assertEqual(api.call_generate_secret_key_with_scheme(
-                            str(master), "admin it", str(userkey), scheme), 0)
+                            str(master), "admin it", str(userkey), **scheme_options), 0)
                         message = directory / "message.bin"
                         message.write_bytes(data)
                         out = directory / "ciphertext.bin"
                         decoded = directory / "decoded.bin"
                         self.assertEqual(api.call_hybrid_cpabe_encrypt_with_scheme(
-                            str(public), str(message), policy, str(out), scheme), 0)
+                            str(public), str(message), policy, str(out), **scheme_options), 0)
                         self.assertEqual(api.call_hybrid_cpabe_decrypt(
                             str(userkey), str(out), str(decoded)), 0)
                         self.assertEqual(decoded.read_bytes(), data)
                         self.assertEqual(api.call_hybrid_cpabe_encrypt_and_sign_with_scheme(
                             str(public), str(directory / "pqc_sk.key"), str(message),
-                            policy, str(out), scheme), 0)
+                            policy, str(out), **scheme_options), 0)
                         self.assertEqual(api.call_hybrid_cpabe_decrypt_and_verify(
                             str(userkey), str(directory / "pqc_pk.key"), str(out), str(decoded)), 0)
                         self.assertEqual(decoded.read_bytes(), data)
 
                         # Scheme-aware in-memory setup, keygen, encrypt/decrypt/sign/verify.
-                        pk_buffer, msk_buffer = extended_api.setup_buffer(scheme)
-                        sk_buffer = extended_api.genkey_buffer(msk_buffer, "admin it", scheme)
+                        pk_buffer, msk_buffer = extended_api.setup_buffer(**scheme_options)
+                        sk_buffer = extended_api.genkey_buffer(msk_buffer, "admin it", **scheme_options)
                         ciphertext = api.call_hybrid_cpabe_encryptBuffer_with_scheme(
-                            pk_buffer, data, policy, scheme)
+                            pk_buffer, data, policy, **scheme_options)
+                        self.assertEqual(ciphertext[1], scheme)
                         self.assertEqual(api.call_hybrid_cpabe_decryptBuffer(sk_buffer, ciphertext), data)
                         signed_buffer = api.call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
-                            pk_buffer, _read_key(directory / "pqc_sk.key"), data, policy, scheme)
+                            pk_buffer, _read_key(directory / "pqc_sk.key"), data, policy, **scheme_options)
                         self.assertEqual(api.call_hybrid_cpabe_decryptBuffer_and_verify(
                             sk_buffer, _read_key(directory / "pqc_pk.key"), signed_buffer), data)
-                        abe_pk, abe_msk, pqc_pk, pqc_sk = extended_api.setup_buffer_with_pqc(scheme)
+                        abe_pk, abe_msk, pqc_pk, pqc_sk = extended_api.setup_buffer_with_pqc(**scheme_options)
                         self.assertTrue(abe_pk and abe_msk and pqc_pk and pqc_sk)
                         print(f"  PASS {name} scheme / file / buffer / signed")
 

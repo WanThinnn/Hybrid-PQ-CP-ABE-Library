@@ -19,9 +19,17 @@ HCPABE_ERR_UNSUPPORTED_FORMAT = -7
 HCPABE_ERR_VERSION_MISMATCH = -8
 HCPABE_ERR_SIGNATURE_INVALID = -9
 
+def _call_scheme(legacy, scheme_aware, scheme, *arguments):
+    if scheme == CPABE_SCHEME_AC17:
+        return legacy(*arguments)
+    return scheme_aware(*arguments, scheme)
+
+
 # Python functions wrapping C++ library functions
-def call_setup(path_to_save_file):
-    result = abe_lib.setup(path_to_save_file.encode('utf-8'))
+def call_setup(path_to_save_file, scheme=CPABE_SCHEME_COVERCRYPT):
+    result = _call_scheme(abe_lib.setup, abe_lib.setup_with_scheme, scheme,
+        path_to_save_file.encode('utf-8'),
+    )
     if result == HCPABE_SUCCESS:
         print(f"Setup completed successfully!")
         print(f"   Files created in: {path_to_save_file}/")
@@ -32,10 +40,12 @@ def call_setup(path_to_save_file):
         print(f"Setup failed: {error_msg} (code: {result})")
     return result
 
-def call_generate_secret_key(master_key_file, attributes, private_key_file):
-    result = abe_lib.generateSecretKey(master_key_file.encode('utf-8'),
-                                        attributes.encode('utf-8'),
-                                        private_key_file.encode('utf-8'))
+def call_generate_secret_key(master_key_file, attributes, private_key_file, scheme=CPABE_SCHEME_COVERCRYPT):
+    result = _call_scheme(abe_lib.generateSecretKey, abe_lib.generateSecretKey_with_scheme, scheme,
+        master_key_file.encode('utf-8'),
+        attributes.encode('utf-8'),
+        private_key_file.encode('utf-8'),
+    )
     if result == HCPABE_SUCCESS:
         print(f"Secret key generated successfully!")
         print(f"   Attributes: {attributes}")
@@ -45,11 +55,13 @@ def call_generate_secret_key(master_key_file, attributes, private_key_file):
         print(f"Key generation failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encrypt(public_key_file, plaintext_file, policy, ciphertext_file):
-    result = abe_lib.hybrid_cpabe_encrypt(public_key_file.encode('utf-8'),
-                                   plaintext_file.encode('utf-8'),
-                                   policy.encode('utf-8'),
-                                   ciphertext_file.encode('utf-8'))
+def call_hybrid_cpabe_encrypt(public_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_COVERCRYPT):
+    result = _call_scheme(abe_lib.hybrid_cpabe_encrypt, abe_lib.hybrid_cpabe_encrypt_with_scheme, scheme,
+        public_key_file.encode('utf-8'),
+        plaintext_file.encode('utf-8'),
+        policy.encode('utf-8'),
+        ciphertext_file.encode('utf-8'),
+    )
     if result == HCPABE_SUCCESS:
         print(f"Encryption successful!")
         print(f"   Policy: {policy}")
@@ -73,7 +85,9 @@ def call_hybrid_cpabe_decrypt(private_key_file, ciphertext_file, recovertext_fil
         print(f"Decryption failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encryptBuffer(public_key: bytes, plaintext: bytes, policy: str) -> bytes:
+def call_hybrid_cpabe_encryptBuffer(public_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_COVERCRYPT) -> bytes:
+    if scheme != CPABE_SCHEME_AC17:
+        return call_hybrid_cpabe_encryptBuffer_with_scheme(public_key, plaintext, policy, scheme)
     pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
     pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
     
@@ -119,8 +133,10 @@ def call_hybrid_cpabe_decryptBuffer(private_key: bytes, ciphertext: bytes) -> by
         raise RuntimeError(f"Buffer decryption failed: {error_msg} (code: {result})")
 
 # Python wrappers for PQC functions
-def call_hybrid_cpabe_setup_with_pqc(path_to_save_file):
-    result = abe_lib.hybrid_cpabe_setup_with_pqc(path_to_save_file.encode('utf-8'))
+def call_hybrid_cpabe_setup_with_pqc(path_to_save_file, scheme=CPABE_SCHEME_COVERCRYPT):
+    result = _call_scheme(abe_lib.hybrid_cpabe_setup_with_pqc, abe_lib.hybrid_cpabe_setup_with_pqc_scheme, scheme,
+        path_to_save_file.encode('utf-8'),
+    )
     if result == HCPABE_SUCCESS:
         print(f"Setup with PQC completed successfully!")
         print(f"   Files created in: {path_to_save_file}/")
@@ -133,13 +149,13 @@ def call_hybrid_cpabe_setup_with_pqc(path_to_save_file):
         print(f"Setup failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encrypt_and_sign(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file):
-    result = abe_lib.hybrid_cpabe_encrypt_and_sign(
+def call_hybrid_cpabe_encrypt_and_sign(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_COVERCRYPT):
+    result = _call_scheme(abe_lib.hybrid_cpabe_encrypt_and_sign, abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme, scheme,
         public_key_file.encode('utf-8'),
         pqc_private_key_file.encode('utf-8'),
         plaintext_file.encode('utf-8'),
         policy.encode('utf-8'),
-        ciphertext_file.encode('utf-8')
+        ciphertext_file.encode('utf-8'),
     )
     if result == HCPABE_SUCCESS:
         print(f"Encryption & Sign successful!")
@@ -165,7 +181,9 @@ def call_hybrid_cpabe_decrypt_and_verify(private_key_file, pqc_public_key_file, 
         print(f"Decryption failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encryptBuffer_and_sign(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str) -> bytes:
+def call_hybrid_cpabe_encryptBuffer_and_sign(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_COVERCRYPT) -> bytes:
+    if scheme != CPABE_SCHEME_AC17:
+        return call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme(public_key, pqc_priv_key, plaintext, policy, scheme)
     pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
     pqc_sk_arr = (c_ubyte * len(pqc_priv_key)).from_buffer_copy(pqc_priv_key)
     pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
@@ -213,21 +231,21 @@ def call_hybrid_cpabe_decryptBuffer_and_verify(private_key: bytes, pqc_pub_key: 
         raise RuntimeError(f"Buffer PQC decryption failed: {error_msg} (code: {result})")
 
 # --- WRAPPERS WITH SCHEME ---
-def call_setup_with_scheme(path_to_save_file, scheme=CPABE_SCHEME_AC17):
+def call_setup_with_scheme(path_to_save_file, scheme=CPABE_SCHEME_COVERCRYPT):
     result = abe_lib.setup_with_scheme(path_to_save_file.encode('utf-8'), scheme)
     if result != HCPABE_SUCCESS:
         error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
         print(f"Setup failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_setup_with_pqc_scheme(path_to_save_file, scheme=CPABE_SCHEME_AC17):
+def call_hybrid_cpabe_setup_with_pqc_scheme(path_to_save_file, scheme=CPABE_SCHEME_COVERCRYPT):
     result = abe_lib.hybrid_cpabe_setup_with_pqc_scheme(path_to_save_file.encode('utf-8'), scheme)
     if result != HCPABE_SUCCESS:
         error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
         print(f"PQC Setup failed: {error_msg} (code: {result})")
     return result
 
-def call_generate_secret_key_with_scheme(master_key_file, attributes, private_key_file, scheme=CPABE_SCHEME_AC17):
+def call_generate_secret_key_with_scheme(master_key_file, attributes, private_key_file, scheme=CPABE_SCHEME_COVERCRYPT):
     result = abe_lib.generateSecretKey_with_scheme(master_key_file.encode('utf-8'),
                                         attributes.encode('utf-8'),
                                         private_key_file.encode('utf-8'), scheme)
@@ -236,7 +254,7 @@ def call_generate_secret_key_with_scheme(master_key_file, attributes, private_ke
         print(f"Key generation failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encrypt_with_scheme(public_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_AC17):
+def call_hybrid_cpabe_encrypt_with_scheme(public_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_COVERCRYPT):
     result = abe_lib.hybrid_cpabe_encrypt_with_scheme(public_key_file.encode('utf-8'),
                                    plaintext_file.encode('utf-8'),
                                    policy.encode('utf-8'),
@@ -246,7 +264,7 @@ def call_hybrid_cpabe_encrypt_with_scheme(public_key_file, plaintext_file, polic
         print(f"Encryption failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encryptBuffer_with_scheme(public_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_AC17) -> bytes:
+def call_hybrid_cpabe_encryptBuffer_with_scheme(public_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_COVERCRYPT) -> bytes:
     pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
     pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)
     ct_ptr = c_ubyte_p()
@@ -263,7 +281,7 @@ def call_hybrid_cpabe_encryptBuffer_with_scheme(public_key: bytes, plaintext: by
         error_msg = abe_lib.getErrorMessage(result).decode('utf-8')
         raise RuntimeError(f"Buffer encryption failed: {error_msg} (code: {result})")
 
-def call_hybrid_cpabe_encrypt_and_sign_with_scheme(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_AC17):
+def call_hybrid_cpabe_encrypt_and_sign_with_scheme(public_key_file, pqc_private_key_file, plaintext_file, policy, ciphertext_file, scheme=CPABE_SCHEME_COVERCRYPT):
     result = abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme(
         public_key_file.encode('utf-8'), pqc_private_key_file.encode('utf-8'),
         plaintext_file.encode('utf-8'), policy.encode('utf-8'), ciphertext_file.encode('utf-8'), scheme)
@@ -272,7 +290,7 @@ def call_hybrid_cpabe_encrypt_and_sign_with_scheme(public_key_file, pqc_private_
         print(f"Encryption failed: {error_msg} (code: {result})")
     return result
 
-def call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_AC17) -> bytes:
+def call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme(public_key: bytes, pqc_priv_key: bytes, plaintext: bytes, policy: str, scheme: int = CPABE_SCHEME_COVERCRYPT) -> bytes:
     pk_arr = (c_ubyte * len(public_key)).from_buffer_copy(public_key)
     pqc_sk_arr = (c_ubyte * len(pqc_priv_key)).from_buffer_copy(pqc_priv_key)
     pt_arr = (c_ubyte * len(plaintext)).from_buffer_copy(plaintext)

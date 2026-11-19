@@ -2,15 +2,16 @@
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-try:
-    # Installed wheels use their embedded package metadata, not a repository file.
-    __version__ = version("pq-cp-abe")
-except PackageNotFoundError:
-    # Development source tree: the root VERSION remains authoritative.
-    _root_version = Path(__file__).resolve().parents[3] / "VERSION"
-    if not _root_version.is_file():
-        raise RuntimeError("Cannot resolve pq-cp-abe version: no installed metadata or root VERSION")
+_project_dir = Path(__file__).resolve().parent.parent
+_root_version = _project_dir.parents[1] / "VERSION"
+if (_project_dir / "pyproject.toml").is_file() and _root_version.is_file():
+    # Ignore stale egg-info or another installed copy when importing from source.
     __version__ = _root_version.read_text(encoding="utf-8").strip()
+else:
+    try:
+        __version__ = version("pq-cp-abe")
+    except PackageNotFoundError as exc:
+        raise RuntimeError("Cannot resolve pq-cp-abe version: no installed metadata or root VERSION") from exc
 
 from ._native import abe_lib as native  # Complete low-level C ABI (33 exported DLL symbols)
 

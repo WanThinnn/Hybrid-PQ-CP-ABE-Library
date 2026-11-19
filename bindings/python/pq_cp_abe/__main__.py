@@ -1,10 +1,24 @@
 """Run the existing command-line interface with python -m pq_cp_abe."""
+import argparse
 import sys
 from .api import *
 from ._native import abe_lib
 
 # Main function to handle CLI in Python
 if __name__ == "__main__":
+    schemes = {"covercrypt": CPABE_SCHEME_COVERCRYPT, "ac17": CPABE_SCHEME_AC17,
+               "tkn20": CPABE_SCHEME_TKN20}
+    parser = argparse.ArgumentParser(description="PQ-CP-ABE Python CLI")
+    parser.add_argument("--scheme", choices=schemes, default="covercrypt",
+                        help="ABE scheme for setup, key generation and encryption (default: covercrypt)")
+    parser.add_argument("command", nargs="?")
+    parser.add_argument("arguments", nargs="*")
+    parser.add_argument("--test", action="store_true", help="Run the native self-test")
+    options = parser.parse_intermixed_args()
+    if options.test and options.command:
+        parser.error("--test does not take a command")
+    scheme = schemes[options.scheme]
+    sys.argv[1:] = ["--test"] if options.test else ([options.command, *options.arguments] if options.command else [])
     # Print version info
     version = abe_lib.getVersion().decode('utf-8')
     print(f"Hybrid CP-ABE Library v{version} (Python Wrapper)")
@@ -46,7 +60,7 @@ if __name__ == "__main__":
                 print(f"Usage: python {sys.argv[0]} setup <path_to_save_keys>")
                 sys.exit(1)
             path = sys.argv[2]
-            result = call_setup(path)
+            result = call_setup(path, scheme=scheme)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "setup-pqc":
@@ -54,7 +68,7 @@ if __name__ == "__main__":
                 print(f"Usage: python {sys.argv[0]} setup-pqc <path_to_save_keys>")
                 sys.exit(1)
             path = sys.argv[2]
-            result = call_hybrid_cpabe_setup_with_pqc(path)
+            result = call_hybrid_cpabe_setup_with_pqc(path, scheme=scheme)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "genkey":
@@ -65,7 +79,7 @@ if __name__ == "__main__":
             master_key_file = sys.argv[2]
             attributes = sys.argv[3]
             private_key_file = sys.argv[4]
-            result = call_generate_secret_key(master_key_file, attributes, private_key_file)
+            result = call_generate_secret_key(master_key_file, attributes, private_key_file, scheme=scheme)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "encrypt":
@@ -77,14 +91,14 @@ if __name__ == "__main__":
             plaintext_file = sys.argv[3]
             policy = sys.argv[4]
             ciphertext_file = sys.argv[5]
-            result = call_hybrid_cpabe_encrypt(public_key_file, plaintext_file, policy, ciphertext_file)
+            result = call_hybrid_cpabe_encrypt(public_key_file, plaintext_file, policy, ciphertext_file, scheme=scheme)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "encrypt-pqc":
             if len(sys.argv) != 7:
                 print(f"Usage: python {sys.argv[0]} encrypt-pqc <pk> <pqc_sk> <file> <policy> <out>")
                 sys.exit(1)
-            result = call_hybrid_cpabe_encrypt_and_sign(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+            result = call_hybrid_cpabe_encrypt_and_sign(*sys.argv[2:], scheme=scheme)
             sys.exit(0 if result == HCPABE_SUCCESS else 1)
             
         elif mode == "decrypt":
@@ -121,7 +135,7 @@ if __name__ == "__main__":
             print(f"Original plaintext: {plaintext.decode('utf-8')}")
             print(f"Policy: {policy}")
             print("Encrypting buffer...")
-            ct = call_hybrid_cpabe_encryptBuffer(pk, plaintext, policy)
+            ct = call_hybrid_cpabe_encryptBuffer(pk, plaintext, policy, scheme=scheme)
             print(f"Encrypted! Ciphertext size: {len(ct)} bytes")
             
             print("Decrypting buffer...")

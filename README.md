@@ -5,7 +5,7 @@ WebAssembly. It combines AC17, TKN20, or CoverCrypt with AES-256-GCM and
 optional ML-DSA-87 signatures. CoverCrypt can use ML-KEM-768 for key
 encapsulation. AC17 and TKN20 use classical ABE.
 
-[What's new in v6.0.1](release_notes/v6.0.1.md)
+[Latest release](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest) · [Release notes](release_notes/)
 
 ## Quick install
 
@@ -15,7 +15,7 @@ Install a compatible wheel on Python 3.10 or later. PyPI installation becomes
 available after the separate wheel publishing workflow succeeds.
 
 ```sh
-python -m pip install pq-cp-abe==6.0.1
+python -m pip install pq-cp-abe
 python -m pq_cp_abe --test
 ```
 
@@ -40,7 +40,7 @@ libraries for C/C++ integration. See the [CLI examples](docs/cli.md) and
 
 ### WebAssembly
 
-Download `libhybrid-pq-cp-abe_wasm_v6.0.1.zip` from the same release. Extract it
+Download the `libhybrid-pq-cp-abe_wasm_*.zip` asset from the same release. Extract it
 and keep the JavaScript and WASM runtime files in `lib/wasm/` together:
 
 ```js

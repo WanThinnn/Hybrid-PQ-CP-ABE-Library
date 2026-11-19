@@ -1,11 +1,11 @@
-"""Python-friendly wrappers for the complete native v6.0.1 C export table.
+"""Python-friendly wrappers for the native C export table.
 
 All C-owned buffers are copied into Python bytes and released with freeBuffer
 even if a native call fails. No caller receives a dangling native pointer.
 """
 import ctypes
 from ctypes import byref, c_size_t, c_ubyte
-from ._native import abe_lib, c_ubyte_p, CPABE_SCHEME_AC17
+from ._native import abe_lib, c_ubyte_p, CPABE_SCHEME_COVERCRYPT
 
 HCPABE_SUCCESS = 0
 HCPABE_ERR_SIGNATURE_INVALID = -9
@@ -62,17 +62,17 @@ def _run_scheme_outputs(fn, scheme, *arguments, count):
     data = _release(outputs)
     return data
 
-def setup_buffer(scheme=CPABE_SCHEME_AC17):
+def setup_buffer(scheme=CPABE_SCHEME_COVERCRYPT):
     """Return (public_key, master_secret_key) as bytes."""
     return _run_scheme_outputs(abe_lib.hybrid_cpabe_setupBuffer_with_scheme,
                                scheme, count=2)
 
-def setup_buffer_with_pqc(scheme=CPABE_SCHEME_AC17):
+def setup_buffer_with_pqc(scheme=CPABE_SCHEME_COVERCRYPT):
     """Return ABE PK/MSK (native bytes), then ML-DSA PK/SK (Base64-encoded bytes)."""
     return _run_scheme_outputs(abe_lib.hybrid_cpabe_setupBuffer_with_pqc_scheme,
                                scheme, count=4)
 
-def genkey_buffer(master_secret_key: bytes, attributes: str, scheme=CPABE_SCHEME_AC17):
+def genkey_buffer(master_secret_key: bytes, attributes: str, scheme=CPABE_SCHEME_COVERCRYPT):
     """Generate a scheme-specific private key in memory."""
     (key,) = _run_scheme_outputs(
         abe_lib.hybrid_cpabe_genkeyBuffer_with_scheme, scheme,

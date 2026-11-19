@@ -15,7 +15,7 @@ spec.loader.exec_module(stage)
 
 
 def mock_release(include_tkn20=True, include_notices=True):
-    version = "6.0.1"
+    version = stage.release_version()
     name = f"libhybrid-pq-cp-abe_win_x86_64_v{version}.zip"
     archive_root = name[:-4]
     payload = io.BytesIO()
@@ -36,7 +36,7 @@ class ReleaseStagingTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(prefix="staging-tests-")
         self.addCleanup(self.tmp.cleanup)
         root = Path(self.tmp.name)
-        (root / "VERSION").write_text("6.0.1\n", encoding="utf-8")
+        (root / "VERSION").write_text("9.8.7\n", encoding="utf-8")
         self.target = root / "package" / "_libs"
         for attr, val in (("ROOT", root), ("PACKAGE", self.target)):
             p = patch.object(stage, attr, val)
@@ -58,8 +58,9 @@ class ReleaseStagingTests(unittest.TestCase):
 
     def test_stages_both_windows_dlls(self):
         _, payload, sums = mock_release()
-        with self._downloads(payload, sums):
+        with self._downloads(payload, sums) as download:
             output = stage.stage("windows", "x86_64")
+        self.assertIn("/v9.8.7/", download.call_args.args[0])
         self.assertEqual({f.name for f in output}, {
             "libhybrid-pq-cp-abe.dll", "libcpabe_tkn20.dll",
         })

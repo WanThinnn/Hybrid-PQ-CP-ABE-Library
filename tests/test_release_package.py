@@ -8,7 +8,10 @@ import unittest
 import zipfile
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts/package-release.py"
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "scripts/package-release.py"
+VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+TAG = f"v{VERSION}"
 SPEC = importlib.util.spec_from_file_location("package_release", SCRIPT)
 PACKAGE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PACKAGE)
@@ -26,7 +29,7 @@ class ReleasePackageTests(unittest.TestCase):
         for name in names:
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(b"fixture-build-output")
+            path.write_bytes(f"{VERSION}\n".encode() if name == "VERSION" else b"fixture-build-output")
 
     def test_all_platform_layouts_include_headers_libraries_and_cli(self):
         for target, arch in PACKAGE.TARGETS:
@@ -83,11 +86,11 @@ class ReleasePackageTests(unittest.TestCase):
     def test_publish_requires_exactly_all_platform_archives(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
-            command = [sys.executable, str(SCRIPT), "--verify-assets", str(output), "--version", "v5.2.0"]
+            command = [sys.executable, str(SCRIPT), "--verify-assets", str(output), "--version", TAG]
             result = subprocess.run(command, capture_output=True)
             self.assertNotEqual(result.returncode, 0)
             for target, arch in PACKAGE.TARGETS:
-                (output / (PACKAGE.archive_name(target, arch, "5.2.0") + ".zip")).touch()
+                (output / (PACKAGE.archive_name(target, arch, VERSION) + ".zip")).touch()
             result = subprocess.run(command, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             (output / "unexpected.zip").touch()
@@ -99,13 +102,13 @@ class ReleasePackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             command = [sys.executable, str(SCRIPT), "--verify-assets", str(output),
-                       "--include-vault", "--include-wasm", "--version", "v6.0.1"]
+                       "--include-vault", "--include-wasm", "--version", TAG]
             for target, arch in PACKAGE.TARGETS:
-                (output / (PACKAGE.archive_name(target, arch, "6.0.1") + ".zip")).touch()
-            (output / "vault-plugin-abe_linux_x86_64_v6.0.1.zip").touch()
+                (output / (PACKAGE.archive_name(target, arch, VERSION) + ".zip")).touch()
+            (output / f"vault-plugin-abe_linux_x86_64_{TAG}.zip").touch()
             missing = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(missing.returncode, 0)
-            name = "libhybrid-pq-cp-abe_wasm_v6.0.1.zip"
+            name = f"libhybrid-pq-cp-abe_wasm_{TAG}.zip"
             self.assertIn(name, missing.stderr)
             (output / name).touch()
             complete = subprocess.run(command, capture_output=True, text=True)
@@ -133,12 +136,12 @@ class ReleasePackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             command = [sys.executable, str(SCRIPT), "--verify-assets", str(output),
-                       "--include-vault", "--version", "v6.0.0"]
+                       "--include-vault", "--version", TAG]
             for target, arch in PACKAGE.TARGETS:
-                (output / (PACKAGE.archive_name(target, arch, "6.0.0") + ".zip")).touch()
+                (output / (PACKAGE.archive_name(target, arch, VERSION) + ".zip")).touch()
             self.assertNotEqual(subprocess.run(command, capture_output=True).returncode, 0)
-            name = PACKAGE.vault_archive_name("x86_64", "6.0.0") + ".zip"
-            self.assertEqual(name, "vault-plugin-abe_linux_x86_64_v6.0.0.zip")
+            name = PACKAGE.vault_archive_name("x86_64", VERSION) + ".zip"
+            self.assertEqual(name, f"vault-plugin-abe_linux_x86_64_{TAG}.zip")
             asset = output / name
             asset.touch()
             result = subprocess.run(command, capture_output=True)
