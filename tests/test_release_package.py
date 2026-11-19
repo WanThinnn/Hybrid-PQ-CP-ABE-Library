@@ -95,6 +95,22 @@ class ReleasePackageTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
 
 
+    def test_publish_requires_wasm_asset_when_enabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            command = [sys.executable, str(SCRIPT), "--verify-assets", str(output),
+                       "--include-vault", "--include-wasm", "--version", "v6.0.1"]
+            for target, arch in PACKAGE.TARGETS:
+                (output / (PACKAGE.archive_name(target, arch, "6.0.1") + ".zip")).touch()
+            (output / "vault-plugin-abe_linux_x86_64_v6.0.1.zip").touch()
+            missing = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(missing.returncode, 0)
+            name = "libhybrid-pq-cp-abe_wasm_v6.0.1.zip"
+            self.assertIn(name, missing.stderr)
+            (output / name).touch()
+            complete = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(complete.returncode, 0, complete.stderr)
+
     def test_vault_package_requires_the_shared_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

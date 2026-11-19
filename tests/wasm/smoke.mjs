@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import createHybridCPABE from '../../lib/wasm/loader.mjs';
+import { pathToFileURL } from 'node:url';
+
+const [loader, expectedVersion] = process.argv.slice(2);
+const { default: createHybridCPABE } = await import(
+  loader ? pathToFileURL(loader).href : '../../lib/wasm/loader.mjs');
 
 const module = await createHybridCPABE({
   preRun: [m => {
@@ -14,7 +18,9 @@ const module = await createHybridCPABE({
 const call = (name, args) => module.ccall(name, 'number',
   args.map(x => typeof x === 'string' ? 'string' : 'number'), args);
 const ok = (name, args) => assert.equal(call(name, args), 0, name);
-assert.match(module.ccall('getVersion', 'string', [], []), /^\d+\.\d+/);
+const version = module.ccall('getVersion', 'string', [], []);
+if (expectedVersion) assert.equal(version, expectedVersion);
+else assert.match(version, /^\d+\.\d+/);
 const plain = Uint8Array.from([0, 1, 2, 127, 128, 255, 42]);
 module.FS.writeFile('/plain', plain);
 

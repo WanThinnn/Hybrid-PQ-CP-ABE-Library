@@ -171,9 +171,52 @@ jobs:
           path: build/release/vault-plugin-abe_linux_*.zip
           if-no-files-found: error
 
+  build-wasm:
+    name: Build WebAssembly SDK on Linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_TERM_COLOR: never
+      JOBS: '4'
+      EMSDK_VERSION: '7.0.0'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: bindings/tkn20/go.mod
+          cache-dependency-path: bindings/tkn20/go.sum
+
+      - name: Install Emscripten and Rust toolchains
+        run: |
+          git clone --depth 1 --branch "$EMSDK_VERSION" https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install "$EMSDK_VERSION"
+          "$RUNNER_TEMP/emsdk/emsdk" activate "$EMSDK_VERSION"
+          rustup toolchain install nightly --profile minimal --component rust-src
+
+      - name: Build, package and test the extracted WebAssembly SDK
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          make wasm -j4
+          python -m unittest discover -s tests -p test_release_package.py
+          python scripts/package-release.py --wasm
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-wasm
+          path: build/release/libhybrid-pq-cp-abe_wasm_*.zip
+          if-no-files-found: error
+
   publish:
     name: Attach all platform packages to release
-    needs: build
+    needs: [build, build-wasm]
     if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-22.04
     permissions:
@@ -189,12 +232,12 @@ jobs:
           path: build/release
           merge-multiple: true
 
-      - name: Verify all four native packages plus Linux Vault and prepare checksums
+      - name: Verify native, Vault and WebAssembly packages and prepare checksums
         id: notes
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          python scripts/package-release.py --verify-assets build/release --include-vault --version "$RELEASE_TAG"
+          python scripts/package-release.py --verify-assets build/release --include-vault --include-wasm --version "$RELEASE_TAG"
           cd build/release
           sha256sum *.zip > SHA256SUMS.txt
           cd ../..

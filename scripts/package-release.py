@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package native build outputs and verify the extracted CLI and shared library."""
+"""Package release outputs and verify the extracted runtimes."""
 
 import argparse
 import json
@@ -17,6 +17,8 @@ LIBRARY = "libhybrid-pq-cp-abe"
 TARGETS = (("linux", "x86_64"), ("windows", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64"))
 VAULT_TARGETS = (("linux", "x86_64"),)
+WASM_FILES = ("loader.mjs", "hybrid-pq-cp-abe.mjs", "hybrid-pq-cp-abe.wasm",
+              "tkn20.wasm", "wasm_exec.js", f"{LIBRARY}.a")
 
 
 def version_string(value):
@@ -35,6 +37,10 @@ def vault_archive_name(arch, version):
     if ("linux", arch) not in VAULT_TARGETS:
         raise ValueError(f"Unsupported Vault release architecture: {arch}")
     return f"vault-plugin-abe_linux_{arch}_v{version_string(version)}"
+
+
+def wasm_archive_name(version):
+    return f"{LIBRARY}_wasm_v{version_string(version)}"
 
 
 def require_file(path):
@@ -185,6 +191,35 @@ def stage_vault_package(root, package):
         "Third-party notices are included under vendor/ and licenses/.\n", encoding="utf-8")
 
 
+def stage_wasm_package(root, package):
+    runtime = package / "lib/wasm"
+    runtime.mkdir(parents=True)
+    for name in WASM_FILES:
+        shutil.copy2(require_file(root / "lib/wasm" / name), runtime / name)
+    headers = package / "include/hybrid_pq_cp_abe"
+    require_file(root / "include/hybrid_pq_cp_abe/version.h")
+    shutil.copytree(root / "include/hybrid_pq_cp_abe", headers)
+    for name in ("LICENSE", "NOTICE", "VERSION"):
+        shutil.copy2(require_file(root / name), package / name)
+    shutil.copy2(require_file(root / "bindings/wasm/README.md"), package / "README.md")
+    goroot = subprocess.check_output(["go", "env", "GOROOT"], cwd=root / "bindings/tkn20",
+                                     text=True, encoding="utf-8").strip()
+    go_notices = package / "licenses/go-runtime"
+    go_notices.mkdir(parents=True)
+    for name in ("LICENSE", "PATENTS"):
+        shutil.copy2(require_file(Path(goroot) / name), go_notices / name)
+
+
+def verify_wasm_runtime(root, archive, version):
+    with tempfile.TemporaryDirectory(prefix="verify-wasm-", dir=archive.parent) as directory:
+        with zipfile.ZipFile(archive) as zipped:
+            zipped.extractall(directory)
+        package = Path(directory) / archive.stem
+        loader = (package / "lib/wasm/loader.mjs").resolve()
+        subprocess.run(["node", str(root / "tests/wasm/smoke.mjs"), str(loader), version],
+                       cwd=package, check=True)
+
+
 def verify_vault_runtime(root, archive):
     # Loading the extracted package in a service container proves that no
     # workspace library path or unshipped dependency is needed at runtime.
@@ -250,8 +285,11 @@ def main():
     parser.add_argument("--arch", choices=("x86_64", "arm64"))
     parser.add_argument("--version")
     parser.add_argument("--verify-assets", type=Path)
-    parser.add_argument("--vault", action="store_true", help="Package the Linux Vault plugin instead of the native SDK")
+    kind = parser.add_mutually_exclusive_group()
+    kind.add_argument("--vault", action="store_true", help="Package the Linux Vault plugin instead of the native SDK")
+    kind.add_argument("--wasm", action="store_true", help="Package the WebAssembly SDK")
     parser.add_argument("--include-vault", action="store_true", help="Require Vault as well when verifying release assets")
+    parser.add_argument("--include-wasm", action="store_true", help="Require WASM as well when verifying release assets")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     version = args.version or (os.environ.get("GITHUB_REF_NAME") if os.environ.get("GITHUB_REF_TYPE") == "tag"
@@ -261,9 +299,30 @@ def main():
         expected = {archive_name(target, arch, version) + ".zip" for target, arch in TARGETS}
         if args.include_vault:
             expected.update(vault_archive_name(arch, version) + ".zip" for _, arch in VAULT_TARGETS)
+        if args.include_wasm:
+            expected.add(wasm_archive_name(version) + ".zip")
         actual = {path.name for path in args.verify_assets.glob("*.zip")}
         if actual != expected:
             raise ValueError(f"Release assets mismatch: missing={expected - actual}, unexpected={actual - expected}")
+        return
+    if args.wasm:
+        if args.platform or args.arch:
+            parser.error("--wasm does not take --platform or --arch")
+        library_version = version_string((root / "VERSION").read_text(encoding="utf-8").strip())
+        if os.environ.get("GITHUB_REF_TYPE") == "tag" and version != library_version:
+            raise ValueError(f"Release version {version} does not match VERSION ({library_version})")
+        output = root / "build/release"
+        output.mkdir(parents=True, exist_ok=True)
+        name = wasm_archive_name(version)
+        with tempfile.TemporaryDirectory(prefix="stage-wasm-", dir=output) as directory:
+            package = Path(directory) / name
+            stage_wasm_package(root, package)
+            collect_notices(root, package)
+            archive = Path(directory) / (name + ".zip")
+            write_archive(package, archive)
+            verify_wasm_runtime(root, archive, library_version)
+            archive.replace(output / archive.name)
+        print(f"Verified release archive: {output / (name + '.zip')}")
         return
     targets = VAULT_TARGETS if args.vault else TARGETS
     if (args.platform, args.arch) not in targets:
