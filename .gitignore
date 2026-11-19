@@ -400,4 +400,4 @@ test_api
 /build/deps/windows/*
 !/build/deps/windows/include/
 !/build/deps/windows/include/**
-demo.py
+demo*

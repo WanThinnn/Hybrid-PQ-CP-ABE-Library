@@ -7,6 +7,7 @@ plugins/vault/tests/*.sh text eol=lf
 scripts/build-vault.go text eol=lf
 scripts/release.sh text eol=lf
 Makefile.wasm text eol=lf
+bindings/wasm/cli.mjs text eol=lf
 scripts/build-wasm-deps.sh text eol=lf
 # cmd.exe CALL/label parsing requires CRLF even when CI uses autocrlf=input.
 *.bat text eol=crlf

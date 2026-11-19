@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -70,6 +71,10 @@ def stage_package(archive, stage, version):
     metadata.pop("private", None)
     (stage / "package.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     shutil.copy2(HERE / "README.md", stage / "README.md")
+    cli = stage / "bindings/wasm"
+    cli.mkdir(parents=True)
+    for source in ("cli.mjs", "selftest.mjs"):
+        shutil.copy2(ROOT / "bindings/wasm" / source, cli / source)
     return metadata["name"]
 
 
@@ -107,9 +112,17 @@ def main():
         subprocess.run([npm, "install", "--offline", "--ignore-scripts", "--no-audit",
                         "--no-fund", str(tarball)], cwd=consumer, check=True)
         entry = consumer / "package-entry.mjs"
-        entry.write_text(f'export {{ default }} from {json.dumps(name)};\n', encoding="utf-8")
-        subprocess.run(["node", str(ROOT / "tests/wasm/smoke.mjs"), str(entry), version],
-                       cwd=consumer, check=True)
+        entry.write_text(
+            f'import createHybridCPABE from {json.dumps(name)};\n'
+            'import assert from "node:assert/strict";\n'
+            'const abe = await createHybridCPABE();\n'
+            'assert.equal(abe.ccall("getVersion", "string", [], []), process.argv[2]);\n',
+            encoding="utf-8",
+        )
+        subprocess.run(["node", str(entry), version], cwd=consumer, check=True)
+        command = "pq-cp-abe.cmd" if os.name == "nt" else "pq-cp-abe"
+        executable = consumer / "node_modules" / ".bin" / command
+        subprocess.run([str(executable), "--test"], cwd=consumer, check=True)
         destination = out / tarball.name
         tarball.replace(destination)
     print(f"Verified npm tarball: {destination}")

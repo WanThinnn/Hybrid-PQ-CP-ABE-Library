@@ -50,6 +50,22 @@ Verified on Linux/WSL with Emscripten 7.0.0, Rust 1.99.0 nightly, Go 1.25.0 and
 Node.js 18.19.1. Tests cover all three schemes through file/buffer APIs, policy
 denial, ML-DSA signing/verification, and rejection of modified ciphertext.
 
+From a repository checkout with a WASM build in `lib/wasm`, run the full Node.js
+self-test directly:
+
+```sh
+node bindings/wasm/cli.mjs --test
+```
+
+This uses the same suite as `make wasm-test`. The suite exercises the public
+C exports and uses WASM's in-memory filesystem for its test files.
+
+Run `node bindings/wasm/cli.mjs --help` for file-based commands including setup,
+key generation, encryption, and decryption. The
+[npm CLI examples](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm#post-quantum-abe-from-the-cli)
+also work from the repository when you replace `npx @wanthinnn/pq-cp-abe` with
+`node /path/to/repo/bindings/wasm/cli.mjs`.
+
 Standalone targets:
 
 ```sh

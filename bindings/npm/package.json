@@ -4,6 +4,9 @@
   "description": "WebAssembly bindings for post-quantum ciphertext-policy attribute-based encryption (CP-ABE)",
   "type": "module",
   "exports": "./lib/wasm/loader.mjs",
+  "bin": {
+    "pq-cp-abe": "./bindings/wasm/cli.mjs"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -16,6 +19,8 @@
 
   "files": [
     "lib/wasm",
+    "bindings/wasm/cli.mjs",
+    "bindings/wasm/selftest.mjs",
     "LICENSE",
     "NOTICE",
     "licenses",
