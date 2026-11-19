@@ -50,7 +50,7 @@ const abe = await createHybridCPABE();
 console.log(abe.ccall('getVersion', 'string', [], []));
 ```
 
-For Linux builds, browser hosting, and C/C++ linking, see the
+For local builds, browser hosting, and C/C++ linking, see the
 [WebAssembly guide](bindings/wasm/README.md).
 
 ## Build from source
@@ -67,9 +67,10 @@ make test -j8
 See the [native build guide](docs/build.md) for toolchain setup on Windows,
 Linux, and macOS.
 
-For WebAssembly, set up Emscripten on Linux, then run:
+For WebAssembly, set up Emscripten on Linux, macOS, or Windows MSYS2, then run:
 
 ```sh
+sh ./configure --wasm
 make wasm -j8
 make wasm-test -j8
 ```

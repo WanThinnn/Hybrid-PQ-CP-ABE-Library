@@ -51,6 +51,11 @@ chmod +x configure
 . ./build/tools/activate.sh
 ```
 
+On Linux, WSL, macOS, or Windows MSYS2, use `sh ./configure --wasm` after
+activating Emscripten to check the WebAssembly toolchain. Combine it with
+`--install` to install the standard host tools. See the
+[WebAssembly guide](../bindings/wasm/README.md) for platform setup.
+
 For a custom Linux/macOS toolchain with an explicitly controlled `PATH`, use
 `HCPABE_CONFIGURE_DISCOVER_PATHS=0 ./configure`. This disables automatic search
 paths for bundled Go, Cargo and Homebrew; ordinary checks retain discovery by
@@ -72,6 +77,7 @@ $text = Get-Content .\configure -Raw
 $setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1])
 & $setup                 # Check only
 & $setup -Install        # Install missing tools
+& $setup -Wasm           # Check Windows WASM tools through MSYS2 when Emscripten is on PATH
 cmd /k build\tools\activate.cmd
 ```
 

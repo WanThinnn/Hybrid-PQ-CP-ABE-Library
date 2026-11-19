@@ -31,6 +31,7 @@ class ConfigureTests(unittest.TestCase):
         result = self.run_configure("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("--install", result.stdout)
+        self.assertIn("--wasm", result.stdout)
         result = self.run_configure("--unknown")
         self.assertEqual(result.returncode, 2)
 
@@ -42,9 +43,19 @@ class ConfigureTests(unittest.TestCase):
             stub = """#!/bin/sh
 name=${0##*/}
 case "$name" in
-  uname) echo "${CONFIGURE_TEST_OS:-Linux}" ;;
+  uname)
+    if [ "${1:-}" = -m ]; then echo "${CONFIGURE_TEST_ARCH:-x86_64}"
+    else echo "${CONFIGURE_TEST_OS:-Linux}"; fi ;;
   go) echo "go version go${CONFIGURE_TEST_GO:-1.24.0} test/amd64" ;;
   make) echo "GNU Make ${CONFIGURE_TEST_MAKE:-4.4}" ;;
+  emcc|em++) echo "emcc Emscripten ${CONFIGURE_TEST_EMSDK:-7.0.0}" ;;
+  node) echo "v${CONFIGURE_TEST_NODE:-18.0.0}" ;;
+  rustup)
+    if [ "${1:-}" = run ] && [ -n "${CONFIGURE_TEST_RUST:-}" ] &&
+        [ "$2" != "$CONFIGURE_TEST_RUST" ]; then exit 1; fi
+    if [ "${1:-}" = component ]; then echo "${CONFIGURE_TEST_RUST_SRC:-rust-src}"
+    else echo test-rustup; fi ;;
+  powershell.exe) exit "${CONFIGURE_TEST_VS_STATUS:-0}" ;;
   brew) echo /nonexistent-configure-test ;;
   curl|apt-get|sudo)
     if [ "${1:-}" != --version ]; then echo unexpected-install >> "$CONFIGURE_TEST_TRACE"; exit 99; fi
@@ -54,7 +65,8 @@ esac
 """
             for name in ("uname", "go", "make", "brew", "cmake", "gcc", "g++", "gcc-ar",
                          "clang++", "git", "curl", "python3", "cargo", "rustc",
-                         "rustup", "apt-get", "sudo"):
+                         "rustup", "apt-get", "sudo", "emcc", "em++", "emar", "emranlib",
+                         "emcmake", "node", "cygpath", "ninja", "emcc.exe", "powershell.exe"):
                 file = commands / name
                 file.write_text(stub, encoding="utf-8", newline="\n")
                 file.chmod(0o755)
@@ -72,12 +84,53 @@ esac
             auto.mkdir(parents=True)
             (auto / "go").write_text('#!/bin/sh\necho "go version go9.99.0 test/amd64"\n', newline="\n")
             (auto / "go").chmod(0o755)
+            env["CONFIGURE_TEST_EMSDK"] = "3.1.6"
             for system in ("Linux", "Darwin"):
                 with self.subTest(system=system):
                     env["CONFIGURE_TEST_OS"] = system
                     result = self.run_configure(env=env)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertIn("Ready:", result.stdout)
+                    self.assertNotIn("Emscripten", result.stdout)
+            result = self.run_configure("--wasm", env=dict(env, CONFIGURE_TEST_OS="FreeBSD"))
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires Linux/WSL, macOS, or Windows MSYS2", result.stderr)
+
+            env["CONFIGURE_TEST_OS"] = "Linux"
+            go_mod = (ROOT / "bindings/tkn20/go.mod").read_text(encoding="utf-8")
+            wasm_go = next(line.split()[1] for line in go_mod.splitlines() if line.startswith("go "))
+            env["CONFIGURE_TEST_GO"] = wasm_go
+            result = self.run_configure("--wasm", env=env)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Emscripten SDK >= 7.0.0", result.stdout)
+            env["CONFIGURE_TEST_EMSDK"] = "7.0.0"
+            result = self.run_configure("--wasm", env=env)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Ready: make wasm", result.stdout)
+            self.assertNotIn("[OK] gcc", result.stdout)
+            for system, arch in (("Darwin", "x86_64"), ("Darwin", "arm64"), ("MSYS_NT-10.0", "x86_64")):
+                with self.subTest(wasm_system=system, arch=arch):
+                    rust = "nightly-x86_64-pc-windows-msvc" if system.startswith("MSYS") else "nightly"
+                    host_env = dict(env, CONFIGURE_TEST_OS=system, CONFIGURE_TEST_ARCH=arch,
+                                    CONFIGURE_TEST_RUST=rust)
+                    result = self.run_configure("--wasm", env=host_env)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"WebAssembly ({system} {arch})", result.stdout)
+                    self.assertIn(f"[OK] Rust {rust}", result.stdout)
+                    if system.startswith("MSYS"):
+                        result = self.run_configure("--wasm", env=dict(host_env, CONFIGURE_TEST_VS_STATUS="1"))
+                        self.assertEqual(result.returncode, 1)
+                        self.assertIn("Visual Studio C++ Build Tools", result.stdout)
+            for variable, version, expected in (
+                ("CONFIGURE_TEST_GO", "1.24.0", f"Go >= {wasm_go}"),
+                ("CONFIGURE_TEST_NODE", "16.0.0", "Node.js >= 18"),
+                ("CONFIGURE_TEST_RUST_SRC", "rustfmt", "Rust nightly + rust-src"),
+            ):
+                with self.subTest(wasm_check=variable):
+                    result = self.run_configure("--wasm", env=dict(env, **{variable: version}))
+                    self.assertEqual(result.returncode, 1)
+                    self.assertIn(expected, result.stdout)
+
             env["CONFIGURE_TEST_GO"] = "1.23.9"
             result = self.run_configure(env=env)
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)

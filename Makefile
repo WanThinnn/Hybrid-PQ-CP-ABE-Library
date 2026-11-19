@@ -246,7 +246,7 @@ help:
 	@echo "  make clean-vault     Remove only Linux Vault plugin build output"
 	@echo "  make abi-info        Show platform ABI policy"
 	@echo "  make clean           Remove core build outputs only"
-	@echo "  make wasm -j8        Build all WASM schemes on Linux (see bindings/wasm/README.md)"
+	@echo "  make wasm -j8        Build WASM on Linux/WSL, macOS, or Windows MSYS2"
 	@echo "  make wasm-test -j8   Build WASM and run Node.js smoke tests"
 	@echo ""
 	@echo "sccache is used automatically when installed."
@@ -499,6 +499,10 @@ test: $(EXEC) $(COVERCRYPT_TEST)
 endif
 
 .PHONY: wasm wasm-deps wasm-test clean-wasm
+ifeq ($(PLATFORM),windows)
+wasm wasm-deps wasm-test clean-wasm: SHELL := /bin/bash
+wasm wasm-deps wasm-test clean-wasm: .SHELLFLAGS := -c
+endif
 wasm:
 	$(MAKE) -f Makefile.wasm all
 wasm-deps:

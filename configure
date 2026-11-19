@@ -2,26 +2,42 @@
 # Check the host toolchain. Nothing is installed unless --install is supplied.
 set -eu
 INSTALL=0
-case "${1:-}" in
-    '') ;;
-    --install) INSTALL=1 ;;
-    --help|-h)
-        printf '%s\n' 'Usage: ./configure [--install]' \
-            'Default: check only. --install: install missing host build tools.' \
-            'Windows without Bash: see the PowerShell invocation in README.md.'
-        exit 0 ;;
-    *) echo "Unknown option: $1" >&2; exit 2 ;;
-esac
-[ "$#" -le 1 ] || { echo 'Too many arguments' >&2; exit 2; }
+WASM=0
+WASM_WINDOWS=0
+HELP=0
+for option in "$@"; do
+    case "$option" in
+        --install) INSTALL=1 ;;
+        --wasm) WASM=1 ;;
+        --help|-h) HELP=1 ;;
+        *) echo "Unknown option: $option" >&2; exit 2 ;;
+    esac
+done
+if [ "$HELP" = 1 ]; then
+    printf '%s\n' 'Usage: ./configure [--install] [--wasm]' \
+        'Default: check the native toolchain. --install: install missing host build tools.' \
+        '--wasm: check WebAssembly tools on Linux/WSL, macOS, or Windows MSYS2.' \
+        'Windows without Bash: see the PowerShell invocation in docs/build.md.'
+    exit 0
+fi
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 OS=$(uname -s)
+if [ "$WASM" = 1 ]; then
+    case "$OS" in
+        Linux|Darwin) ;;
+        MINGW*|MSYS*|UCRT*|CLANG*) WASM_WINDOWS=1 ;;
+        *) echo 'configure: --wasm requires Linux/WSL, macOS, or Windows MSYS2.' >&2; exit 1 ;;
+    esac
+fi
 case "$OS" in
-    MINGW*|MSYS*|CYGWIN*)
-        HCPABE_CONFIGURE_FILE=$(cygpath -w "$ROOT/configure")
-        HCPABE_CONFIGURE_INSTALL=$INSTALL
-        export HCPABE_CONFIGURE_FILE HCPABE_CONFIGURE_INSTALL
-        exec powershell.exe -NoProfile -Command \
-            '$c=Get-Content -LiteralPath $env:HCPABE_CONFIGURE_FILE -Raw; & ([scriptblock]::Create(($c -split "(?m)^# WINDOWS CONFIGURE\r?$",2)[1]))'
+    MINGW*|MSYS*|CYGWIN*|UCRT*|CLANG*)
+        if [ "$WASM_WINDOWS" = 0 ]; then
+            HCPABE_CONFIGURE_FILE=$(cygpath -w "$ROOT/configure")
+            HCPABE_CONFIGURE_INSTALL=$INSTALL
+            export HCPABE_CONFIGURE_FILE HCPABE_CONFIGURE_INSTALL
+            exec powershell.exe -NoProfile -Command \
+                '$c=Get-Content -LiteralPath $env:HCPABE_CONFIGURE_FILE -Raw; & ([scriptblock]::Create(($c -split "(?m)^# WINDOWS CONFIGURE\r?$",2)[1]))'
+        fi
         ;;
     Linux|Darwin) ;;
     *) echo "Unsupported operating system: $OS" >&2; exit 1 ;;
@@ -45,6 +61,85 @@ make_ok() {
     version=$(make --version 2>/dev/null) || return 1
     printf '%s\n' "$version" | awk 'NR==1 {exit !($1=="GNU" && $2=="Make" && $3+0>=4)}'
 }
+version_at_least() {
+    printf '%s\n' "$1" | awk -v minimum="$2" '
+        NR == 1 {
+            if (!match($0, /[0-9]+\.[0-9]+\.[0-9]+/)) exit 1
+            split(substr($0, RSTART, RLENGTH), actual, ".")
+            split(minimum, required, ".")
+            for (i = 1; i <= 3; i++) {
+                if (actual[i]+0 != required[i]+0) exit !(actual[i]+0 > required[i]+0)
+            }
+            exit 0
+        }'
+}
+check_wasm() {
+    missing=0
+    echo "Toolchain check: WebAssembly ($OS $(uname -m))"
+    tools='bash cmake python3 emar emranlib emcmake'
+    rust_toolchain=nightly
+    if [ "$WASM_WINDOWS" = 1 ]; then
+        tools="$tools cygpath ninja emcc.exe"
+        rust_toolchain=nightly-x86_64-pc-windows-msvc
+    fi
+    for tool in $tools; do
+        if have "$tool"; then echo "[OK] $tool: $(command -v "$tool")"
+        else echo "[MISSING] $tool"; missing=1; fi
+    done
+    if have sha256sum || have shasum; then
+        echo '[OK] SHA-256 tool'
+    else echo '[MISSING] sha256sum or shasum'; missing=1; fi
+    if make_ok; then echo "[OK] GNU Make: $(command -v make)"
+    else echo '[MISSING] GNU Make >= 4'; missing=1; fi
+
+    for tool in emcc em++; do
+        if version=$("$tool" --version 2>/dev/null) && version_at_least "$version" 7.0.0; then
+            echo "[OK] $tool: $(command -v "$tool")"
+        else
+            echo "[MISSING] $tool from Emscripten SDK >= 7.0.0 (activate emsdk_env.sh)"
+            missing=1
+        fi
+    done
+    if version=$(node --version 2>/dev/null) && version_at_least "$version" 18.0.0; then
+        echo "[OK] Node.js $version"
+    else echo '[MISSING] Node.js >= 18'; missing=1; fi
+
+    go_min=$(awk '$1 == "go" { print $2; exit }' "$ROOT/bindings/tkn20/go.mod")
+    # Allow the module to select an already cached Go toolchain.
+    if version=$(cd "$ROOT/bindings/tkn20" && GOPROXY=off GONOPROXY=none go version 2>/dev/null) &&
+        version_at_least "$version" "$go_min"; then
+        echo "[OK] $version"
+    else echo "[MISSING] Go >= $go_min for bindings/tkn20"; missing=1; fi
+
+    if rustup run "$rust_toolchain" rustc --version >/dev/null 2>&1 &&
+        rustup run "$rust_toolchain" cargo --version >/dev/null 2>&1 &&
+        rustup component list --installed --toolchain "$rust_toolchain" 2>/dev/null | grep -q '^rust-src'; then
+        echo "[OK] Rust $rust_toolchain, Cargo and rust-src"
+    else
+        echo "[MISSING] Rust $rust_toolchain + rust-src (rustup toolchain install $rust_toolchain --component rust-src)"
+        missing=1
+    fi
+    if [ "$WASM_WINDOWS" = 1 ]; then
+        if powershell.exe -NoProfile -NonInteractive -Command '
+            $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio/Installer/vswhere.exe"
+            if (Test-Path -LiteralPath $vswhere) {
+                $linker = & $vswhere -latest -products "*" -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "VC/Tools/MSVC/**/bin/Hostx64/x64/link.exe"
+                if ($linker) { exit 0 }
+            }
+            exit 1
+        ' >/dev/null 2>&1; then
+            echo '[OK] MSVC x64 host linker'
+        else
+            echo '[MISSING] Visual Studio C++ Build Tools for the Rust host (include the Windows SDK)'
+            missing=1
+        fi
+    fi
+    if [ "$missing" = 1 ]; then
+        echo 'Set up the missing tools and rerun ./configure --wasm. See bindings/wasm/README.md.'
+        return 1
+    fi
+    echo 'Ready: make wasm -j8 && make wasm-test -j8'
+}
 refresh_path() {
     # Custom toolchains and hermetic checks can opt out of implicit host paths.
     # Keep discovery enabled by default for ordinary fresh-machine setup.
@@ -55,7 +150,19 @@ refresh_path() {
 }
 refresh_path
 
-if [ "$INSTALL" = 1 ]; then
+if [ "$INSTALL" = 1 ] && [ "$WASM_WINDOWS" = 1 ]; then
+    case "${MSYSTEM:-}" in
+        MINGW64) prefix=mingw-w64-x86_64 ;;
+        UCRT64) prefix=mingw-w64-ucrt-x86_64 ;;
+        *) fail 'For --wasm --install, open an MSYS2 MINGW64 or UCRT64 terminal.' ;;
+    esac
+    packages=''
+    if ! make_ok; then packages='make'; fi
+    for pair in cmake:cmake ninja:ninja python3:python; do
+        if ! have "${pair%%:*}"; then packages="$packages $prefix-${pair#*:}"; fi
+    done
+    if [ -n "$packages" ]; then pacman -S --needed --noconfirm $packages; fi
+elif [ "$INSTALL" = 1 ]; then
     mkdir -p "$ROOT/build/tmp/configure" "$ROOT/build/tools"
     if [ "$OS" = Darwin ]; then
         if ! xcode-select -p >/dev/null 2>&1; then
@@ -155,6 +262,11 @@ paths = [str(root / 'build/tools/go/bin'), str(pathlib.Path.home() / '.cargo/bin
 PY
 fi
 
+if [ "$WASM" = 1 ]; then
+    check_wasm
+    exit 0
+fi
+
 missing=0
 echo "Toolchain check: $OS"
 tools='make cmake git curl python3 cargo rustc rustup'
@@ -180,14 +292,34 @@ exit 0
 # Windows PowerShell is embedded so a fresh Windows host needs no Bash/Python.
 : <<'# END WINDOWS CONFIGURE'
 # WINDOWS CONFIGURE
-param([switch]$Install, [switch]$Help)
+param([switch]$Install, [switch]$Help, [switch]$Wasm)
 $ErrorActionPreference = 'Stop'
-if ($Help) { Write-Host 'configure: check only by default; -Install installs missing tools.'; return }
+if ($Help) { Write-Host 'configure checks native tools by default. Use -Wasm to check the Windows MSYS2 WebAssembly toolchain.'; return }
 if ($env:HCPABE_CONFIGURE_INSTALL -eq '1') { $Install = $true }
 if ($env:HCPABE_CONFIGURE_FILE) { $Root = Split-Path -Parent $env:HCPABE_CONFIGURE_FILE }
 else { $Root = (Get-Location).Path }
 if (-not (Test-Path -LiteralPath (Join-Path $Root 'Makefile'))) { throw 'Run configure from the repository root.' }
 $Msys = if ($env:MSYS2_ROOT) { $env:MSYS2_ROOT } else { 'C:\msys64' }
+if ($Wasm) {
+    $Bash = Join-Path $Msys 'usr\bin\bash.exe'
+    if (-not (Test-Path -LiteralPath $Bash)) {
+        throw "MSYS2 Bash is required at $Bash. Set MSYS2_ROOT to its installation directory."
+    }
+    $SavedSystem, $SavedPathType, $SavedChere = $env:MSYSTEM, $env:MSYS2_PATH_TYPE, $env:CHERE_INVOKING
+    Push-Location -LiteralPath $Root
+    try {
+        $env:MSYSTEM = 'MINGW64'
+        $env:MSYS2_PATH_TYPE = 'inherit'
+        $env:CHERE_INVOKING = '1'
+        $InstallFlag = if ($Install) { ' --install' } else { '' }
+        & $Bash --login -c ("sh ./configure --wasm" + $InstallFlag)
+        if ($LASTEXITCODE -ne 0) { throw 'WebAssembly toolchain check failed.' }
+    } finally {
+        Pop-Location
+        $env:MSYSTEM, $env:MSYS2_PATH_TYPE, $env:CHERE_INVOKING = $SavedSystem, $SavedPathType, $SavedChere
+    }
+    return
+}
 function Refresh-Path {
     $env:Path = "$Msys\usr\bin;$Msys\mingw64\bin;$env:USERPROFILE\.cargo\bin;$env:ProgramFiles\Go\bin;" +
         [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +

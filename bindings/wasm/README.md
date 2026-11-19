@@ -1,4 +1,4 @@
-# WebAssembly build on Linux
+# WebAssembly build on Linux, macOS, and Windows
 
 Builds the complete public C API: AC17, TKN20, CoverCrypt (including ML-KEM-768),
 AES-GCM, ML-DSA-87, file/buffer operations, and the CLI entry point. Native DLL/SO
@@ -9,12 +9,42 @@ Install CMake, GNU Make, Python 3, Node.js 18+, Go satisfying
 current shell. Rust nightly with `rust-src` rebuilds the standard library against
 the same Emscripten ABI as C++:
 
+### Linux, WSL, and macOS
+
+On macOS Intel and Apple Silicon, use the Emscripten SDK and Rust toolchain for
+your host architecture. Install GNU Make 4 or newer. If you use Homebrew, put
+GNU Make on `PATH` with `export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"`.
+
 ```sh
 source /path/to/emsdk/emsdk_env.sh
 rustup toolchain install nightly --component rust-src
+sh ./configure --wasm
 make wasm -j8
 make wasm-test -j8
 ```
+
+### Windows x64 with MSYS2
+
+Install Visual Studio C++ Build Tools with the Windows SDK for the Rust host.
+Install Go, Emscripten SDK 7.0.0 or newer, and Rust via rustup. In the MSYS2
+MINGW64 terminal, use the Windows Emscripten installation and put Windows Go
+and Cargo on `PATH`. Replace the sample Emscripten path with your installation
+directory.
+
+```sh
+export PATH="$(cygpath -u "$USERPROFILE")/.cargo/bin:/c/Program Files/Go/bin:$PATH"
+source /c/path/to/emsdk/emsdk_env.sh
+rustup toolchain install nightly-x86_64-pc-windows-msvc --component rust-src
+sh ./configure --wasm --install  # Use --wasm alone when MSYS2 tools are installed
+make wasm -j8
+make wasm-test -j8
+```
+
+The Windows dependency build uses Ninja for liboqs. `--install` can provision
+GNU Make, CMake, Ninja, and Python in MSYS2. The SDK, Go, and Rust are set up
+separately. Run the Make commands in the same MSYS2 terminal.
+
+### Build targets and outputs
 
 Verified on Linux/WSL with Emscripten 7.0.0, Rust 1.99.0 nightly, Go 1.25.0 and
 Node.js 18.19.1. Tests cover all three schemes through file/buffer APIs, policy
@@ -34,11 +64,17 @@ make -f Makefile.wasm clean-deps
 ```
 
 `JOBS` controls dependency compiler jobs (default 8); `-j` controls C++ objects.
-Dependencies use `build/deps/wasm/{include,lib}`. Normal builds reuse the ready
-marker; run `make wasm-deps` after dependency source/toolchain changes. Checks
-fingerprint source contents and compiler versions. Objects, the merged static
-archive, and modules go to `build/artifacts/wasm`. The deployment package is
-copied to `lib/wasm`:
+Normal builds reuse the dependency cache. Run `make wasm-deps` after dependency
+source or toolchain changes. Build directories are selected by host:
+
+| Host | Directory name under `build/deps/` and `build/artifacts/` |
+| --- | --- |
+| Linux and WSL | `wasm` |
+| Windows MSYS2 | `wasm-windows` |
+| macOS Intel | `wasm-macos-x86_64` |
+| macOS Apple Silicon | `wasm-macos-arm64` |
+
+Each build copies its deployment package to `lib/wasm`:
 
 | File | Purpose |
 | --- | --- |
@@ -50,6 +86,8 @@ copied to `lib/wasm`:
 | `libhybrid-pq-cp-abe.a` | Merged archive for Emscripten C/C++ consumers |
 
 Deploy the five runtime files together; the archive is for linking consumers.
+See the [npm package guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm)
+to package and test those runtime files for npm.
 Import `loader.mjs` in Node.js or a browser
 served over HTTP(S):
 

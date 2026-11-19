@@ -1,0 +1,57 @@
+{
+  "name": "@wanthinnn/pq-cp-abe",
+  "private": true,
+  "description": "WebAssembly bindings for post-quantum ciphertext-policy attribute-based encryption (CP-ABE)",
+  "type": "module",
+  "exports": "./lib/wasm/loader.mjs",
+  "engines": {
+    "node": ">=18"
+  },
+
+  "author": {
+    "name": "Elio aka WanThinnn",
+    "email": "iam.elio2415@gmail.com",
+    "url": "https://github.com/WanThinnn"
+  },
+
+  "files": [
+    "lib/wasm",
+    "LICENSE",
+    "NOTICE",
+    "licenses",
+    "vendor"
+  ],
+
+  "license": "SEE LICENSE IN NOTICE",
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git",
+    "directory": "bindings/npm"
+  },
+
+  "bugs": {
+    "url": "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/issues"
+  },
+
+  "homepage": "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library#readme",
+
+  "keywords": [
+    "post-quantum",
+    "cryptography",
+    "cp-abe",
+    "pq-abe",
+    "pq-cp-abe",
+    "attribute-based-encryption",
+    "webassembly",
+    "wasm",
+    "ml-kem",
+    "ml-dsa",
+    "cybersecurity"
+  ],
+
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  }
+}

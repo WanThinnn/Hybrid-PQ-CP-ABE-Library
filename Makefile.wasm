@@ -1,8 +1,13 @@
-# Linux -> WebAssembly. Native builds continue to use Makefile.
+# WebAssembly from Linux/WSL, macOS, or Windows MSYS2.
 SHELL := /bin/bash
 .DEFAULT_GOAL := all
-BUILD_DIR := build/artifacts/wasm
-DEPS_DIR := build/deps/wasm
+ifneq ($(filter Windows_NT %msys,$(OS) $(MAKE_HOST)),)
+HOST_SUFFIX := -windows
+else ifeq ($(shell uname -s),Darwin)
+HOST_SUFFIX := -macos-$(shell uname -m)
+endif
+BUILD_DIR := build/artifacts/wasm$(HOST_SUFFIX)
+DEPS_DIR := build/deps/wasm$(HOST_SUFFIX)
 LIB_DIR := lib/wasm
 CXX := em++
 AR := emar
@@ -31,7 +36,7 @@ $(READY):
 	@bash scripts/build-wasm-deps.sh $(JOBS)
 
 include/hybrid_pq_cp_abe/version.h: VERSION
-	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(shell cat VERSION)"' '#endif' > $@
+	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(shell tr -d '\r' < VERSION)"' '#endif' > $@
 
 $(BUILD_DIR)/obj/%.o: %.cpp $(HEADERS) include/hybrid_pq_cp_abe/version.h | $(READY)
 	@mkdir -p $(dir $@)
@@ -40,10 +45,9 @@ $(BUILD_DIR)/obj/%.o: %.cpp $(HEADERS) include/hybrid_pq_cp_abe/version.h | $(RE
 $(DEPS): | $(READY)
 	@test -f $@
 
-static: $(LIB_DIR)/libhybrid-pq-cp-abe.a
-$(LIB_DIR)/libhybrid-pq-cp-abe.a: $(STATIC)
+static: $(STATIC)
 	@mkdir -p $(LIB_DIR)
-	cp $< $@
+	@cmp -s $< $(LIB_DIR)/$(notdir $<) || install -m 644 $< $(LIB_DIR)/
 $(STATIC): $(OBJS) $(DEPS) Makefile.wasm
 	@mkdir -p $(BUILD_DIR)
 	@printf '%s\n' 'create $@' $(foreach a,$(DEPS),'addlib $(a)') $(foreach o,$(OBJS),'addmod $(o)') 'save' 'end' | $(AR) -M
@@ -70,7 +74,7 @@ clean-deps:
 	rm -rf $(DEPS_DIR)
 help:
 	@echo 'make -f Makefile.wasm -j8 [all|deps|static|shared|executable|test|clean|clean-deps]'
-	@echo 'Requires Linux, Emscripten, Rust nightly + rust-src, Go (see go.mod), Python 3, CMake, Node.js.'
-	@echo 'JOBS=8 controls dependency compiler jobs. Outputs: build/artifacts/wasm and lib/wasm.'
+	@echo 'Run configure --wasm on Linux/WSL, macOS, or Windows MSYS2 to check the toolchain.'
+	@echo 'JOBS=8 controls dependency compiler jobs. Artifacts: $(BUILD_DIR). SDK: $(LIB_DIR).'
 
 -include $(OBJS:.o=.d) $(BUILD_DIR)/obj/src/main.d
