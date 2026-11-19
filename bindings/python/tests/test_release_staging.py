@@ -14,7 +14,7 @@ stage = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(stage)
 
 
-def mock_release(include_tkn20=True):
+def mock_release(include_tkn20=True, include_notices=True):
     version = "6.0.1"
     name = f"libhybrid-pq-cp-abe_win_x86_64_v{version}.zip"
     archive_root = name[:-4]
@@ -23,6 +23,9 @@ def mock_release(include_tkn20=True):
         zipfile_out.writestr(f"{archive_root}/lib/libhybrid-pq-cp-abe.dll", b"test native DLL")
         if include_tkn20:
             zipfile_out.writestr(f"{archive_root}/lib/libcpabe_tkn20.dll", b"test TKN20 DLL")
+        if include_notices:
+            for notice in (*stage.REQUIRED_NOTICES, "licenses/rust/example/LICENSE"):
+                zipfile_out.writestr(f"{archive_root}/{notice}", "test notice")
     data = payload.getvalue()
     sums = f"{hashlib.sha256(data).hexdigest()}  {name}\n".encode()
     return name, data, sums
@@ -61,6 +64,16 @@ class ReleaseStagingTests(unittest.TestCase):
             "libhybrid-pq-cp-abe.dll", "libcpabe_tkn20.dll",
         })
         self.assertEqual((self.target / "libcpabe_tkn20.dll").read_bytes(), b"test TKN20 DLL")
+        notices = self.target.parents[1] / "release-licenses"
+        self.assertEqual((notices / "vendor/cover_crypt/LICENSE.md").read_text(), "test notice")
+        self.assertEqual((notices / "licenses/rust/example/LICENSE").read_text(), "test notice")
+
+    def test_missing_notices_leave_runtime_untouched(self):
+        _, payload, sums = mock_release(include_notices=False)
+        with self._downloads(payload, sums):
+            with self.assertRaisesRegex(ValueError, "Missing license files"):
+                stage.stage("windows", "x86_64")
+        self.assertFalse(self.target.exists())
 
     def test_checksum_mismatch_rejected(self):
         name, payload, _ = mock_release()

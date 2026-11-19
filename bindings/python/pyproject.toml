@@ -5,9 +5,57 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pq-cp-abe"
 dynamic = ["version"]
-description = "Python bindings for the Hybrid-PQ-CP-ABE native cryptography library"
+description = "Python bindings for Hybrid Post-Quantum CP-ABE cryptography"
 readme = "README.md"
 requires-python = ">=3.10"
+license-files = ["release-licenses/**"]
+authors = [
+    { name = "Elio aka WanThinnn", email = "iam.elio2415@gmail.com" },
+]
+keywords = [
+    "attribute-based-encryption",
+    "cp-abe",
+    "pq-abe",
+    "cryptography",
+    "post-quantum-cryptography",
+    "ml-kem",
+    "ml-dsa",
+    "aes",
+    "aes-gcm",
+    "pq-cp-abe",
+    "hybrid-pq-cp-abe",
+    "hybrid-cp-abe",
+    "post-quantum-abe",
+    "post-quantum-cp-abe",
+    "cybersecurity",
+    "cybersecurity-engineering",
+    "security-engineering",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Quantum Computing",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+
+[project.urls]
+Homepage = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library"
+Documentation = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library#readme"
+Repository = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library"
+Issues = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/issues"
+Releases = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases"
 
 [tool.setuptools]
 packages = ["pq_cp_abe", "pq_cp_abe._libs"]

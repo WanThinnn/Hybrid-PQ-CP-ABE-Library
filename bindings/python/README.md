@@ -36,6 +36,10 @@ python bindings/python/verify_wheel.py --wheel-dir bindings/python/dist
 
 Substitute `windows/x86_64` with the actual runner target. On Linux/macOS, repair the wheel before calling `verify_wheel.py`, as in the workflow.
 
+Staging also copies the project license, notice, and third-party licenses
+from the verified native release. The wheel ships those files in its
+`.dist-info/licenses/` directory.
+
 The verifier installs the wheel outside the source checkout, checks its internal native files and version, and runs AC17/TKN20/CoverCrypt setup, user key generation and encrypt/decrypt roundtrips. **Do not use a local cached binary to judge a GitHub Release.**
 
 ## Publishing

@@ -10,6 +10,8 @@ import tempfile
 import textwrap
 import zipfile
 
+from stage_native import REQUIRED_NOTICES
+
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 EXTENSION = {"win32": "dll", "linux": "so", "darwin": "dylib"}[sys.platform]
@@ -25,6 +27,12 @@ def verify(wheel_path: Path):
         missing = required - names
         if missing:
             raise RuntimeError(f"Missing native runtimes: {sorted(missing)}")
+        packaged_notices = {
+            name.split(".dist-info/licenses/release-licenses/", 1)[1]
+            for name in names if ".dist-info/licenses/release-licenses/" in name
+        }
+        if missing_notices := REQUIRED_NOTICES - packaged_notices:
+            raise RuntimeError(f"Missing wheel license files: {sorted(missing_notices)}")
         if "pq_cp_abe/__init__.py" not in names:
             raise RuntimeError("Python SDK files missing")
         if "py3-none-any" in wheel_path.name:

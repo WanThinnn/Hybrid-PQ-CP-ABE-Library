@@ -377,6 +377,7 @@ bindings/python/pq_cp_abe/_libs/*
 !bindings/python/pq_cp_abe/_libs/.gitkeep
 !bindings/python/pq_cp_abe/_libs/__init__.py
 bindings/python/dist/
+bindings/python/release-licenses/
 bindings/python/build/
 bindings/python/*.egg-info/
 /lib/wasm/

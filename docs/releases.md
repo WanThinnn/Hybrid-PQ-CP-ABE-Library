@@ -7,6 +7,12 @@ suite against the extracted ZIP. The release attaches all four native SDK
 ZIPs, the Linux Vault ZIP, the WASM ZIP, and `SHA256SUMS.txt` after every check
 passes. A manual workflow run produces downloadable Actions artifacts.
 
+After the GitHub Release is available, manually run **Build Python Wheels**
+from a ref whose `VERSION` matches that release. With `publish=false`, the
+workflow builds and tests all four wheels and keeps them as Actions artifacts.
+With `publish=true`, it also attaches the verified `.whl` files to the GitHub
+Release and publishes them to PyPI.
+
 The workflow must be committed before creating the tag/release. Historical
 prebuilt files tracked by Git LFS are not used. Use
 `./scripts/release.sh 6.0.1 --dry-run` to preview the release assets.

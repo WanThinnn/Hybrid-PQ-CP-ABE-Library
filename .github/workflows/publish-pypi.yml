@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Publish verified wheels to PyPI (requires configured Trusted Publisher)"
+        description: "Attach verified wheels to the GitHub Release and publish to PyPI"
         required: true
         type: boolean
         default: false
@@ -98,6 +98,52 @@ jobs:
           name: python-wheel-${{ matrix.platform }}-${{ matrix.arch }}
           path: bindings/python/repaired/*.whl
           if-no-files-found: error
+
+  attach-wheels:
+    name: Attach verified wheels to GitHub Release
+    needs: wheels
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish == true }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          sparse-checkout: VERSION
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: python-wheel-*
+          path: dist
+          merge-multiple: true
+
+      - name: Upload wheels to the existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="v$(tr -d '\r\n' < VERSION)"
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if (( ${#wheels[@]} != 4 )); then
+            echo "Expected four verified wheels, found ${#wheels[@]}." >&2
+            exit 1
+          fi
+          assets="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          pending=()
+          for wheel in "${wheels[@]}"; do
+            name="${wheel##*/}"
+            if grep -Fxq -- "$name" <<< "$assets"; then
+              echo "Already attached to $tag: $name"
+            else
+              pending+=("$wheel")
+            fi
+          done
+          if (( ${#pending[@]} > 0 )); then
+            gh release upload "$tag" "${pending[@]}" --repo "$GITHUB_REPOSITORY"
+          fi
 
   publish:
     name: Publish all verified wheels to PyPI

@@ -23,6 +23,7 @@ TARGETS = {("windows", "x86_64"), ("linux", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64")}
 EXT = {"windows": "dll", "linux": "so", "macos": "dylib"}
 SYSTEM = {"windows": "Windows", "linux": "Linux", "macos": "Darwin"}
+REQUIRED_NOTICES = {"LICENSE", "NOTICE", "vendor/cover_crypt/LICENSE.md"}
 
 def normalized_arch():
     machine = (platform.machine() or os.getenv("PROCESSOR_ARCHITECTURE")
@@ -84,6 +85,7 @@ def stage(platform_name, arch):
     root_name = archive_name.removesuffix(".zip")
     with zipfile.ZipFile(io.BytesIO(raw)) as archive:
         entries = {}
+        notices = {}
         for file in archive.infolist():
             # Existing release archive structure is <archive-stem>/lib/<filename>.
             path = PurePosixPath(file.filename)
@@ -93,9 +95,17 @@ def stage(platform_name, arch):
                 if path.name in entries:
                     raise ValueError(f"Duplicate runtime: {path.name}")
                 entries[path.name] = file
+            if path.parts[:1] == (root_name,) and not file.is_dir():
+                relative = PurePosixPath(*path.parts[1:])
+                if relative.as_posix() in REQUIRED_NOTICES or relative.parts[:1] in (("licenses",), ("vendor",)):
+                    if ":" in relative.as_posix() or relative.as_posix() in notices:
+                        raise ValueError(f"Unsafe or duplicate license entry: {file.filename}")
+                    notices[relative.as_posix()] = file
         missing = set(required) - set(entries)
         if missing:
             raise ValueError(f"Missing runtime files in verified GitHub release: {sorted(missing)}")
+        if missing_notices := REQUIRED_NOTICES - notices.keys():
+            raise ValueError(f"Missing license files in verified GitHub release: {sorted(missing_notices)}")
 
         # All-or-nothing stage: validate before replacing the existing binaries.
         PACKAGE.mkdir(parents=True, exist_ok=True)
@@ -107,11 +117,22 @@ def stage(platform_name, arch):
                     raise ValueError(f"Invalid runtime size: {name}")
                 with archive.open(info) as source, (tmpdir / name).open("wb") as dest:
                     shutil.copyfileobj(source, dest)
+            staged_notices = tmpdir / "release-licenses"
+            for name, info in notices.items():
+                destination = staged_notices / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                content = archive.read(info)
+                content.decode("utf-8")  # License files must be valid UTF-8.
+                destination.write_bytes(content)
             for old in PACKAGE.iterdir():
                 if old.suffix.lower() in (".dll", ".so", ".dylib") and old.is_file():
                     old.unlink()
             for name in required:
                 shutil.move(str(tmpdir / name), str(PACKAGE / name))
+            license_dir = PACKAGE.parents[1] / "release-licenses"
+            if license_dir.exists():
+                shutil.rmtree(license_dir)
+            shutil.move(str(staged_notices), str(license_dir))
 
     for name in required:
         print(f"Staged GitHub Release v{version}: {PACKAGE / name}")

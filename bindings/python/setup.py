@@ -50,6 +50,10 @@ class PlatformWheel(bdist_wheel):
                     f"Cannot build runnable wheel: missing {artifact}. "
                     "Run bindings/python/stage_native.py first."
                 )
+        notices = PACKAGE.parents[1] / "release-licenses"
+        for name in ("LICENSE", "NOTICE", "vendor/cover_crypt/LICENSE.md"):
+            if not (notices / name).is_file():
+                raise SetupError(f"Missing release license file: {name}. Run bindings/python/stage_native.py first.")
         super().run()
 
     def get_tag(self):
@@ -95,6 +99,8 @@ if not VERSION:
 
 setup(
     version=VERSION,
+    author="Elio aka WanThinnn",
+    url="https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library",
     distclass=PlatformDistribution,
     cmdclass={"build_py": CleanBuildPy, "bdist_wheel": PlatformWheel},
 )
