@@ -61,9 +61,9 @@ $(MODULE): $(STATIC) $(BUILD_DIR)/obj/src/main.o $(BUILD_DIR)/exports.json Makef
 
 # The CLI uses the same module; callMain runs after both runtimes are ready.
 shared executable: publish
-publish: $(MODULE) bindings/wasm/loader.mjs | $(READY)
+publish: $(MODULE) bindings/wasm/loader.mjs bindings/wasm/api.mjs bindings/wasm/loader.d.mts | $(READY)
 	@mkdir -p $(LIB_DIR)
-	install -m 644 $(MODULE) $(BUILD_DIR)/hybrid-pq-cp-abe.wasm $(DEPS_DIR)/lib/tkn20/tkn20.wasm $(DEPS_DIR)/lib/tkn20/wasm_exec.js bindings/wasm/loader.mjs $(LIB_DIR)/
+	install -m 644 $(MODULE) $(BUILD_DIR)/hybrid-pq-cp-abe.wasm $(DEPS_DIR)/lib/tkn20/tkn20.wasm $(DEPS_DIR)/lib/tkn20/wasm_exec.js bindings/wasm/loader.mjs bindings/wasm/api.mjs bindings/wasm/loader.d.mts $(LIB_DIR)/
 
 test: all
 	node tests/wasm/smoke.mjs

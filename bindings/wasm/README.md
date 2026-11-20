@@ -1,5 +1,12 @@
 # WebAssembly build on Linux, macOS, and Windows
 
+The default `createHybridCPABE` loader export preserves the raw Emscripten API.
+The named `createHybridCpAbe` export adds the modern camelCase API; see the
+[JavaScript SDK guide](../npm/README.md#modern-javascript--typescript-api-additive).
+Keep `api.mjs` and `loader.d.mts` alongside the loader and runtime binaries.
+Run `node tests/wasm/modern-api.mjs` after `make -f Makefile.wasm publish` to
+exercise the modern API, buffer cleanup and legacy loader compatibility.
+
 Builds the complete public C API: AC17, TKN20, CoverCrypt (including ML-KEM-768),
 AES-GCM, ML-DSA-87, file/buffer operations, and the CLI entry point. Native DLL/SO
 targets retain their existing toolchains and output paths.

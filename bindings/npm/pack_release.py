@@ -16,7 +16,7 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 RUNTIME = {
-    "lib/wasm/loader.mjs", "lib/wasm/hybrid-pq-cp-abe.mjs",
+    "lib/wasm/loader.mjs", "lib/wasm/api.mjs", "lib/wasm/loader.d.mts", "lib/wasm/hybrid-pq-cp-abe.mjs",
     "lib/wasm/hybrid-pq-cp-abe.wasm", "lib/wasm/tkn20.wasm",
     "lib/wasm/wasm_exec.js",
 }
@@ -114,9 +114,17 @@ def main():
         entry = consumer / "package-entry.mjs"
         entry.write_text(
             f'import createHybridCPABE from {json.dumps(name)};\n'
+            f'import {{ createHybridCpAbe, Scheme }} from {json.dumps(name)};\n'
             'import assert from "node:assert/strict";\n'
             'const abe = await createHybridCPABE();\n'
-            'assert.equal(abe.ccall("getVersion", "string", [], []), process.argv[2]);\n',
+            'assert.equal(abe.ccall("getVersion", "string", [], []), process.argv[2]);\n'
+            'const modern = await createHybridCpAbe();\n'
+            'const scheme = Scheme.AC17;\n'
+            'const keys = modern.setup({ scheme });\n'
+            'const secretKey = modern.generateSecretKey({ masterSecretKey: keys.masterSecretKey, attributes: "admin", scheme });\n'
+            'const plaintext = Uint8Array.of(0, 1, 255);\n'
+            'const ciphertext = modern.encrypt({ publicKey: keys.publicKey, plaintext, policy: "admin", scheme });\n'
+            'assert.deepEqual(modern.decrypt({ secretKey, ciphertext }), plaintext);\n',
             encoding="utf-8",
         )
         subprocess.run(["node", str(entry), version], cwd=consumer, check=True)

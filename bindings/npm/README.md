@@ -1,5 +1,70 @@
 # PQ-CP-ABE JavaScript SDK
 
+## Modern JavaScript / TypeScript API (additive)
+
+Use the named `createHybridCpAbe` factory for camelCase methods and automatic
+buffer management. The existing default `createHybridCPABE` export continues
+to return the raw Emscripten module; its `ccall`, heap and filesystem APIs
+are unchanged. TypeScript declarations are included.
+
+```js
+import { createHybridCpAbe } from '@wanthinnn/pq-cp-abe';
+
+const config = JSON.stringify({ dimensions: [
+  { name: 'role', attributes: ['admin', 'analyst'] },
+  { name: 'department', attributes: ['finance', 'engineering'] },
+] });
+const abe = await createHybridCpAbe({ preRun: [module => {
+  module.FS.writeFile('/attributes.json', config);
+  module.ENV.HCPABE_COVERCRYPT_CONFIG = '/attributes.json';
+  module.ENV.HCPABE_COVERCRYPT_MODE = 'hybridized';
+}] });
+const keys = abe.setup(); // Default: Scheme.COVERCRYPT
+const secretKey = abe.generateSecretKey({
+  masterSecretKey: keys.masterSecretKey,
+  attributes: 'role::admin department::finance',
+});
+const ciphertext = abe.encrypt({
+  publicKey: keys.publicKey,
+  plaintext: new TextEncoder().encode('Hello'),
+  policy: 'role::admin && department::finance',
+});
+console.log(new TextDecoder().decode(abe.decrypt({ secretKey, ciphertext })));
+```
+
+Only factory initialization is asynchronous; crypto methods are synchronous
+and can block the calling thread. Use a worker if needed. Pass the same
+`scheme: Scheme.AC17` or `Scheme.TKN20` to setup, key generation and encryption
+to choose a different scheme; decryption detects the ciphertext scheme.
+Scheme-specific attribute/policy syntax is unchanged.
+
+| In-memory API | File API |
+| --- | --- |
+| `setup()` | `setupFiles({ outputPath })` |
+| `setupWithSigning()` | `setupFilesWithSigning({ outputPath })` |
+| `generateSecretKey(...)` | `generateSecretKeyFile(...)` |
+| `encrypt(...)` / `decrypt(...)` | `encryptFile(...)` / `decryptFile(...)` |
+| `encryptAndSign(...)` | `encryptAndSignFile(...)` |
+| `decryptAndVerify(...)` | `decryptAndVerifyFile(...)` |
+
+Binary inputs/outputs are `Uint8Array`. Output arrays are copied before native
+buffers are freed, including cleanup after errors. `setup()` returns
+`{ publicKey, masterSecretKey }`; `setupWithSigning()` additionally returns
+`verificationKey` and `signingKey` as native Base64-encoded bytes for the
+combined signing operations (not raw standalone ML-DSA keys).
+File methods return `undefined`; their paths refer to the **WASM virtual
+filesystem**, accessed through `abe.native.FS`, rather than host paths.
+Setup retains native path/prefix naming. Native file operations may emit logs.
+
+Native failures throw `AbeError` with `code` and `operation`; -3 and -9 map to
+`PolicyMismatchError` and `SignatureInvalidError`. Generic cryptographic
+failures (-4) remain `AbeError`. Input errors use `TypeError`/`RangeError`.
+Existing low-level operations remain accessible through `abe.native`.
+
+The factory returns an object bound to one WASM instance and holds no keys.
+An application may wrap it in a class for configuration or resource ownership;
+inheritance and stateful key storage are not required by the SDK.
+
 Encrypt data under a policy such as `role::admin && department::finance`.
 Only a user whose key satisfies that policy can decrypt it. This is
 **ciphertext-policy attribute-based encryption (CP-ABE)**.

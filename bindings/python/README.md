@@ -1,5 +1,65 @@
 # PQ-CP-ABE Python SDK
 
+## Modern Python API (additive)
+
+New integrations can use `setup`, `generate_secret_key`, `encrypt`, and
+`decrypt` directly. Existing `call_*`, buffer helpers, constants, and `native`
+remain available with their original signatures, return values and errors.
+There are no deprecation warnings or automatic migrations.
+
+With the CoverCrypt configuration described below already set through
+`HCPABE_COVERCRYPT_CONFIG`:
+
+```python
+import pq_cp_abe as abe
+
+keys = abe.setup()  # Default: Scheme.COVERCRYPT
+secret_key = abe.generate_secret_key(
+    master_secret_key=keys.master_secret_key,
+    attributes="role::admin department::finance",
+)
+ciphertext = abe.encrypt(
+    public_key=keys.public_key,
+    plaintext=b"Hello",
+    policy="role::admin && department::finance",
+)
+assert abe.decrypt(secret_key=secret_key, ciphertext=ciphertext) == b"Hello"
+```
+
+Pass `scheme=abe.Scheme.AC17` or `abe.Scheme.TKN20` consistently to setup,
+key generation and encryption to use those schemes. Decryption detects the
+ciphertext scheme. Each scheme retains its native attribute/policy syntax.
+
+| In-memory API | File API |
+| --- | --- |
+| `setup()` | `setup_files(output_path)` |
+| `setup_with_signing()` | `setup_files_with_signing(output_path)` |
+| `generate_secret_key(...)` | `generate_secret_key_file(...)` |
+| `encrypt(...)` / `decrypt(...)` | `encrypt_file(...)` / `decrypt_file(...)` |
+| `encrypt_and_sign(...)` | `encrypt_and_sign_file(...)` |
+| `decrypt_and_verify(...)` | `decrypt_and_verify_file(...)` |
+
+In-memory operations accept/return `bytes`; the binding copies and frees C
+output buffers even on failure. `setup()` returns `AuthorityKeys` with
+`public_key` and `master_secret_key` fields (also tuple-unpackable).
+`setup_with_signing()` adds `verification_key` and `signing_key`, in the native
+Base64-encoded byte format expected by the combined signing operations.
+These differ from the raw key bytes used by standalone `ml_dsa_87_*` helpers.
+File operations accept `str` or `PathLike[str]` and return `None` on success;
+setup retains native directory/prefix naming. The new wrappers add no console
+output, although native file functions may still write logs.
+
+New API native failures raise `AbeError` with `.code` and `.operation`;
+native codes -3 and -9 map to `PolicyMismatchError` and `SignatureInvalidError`.
+Other native failures remain `AbeError`, including -4 for a generic
+cryptographic failure. Invalid Python inputs raise `TypeError`/`ValueError`.
+The package ships annotations and a `py.typed` marker.
+
+The public API uses functions and small data types, with no stateful crypto
+class required. A future context object can hold configuration and delegate
+to these same functions without breaking callers. Raw key bytes remain
+application-owned; Python does not guarantee secure erasure of immutable bytes.
+
 Encrypt data under a policy such as `role::admin && department::finance`.
 Only a user whose key grants the admin role in the finance department can
 decrypt it. This is

@@ -3,7 +3,14 @@
   "private": true,
   "description": "WebAssembly bindings for post-quantum ciphertext-policy attribute-based encryption (CP-ABE)",
   "type": "module",
-  "exports": "./lib/wasm/loader.mjs",
+  "exports": {
+    ".": {
+      "types": "./lib/wasm/loader.d.mts",
+      "import": "./lib/wasm/loader.mjs",
+      "default": "./lib/wasm/loader.mjs"
+    }
+  },
+  "types": "./lib/wasm/loader.d.mts",
   "bin": {
     "pq-cp-abe": "./bindings/wasm/cli.mjs"
   },

@@ -64,4 +64,4 @@ packages = ["pq_cp_abe", "pq_cp_abe._libs"]
 include-package-data = false
 
 [tool.setuptools.package-data]
-pq_cp_abe = ["_libs/*.dll", "_libs/*.so", "_libs/*.dylib"]
+pq_cp_abe = ["py.typed", "_libs/*.dll", "_libs/*.so", "_libs/*.dylib"]

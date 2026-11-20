@@ -17,7 +17,7 @@ LIBRARY = "libhybrid-pq-cp-abe"
 TARGETS = (("linux", "x86_64"), ("windows", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64"))
 VAULT_TARGETS = (("linux", "x86_64"),)
-WASM_FILES = ("loader.mjs", "hybrid-pq-cp-abe.mjs", "hybrid-pq-cp-abe.wasm",
+WASM_FILES = ("loader.mjs", "api.mjs", "loader.d.mts", "hybrid-pq-cp-abe.mjs", "hybrid-pq-cp-abe.wasm",
               "tkn20.wasm", "wasm_exec.js", f"{LIBRARY}.a")
 
 
@@ -217,6 +217,8 @@ def verify_wasm_runtime(root, archive, version):
         package = Path(directory) / archive.stem
         loader = (package / "lib/wasm/loader.mjs").resolve()
         subprocess.run(["node", str(root / "tests/wasm/smoke.mjs"), str(loader), version],
+                       cwd=package, check=True)
+        subprocess.run(["node", str(root / "tests/wasm/modern-api.mjs"), str(loader)],
                        cwd=package, check=True)
 
 

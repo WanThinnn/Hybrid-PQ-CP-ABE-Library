@@ -1,3 +1,11 @@
+import { wrapModule } from './api.mjs';
+export { Scheme, AbeError, PolicyMismatchError, SignatureInvalidError } from './api.mjs';
+
+/** Modern API; the default createHybridCPABE export remains the raw module. */
+export async function createHybridCpAbe(options = {}) {
+  return wrapModule(await createHybridCPABE(options));
+}
+
 // Keep one persistent Go runtime, shared by independent Emscripten instances.
 let runtime;
 async function readBinary(url) {

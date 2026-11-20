@@ -114,3 +114,9 @@ __all__ = [
     "call_hybrid_cpabe_encrypt_and_sign_with_scheme",
     "call_hybrid_cpabe_encryptBuffer_and_sign_with_scheme",
 ]
+
+# Additive public API: existing names and legacy return/error behavior stay intact.
+from . import modern_api as _modern_api
+from .modern_api import *
+
+__all__ += _modern_api.__all__

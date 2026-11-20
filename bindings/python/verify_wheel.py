@@ -21,7 +21,8 @@ def verify(wheel_path: Path):
     with zipfile.ZipFile(wheel_path) as archive:
         names = set(archive.namelist())
         lib_prefix = "pq_cp_abe/_libs/"
-        required = {lib_prefix + f"libhybrid-pq-cp-abe.{EXTENSION}"}
+        required = {lib_prefix + f"libhybrid-pq-cp-abe.{EXTENSION}",
+                    "pq_cp_abe/modern_api.py", "pq_cp_abe/py.typed"}
         if EXTENSION == "dll":
             required.add(lib_prefix + "libcpabe_tkn20.dll")
         missing = required - names
@@ -107,6 +108,11 @@ def verify(wheel_path: Path):
                         str(private), str(cipher), str(recovered)
                     ) == abe.HCPABE_SUCCESS, name
                     assert recovered.read_bytes() == message.read_bytes(), name
+                    keys = abe.setup_with_signing(scheme=abe.Scheme(scheme))
+                    user = abe.generate_secret_key(keys.master_secret_key, "admin it", scheme=abe.Scheme(scheme))
+                    signed = abe.encrypt_and_sign(keys.public_key, keys.signing_key,
+                                                  b"modern wheel", "admin and it", scheme=abe.Scheme(scheme))
+                    assert abe.decrypt_and_verify(user, keys.verification_key, signed) == b"modern wheel"
                     print("PASS:", name)
             # Validate extended API from the installed wheel, not the source tree.
             key = bytes(range(32))
