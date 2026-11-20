@@ -1,31 +1,17 @@
 # Native CoverCrypt bridge
 
 This project-owned Rust crate exports a C ABI for the vendored CoverCrypt v16
-KEM. It statically includes Curve25519 + a selected ML-KEM provider (768 by
-default) and supports Classic,
+KEM. It statically includes Curve25519 + ML-KEM-768 and supports Classic,
 PostQuantum and Hybridized rights. The C++ adapter is under
 `src/schemes/`; this is a native dependency, not a runtime plugin.
 
-## ML-KEM build selection
+## ML-KEM provider
 
-The project-owned bridge forwards Cargo features to the unmodified vendor:
-
-```sh
-# Existing default: ML-KEM-768
-cargo build --locked --release --manifest-path bindings/covercrypt/Cargo.toml
-
-# Alternative build: ML-KEM-512
-cargo build --locked --release --manifest-path bindings/covercrypt/Cargo.toml --no-default-features --features mlkem-512
-```
-
-Select exactly one feature. Enabling both is rejected by the bridge, because
-upstream otherwise silently prefers 768. Upstream does not provide a 1024
-feature for this CoverCrypt implementation. This is compile-time selection;
-it does not add runtime parameter negotiation. The normal dependency staging
-scripts continue to use the default 768 build. Serialized keys/encapsulations
-do not carry a portable parameter-set identifier; keep different builds and
-their authority data separate. Standalone liboqs ML-KEM APIs are independent
-of this CoverCrypt build choice.
+The bridge deliberately fixes the ABE provider to ML-KEM-768 in every mode
+that uses post-quantum keys. Vendor sources remain unchanged. The public C
+query `hybrid_cpabe_covercrypt_ml_kem_parameter_set()` returns 768, allowing
+Python/WASM wrappers to validate a requested parameter set. The independent
+liboqs ML-KEM API supports 512/768/1024 and does not change this ABE provider.
 
 Setup takes JSON such as:
 ```json

@@ -67,6 +67,8 @@
 
 /* #undef OQS_SPEED_USE_ARM_PMU */
 
+/* #undef OQS_ENABLE_TEST_CONSTANT_TIME_VALGRIND */
+/* #undef OQS_ENABLE_TEST_CONSTANT_TIME_MEMSAN */
 /* #undef OQS_ENABLE_TEST_CONSTANT_TIME */
 
 #define OQS_ENABLE_SHA3_xkcp_low_avx2 1
@@ -529,6 +531,57 @@
 /* #undef OQS_ENABLE_SIG_mqom_mqom3_cat5_gf2_shorter_ot_memopt */
 /* #undef OQS_ENABLE_SIG_mqom_mqom3_cat5_gf2_shorter_ot_avx2 */
 /* #undef OQS_ENABLE_SIG_mqom_mqom3_cat5_gf2_shorter_ot_neon */
+
+/* #undef OQS_ENABLE_SIG_SDITH */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_short */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_short_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_short_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_short_cipherpow_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_fast */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_fast_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_fast_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l1_gf2_fast_cipherpow_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_short */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_short_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_short_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_short_cipherpow_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_fast */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_fast_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_fast_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l3_gf2_fast_cipherpow_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_short */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_short_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_short_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_short_cipherpow_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_fast */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_fast_avx2 */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_fast_cipherpow */
+/* #undef OQS_ENABLE_SIG_sdith_l5_gf2_fast_cipherpow_avx2 */
+
+/* #undef OQS_ENABLE_SIG_SQISIGN */
+/* #undef OQS_ENABLE_SIG_sqisign_p324_3 */
+/* #undef OQS_ENABLE_SIG_sqisign_p324_3_broadwell */
+/* #undef OQS_ENABLE_SIG_sqisign_p324_3_arm64 */
+/* #undef OQS_ENABLE_SIG_sqisign_p500_27 */
+/* #undef OQS_ENABLE_SIG_sqisign_p500_27_broadwell */
+/* #undef OQS_ENABLE_SIG_sqisign_p500_27_arm64 */
+/* #undef OQS_ENABLE_SIG_sqisign_p664_17 */
+/* #undef OQS_ENABLE_SIG_sqisign_p664_17_broadwell */
+/* #undef OQS_ENABLE_SIG_sqisign_p664_17_arm64 */
+
+/* #undef OQS_ENABLE_SIG_FAEST */
+/* #undef OQS_ENABLE_SIG_faest_128s */
+/* #undef OQS_ENABLE_SIG_faest_128f */
+/* #undef OQS_ENABLE_SIG_faest_em_128s */
+/* #undef OQS_ENABLE_SIG_faest_em_128f */
+/* #undef OQS_ENABLE_SIG_faest_192s */
+/* #undef OQS_ENABLE_SIG_faest_192f */
+/* #undef OQS_ENABLE_SIG_faest_em_192s */
+/* #undef OQS_ENABLE_SIG_faest_em_192f */
+/* #undef OQS_ENABLE_SIG_faest_256s */
+/* #undef OQS_ENABLE_SIG_faest_256f */
+/* #undef OQS_ENABLE_SIG_faest_em_256s */
+/* #undef OQS_ENABLE_SIG_faest_em_256f */
 ///// OQS_COPY_FROM_UPSTREAM_FRAGMENT_ADD_ALG_ENABLE_DEFINES_END
 ///// OQS_COPY_FROM_SLH_DSA_FRAGMENT_ADD_ALG_ENABLE_DEFINES_START
 /* #undef OQS_ENABLE_SIG_SLH_DSA */

@@ -93,6 +93,7 @@ OQS_HEADER = $(OQS_INC_DIR)/oqs/oqs.h
 TKN20_HEADER = $(TKN20_INC_DIR)/cpabe_tkn20.h
 COVERCRYPT_HEADER = $(DEPS_INC_DIR)/covercrypt/covercrypt_ffi.h
 COVERCRYPT_TEST_SRC = tests/cpp/covercrypt_test.cpp
+PARAMS_TEST_SRC = tests/cpp/params_test.cpp
 # Core builds reuse staged dependencies. Only a missing ready marker triggers
 # automatic dependency setup; changed dependency sources require make deps.
 CRYPTOPP_HEADERS = $(DEPS_INC_DIR)/cryptopp/aes.h $(DEPS_INC_DIR)/cryptopp/gcm.h $(DEPS_INC_DIR)/cryptopp/filters.h \
@@ -138,6 +139,7 @@ ifeq ($(COMPILER),msvc)
     EXEC = $(BUILD_DIR)/main.exe
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.lib
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test.exe
+    PARAMS_TEST = $(BUILD_DIR)/params-test.exe
     BENCHMARK_BRIDGE = $(BENCHMARK_BRIDGE_DIR)/native_primitive_bridge.dll
 
     WIN_STATIC_DEPS = $(DEPS_LIB_DIR)/cryptopp/libcryptopp.lib $(DEPS_LIB_DIR)/liboqs/liboqs.lib $(DEPS_LIB_DIR)/rabe/librabe_ffi.lib $(COVERCRYPT_LIB)
@@ -176,6 +178,7 @@ else
     EXEC = $(BUILD_DIR)/main
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.a
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test
+    PARAMS_TEST = $(BUILD_DIR)/params-test
     ifeq ($(PLATFORM),macos)
         BENCHMARK_BRIDGE = $(BENCHMARK_BRIDGE_DIR)/libnative_primitive_bridge.dylib
     else
@@ -398,8 +401,17 @@ clean:
 	@if exist "$(subst /,\,$(TEST_CASE_DIR))" rmdir /S /Q "$(subst /,\,$(TEST_CASE_DIR))"
 	@echo Done! Core build outputs cleared.
 
-test: $(EXEC) $(COVERCRYPT_TEST) $(PUBLISHED_TKN20_DLL)
+$(BUILD_DIR)/crypto-params-header.obj: tests/cpp/header_checks/crypto_params.c $(PROJECT_HEADERS) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) /TC /c /Fo"$(subst /,\,$@)" "$<"
+
+$(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(TKN20_IMPORT_LIB) $(TKN20_DLL) $(BUILD_DIR)/crypto-params-header.obj | $(BUILD_DIR) $(MAIN_OBJ_DIR)
+	$(CXX) $(CXXFLAGS) /Fo"$(subst /,\,$(MAIN_OBJ_DIR))\\" /Fe:"$(subst /,\,$@)" $(PARAMS_TEST_SRC) $(LDFLAGS) "$(subst /,\,$(STATIC_LIB))" "$(subst /,\,$(TKN20_IMPORT_LIB))" $(WIN_SYSTEM_LIBS)
+	@copy /Y "$(subst /,\,$(TKN20_DLL))" "$(subst /,\,$(BUILD_DIR))\\" >nul
+
+test: $(EXEC) $(COVERCRYPT_TEST) $(PARAMS_TEST) $(PUBLISHED_TKN20_DLL)
 	@"$(COVERCRYPT_TEST)"
+	@cd /d "$(subst /,\,$(BUILD_DIR))" && params-test.exe
+	python tests/test_cli_params.py "$(EXEC)"
 	@echo ================================================================
 	@echo  Running Tests...
 	@if not exist "$(subst /,\,$(TEST_CASE_DIR))" mkdir "$(subst /,\,$(TEST_CASE_DIR))"
@@ -487,8 +499,18 @@ clean:
 	@rm -rf $(TEST_CASE_DIR)
 	@echo "Done! Core build outputs cleared."
 
-test: $(EXEC) $(COVERCRYPT_TEST)
+$(BUILD_DIR)/crypto-params-header.o: tests/cpp/header_checks/crypto_params.c $(PROJECT_HEADERS)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -x c -c "$<" -o "$@"
+
+$(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(BUILD_DIR)/crypto-params-header.o
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(PARAMS_TEST_SRC) $(STATIC_LIB) -o "$@" $(LDFLAGS)
+
+test: $(EXEC) $(COVERCRYPT_TEST) $(PARAMS_TEST)
 	@"$(COVERCRYPT_TEST)"
+	@cd "$(BUILD_DIR)" && ./params-test
+	python3 tests/test_cli_params.py "$(EXEC)"
 	@echo "================================================================"
 	@echo " Running Tests..."
 	@mkdir -p $(TEST_CASE_DIR)

@@ -15,204 +15,213 @@
 
 namespace
 {
-using Bytes = std::vector<unsigned char>;
-using Allocation = std::unique_ptr<unsigned char, decltype(&std::free)>;
-struct Error
-{
-    int code;
-};
-struct Buffer
-{
-    cc_buffer value{nullptr, 0};
-    Buffer() = default;
-    Buffer(const Buffer &) = delete;
-    Buffer &operator=(const Buffer &) = delete;
-    ~Buffer()
+    using Bytes = std::vector<unsigned char>;
+    using Allocation = std::unique_ptr<unsigned char, decltype(&std::free)>;
+    struct Error
     {
-        cc_buffer_free(&value);
-    }
-};
-struct Wipe
-{
-    std::string &value;
-    ~Wipe()
+        int code;
+    };
+    struct Buffer
     {
-        if (!value.empty())
-            secureWipe(&value[0], value.size());
-    }
-};
-template <class Operation> int run(Operation operation)
-{
-    try
-    {
-        operation();
-        return HCPABE_SUCCESS;
-    }
-    catch (const Error &error)
-    {
-        return error.code;
-    }
-    catch (const std::bad_alloc &)
-    {
-        return HCPABE_ERR_MEMORY;
-    }
-    catch (...)
-    {
-        return HCPABE_ERR_CRYPTO_FAILED;
-    }
-}
-void check(int status)
-{
-    if (status == CC_OK)
-        return;
-    if (status == CC_INVALID_INPUT)
-        throw Error{HCPABE_ERR_INVALID_PARAM};
-    if (status == CC_ACCESS_DENIED)
-        throw Error{HCPABE_ERR_POLICY_MISMATCH};
-    throw Error{HCPABE_ERR_CRYPTO_FAILED};
-}
-Allocation copy(const unsigned char *data, size_t length)
-{
-    Allocation output(static_cast<unsigned char *>(std::malloc(length ? length : 1)), &std::free);
-    if (!output)
-        throw std::bad_alloc();
-    if (length)
-        std::memcpy(output.get(), data, length);
-    return output;
-}
-void output(const unsigned char *data, size_t length, unsigned char **buffer, size_t *size)
-{
-    auto allocation = copy(data, length);
-    *size = length;
-    *buffer = allocation.release();
-}
-// Bare v5.2 attributes use boolean dimensions, e.g. admin::{present,absent}.
-std::string normalize_policy(const std::string &input, bool attribute_list = false)
-{
-    std::string result;
-    bool previous_atom = false;
-    for (size_t position = 0; position < input.size();)
-    {
-        unsigned char ch = static_cast<unsigned char>(input[position]);
-        if (std::isspace(ch))
+        cc_buffer value{nullptr, 0};
+        Buffer() = default;
+        Buffer(const Buffer &) = delete;
+        Buffer &operator=(const Buffer &) = delete;
+        ~Buffer()
         {
-            ++position;
-            continue;
+            cc_buffer_free(&value);
         }
-        if (ch == '(' || ch == ')')
+    };
+    struct Wipe
+    {
+        std::string &value;
+        ~Wipe()
         {
-            result += static_cast<char>(ch);
-            ++position;
-            previous_atom = ch == ')';
-            continue;
+            if (!value.empty())
+                secureWipe(&value[0], value.size());
         }
-        bool quoted = ch == '"' || ch == '\'';
-        std::string token;
-        if (quoted)
+    };
+    template <class Operation>
+    int run(Operation operation)
+    {
+        try
         {
-            char quote = input[position++];
-            size_t end = input.find(quote, position);
-            if (end == std::string::npos)
-                throw Error{HCPABE_ERR_INVALID_PARAM};
-            token = input.substr(position, end - position);
-            position = end + 1;
+            operation();
+            return HCPABE_SUCCESS;
         }
-        else if (ch == '&' || ch == '|')
+        catch (const Error &error)
         {
-            if (position + 1 >= input.size() || input[position + 1] != ch)
-                throw Error{HCPABE_ERR_INVALID_PARAM};
-            token = input.substr(position, 2);
-            position += 2;
+            return error.code;
         }
-        else
+        catch (const std::bad_alloc &)
         {
-            size_t start = position;
-            while (position < input.size() && !std::isspace(static_cast<unsigned char>(input[position])) &&
-                   input[position] != '(' && input[position] != ')' && input[position] != '&' && input[position] != '|')
+            return HCPABE_ERR_MEMORY;
+        }
+        catch (...)
+        {
+            return HCPABE_ERR_CRYPTO_FAILED;
+        }
+    }
+    void check(int status)
+    {
+        if (status == CC_OK)
+            return;
+        if (status == CC_INVALID_INPUT)
+            throw Error{HCPABE_ERR_INVALID_PARAM};
+        if (status == CC_ACCESS_DENIED)
+            throw Error{HCPABE_ERR_POLICY_MISMATCH};
+        throw Error{HCPABE_ERR_CRYPTO_FAILED};
+    }
+    Allocation copy(const unsigned char *data, size_t length)
+    {
+        Allocation output(static_cast<unsigned char *>(std::malloc(length ? length : 1)), &std::free);
+        if (!output)
+            throw std::bad_alloc();
+        if (length)
+            std::memcpy(output.get(), data, length);
+        return output;
+    }
+    void output(const unsigned char *data, size_t length, unsigned char **buffer, size_t *size)
+    {
+        auto allocation = copy(data, length);
+        *size = length;
+        *buffer = allocation.release();
+    }
+    // Bare v5.2 attributes use boolean dimensions, e.g. admin::{present,absent}.
+    std::string normalize_policy(const std::string &input, bool attribute_list = false)
+    {
+        std::string result;
+        bool previous_atom = false;
+        for (size_t position = 0; position < input.size();)
+        {
+            unsigned char ch = static_cast<unsigned char>(input[position]);
+            if (std::isspace(ch))
+            {
                 ++position;
-            token = input.substr(start, position - start);
+                continue;
+            }
+            if (ch == '(' || ch == ')')
+            {
+                result += static_cast<char>(ch);
+                ++position;
+                previous_atom = ch == ')';
+                continue;
+            }
+            bool quoted = ch == '"' || ch == '\'';
+            std::string token;
+            if (quoted)
+            {
+                char quote = input[position++];
+                size_t end = input.find(quote, position);
+                if (end == std::string::npos)
+                    throw Error{HCPABE_ERR_INVALID_PARAM};
+                token = input.substr(position, end - position);
+                position = end + 1;
+            }
+            else if (ch == '&' || ch == '|')
+            {
+                if (position + 1 >= input.size() || input[position + 1] != ch)
+                    throw Error{HCPABE_ERR_INVALID_PARAM};
+                token = input.substr(position, 2);
+                position += 2;
+            }
+            else
+            {
+                size_t start = position;
+                while (position < input.size() && !std::isspace(static_cast<unsigned char>(input[position])) &&
+                       input[position] != '(' && input[position] != ')' && input[position] != '&' && input[position] != '|')
+                    ++position;
+                token = input.substr(start, position - start);
+            }
+            std::string lowered = toLowerCase(token);
+            if (!quoted && (lowered == "and" || token == "&&" || lowered == "or" || token == "||"))
+            {
+                result += (lowered == "and" || token == "&&") ? " && " : " || ";
+                previous_atom = false;
+            }
+            else
+            {
+                if ((!quoted && lowered == "not") || token.empty())
+                    throw Error{HCPABE_ERR_INVALID_PARAM};
+                if (attribute_list && previous_atom)
+                    result += " && ";
+                result += token.find("::") == std::string::npos ? lowered + "::present" : token;
+                previous_atom = true;
+            }
         }
-        std::string lowered = toLowerCase(token);
-        if (!quoted && (lowered == "and" || token == "&&" || lowered == "or" || token == "||"))
-        {
-            result += (lowered == "and" || token == "&&") ? " && " : " || ";
-            previous_atom = false;
-        }
-        else
-        {
-            if ((!quoted && lowered == "not") || token.empty())
-                throw Error{HCPABE_ERR_INVALID_PARAM};
-            if (attribute_list && previous_atom)
-                result += " && ";
-            result += token.find("::") == std::string::npos ? lowered + "::present" : token;
-            previous_atom = true;
-        }
+        return result;
     }
-    return result;
-}
-int load_key(const char *file, unsigned char **data, size_t *length)
-{
-    if (!file || !data || !length)
-        return HCPABE_ERR_INVALID_PARAM;
-    *data = nullptr;
-    *length = 0;
-    return run([&] {
+    int load_key(const char *file, unsigned char **data, size_t *length)
+    {
+        if (!file || !data || !length)
+            return HCPABE_ERR_INVALID_PARAM;
+        *data = nullptr;
+        *length = 0;
+        return run([&]
+                   {
         std::string raw;
         Wipe wipe{raw};
         if (!LoadFile(file, raw, "Base64"))
             throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-        output(reinterpret_cast<const unsigned char *>(raw.data()), raw.size(), data, length);
-    });
-}
+        output(reinterpret_cast<const unsigned char *>(raw.data()), raw.size(), data, length); });
+    }
 
-int configured_mode()
-{
-    const char *value = std::getenv("HCPABE_COVERCRYPT_MODE");
-    if (!value)
-        return CC_HYBRIDIZED;
-    const std::string choice = toLowerCase(value);
-    if (choice == "hybridized") return CC_HYBRIDIZED;
-    if (choice == "classic") return CC_CLASSIC;
-    if (choice == "post_quantum") return CC_POST_QUANTUM;
-    throw Error{HCPABE_ERR_INVALID_PARAM};
-}
+    int configured_mode()
+    {
+        const char *value = std::getenv("HCPABE_COVERCRYPT_MODE");
+        if (!value)
+            return CC_HYBRIDIZED;
+        const std::string choice = toLowerCase(value);
+        if (choice == "hybridized")
+            return CC_HYBRIDIZED;
+        if (choice == "classic")
+            return CC_CLASSIC;
+        if (choice == "post_quantum")
+            return CC_POST_QUANTUM;
+        throw Error{HCPABE_ERR_INVALID_PARAM};
+    }
 
-template <class Operation>
-int grow_buffer(const unsigned char *msk, size_t mskLen, unsigned char **pkOut, size_t *pkLen,
-                unsigned char **mskOut, size_t *mskOutLen, Operation operation)
-{
-    if (!pkOut || !pkLen || !mskOut || !mskOutLen || pkOut == mskOut || pkLen == mskOutLen)
-        return HCPABE_ERR_INVALID_PARAM;
-    *pkOut = nullptr; *pkLen = 0; *mskOut = nullptr; *mskOutLen = 0;
-    if (!msk || !mskLen)
-        return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    template <class Operation>
+    int grow_buffer(const unsigned char *msk, size_t mskLen, unsigned char **pkOut, size_t *pkLen,
+                    unsigned char **mskOut, size_t *mskOutLen, Operation operation)
+    {
+        if (!pkOut || !pkLen || !mskOut || !mskOutLen || pkOut == mskOut || pkLen == mskOutLen)
+            return HCPABE_ERR_INVALID_PARAM;
+        *pkOut = nullptr;
+        *pkLen = 0;
+        *mskOut = nullptr;
+        *mskOutLen = 0;
+        if (!msk || !mskLen)
+            return HCPABE_ERR_INVALID_PARAM;
+        return run([&]
+                   {
         Buffer secret, public_key;
         check(operation(&secret.value, &public_key.value));
         auto pk = copy(public_key.value.data, public_key.value.len);
         auto master = copy(secret.value.data, secret.value.len);
         *pkLen = public_key.value.len; *mskOutLen = secret.value.len;
-        *pkOut = pk.release(); *mskOut = master.release();
-    });
-}
-
-struct SensitiveAllocation
-{
-    unsigned char *data = nullptr;
-    size_t length = 0;
-    ~SensitiveAllocation()
-    {
-        if (data) secureWipe(data, length);
-        std::free(data);
+        *pkOut = pk.release(); *mskOut = master.release(); });
     }
-};
 
-template <class Operation>
-int grow_file(const char *mskFile, const char *outPrefix, Operation operation)
-{
-    if (!mskFile || !outPrefix || !*outPrefix)
-        return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    struct SensitiveAllocation
+    {
+        unsigned char *data = nullptr;
+        size_t length = 0;
+        ~SensitiveAllocation()
+        {
+            if (data)
+                secureWipe(data, length);
+            std::free(data);
+        }
+    };
+
+    template <class Operation>
+    int grow_file(const char *mskFile, const char *outPrefix, Operation operation)
+    {
+        if (!mskFile || !outPrefix || !*outPrefix)
+            return HCPABE_ERR_INVALID_PARAM;
+        return run([&]
+                   {
         std::string prefix(outPrefix);
         struct stat info;
         bool directory = (stat(outPrefix, &info) == 0 && (info.st_mode & S_IFDIR)) ||
@@ -241,9 +250,8 @@ int grow_file(const char *mskFile, const char *outPrefix, Operation operation)
             std::remove(masterFile.c_str());
             std::remove(pkFile.c_str());
             throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-        }
-    });
-}
+        } });
+    }
 } // namespace
 
 int covercrypt_setupBuffer_from_json(const char *json, int mode, unsigned char **pkBuffer, size_t *pkLen,
@@ -255,7 +263,8 @@ int covercrypt_setupBuffer_from_json(const char *json, int mode, unsigned char *
     *pkLen = 0;
     *mskBuffer = nullptr;
     *mskLen = 0;
-    return run([&] {
+    return run([&]
+               {
         Buffer secret, public_key;
         check(cc_setup(json, mode, &secret.value, &public_key.value));
         auto pk = copy(public_key.value.data, public_key.value.len);
@@ -263,30 +272,33 @@ int covercrypt_setupBuffer_from_json(const char *json, int mode, unsigned char *
         *pkLen = public_key.value.len;
         *mskLen = secret.value.len;
         *pkBuffer = pk.release();
-        *mskBuffer = msk.release();
-    });
+        *mskBuffer = msk.release(); });
 }
 
 int covercrypt_setupBuffer(unsigned char **pkBuffer, size_t *pkLen, unsigned char **mskBuffer, size_t *mskLen)
 {
     if (!pkBuffer || !pkLen || !mskBuffer || !mskLen || pkBuffer == mskBuffer || pkLen == mskLen)
         return HCPABE_ERR_INVALID_PARAM;
-    *pkBuffer = nullptr; *pkLen = 0; *mskBuffer = nullptr; *mskLen = 0;
-    return run([&] {
+    *pkBuffer = nullptr;
+    *pkLen = 0;
+    *mskBuffer = nullptr;
+    *mskLen = 0;
+    return run([&]
+               {
         const char *path = std::getenv("HCPABE_COVERCRYPT_CONFIG");
         if (!path || !*path) throw Error{HCPABE_ERR_INVALID_PARAM};
         std::string json;
         if (!LoadFile(path, json, "Original")) throw Error{HCPABE_ERR_FILE_NOT_FOUND};
         int status = covercrypt_setupBuffer_from_json(json.c_str(), configured_mode(), pkBuffer, pkLen, mskBuffer, mskLen);
-        if (status != HCPABE_SUCCESS) throw Error{status};
-    });
+        if (status != HCPABE_SUCCESS) throw Error{status}; });
 }
 
 int covercrypt_setup(const char *path)
 {
     if (!path)
         return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    return run([&]
+               {
         unsigned char *pk = nullptr, *msk = nullptr;
         size_t pkLen = 0, mskLen = 0;
         int status = covercrypt_setupBuffer(&pk, &pkLen, &msk, &mskLen);
@@ -304,8 +316,7 @@ int covercrypt_setup(const char *path)
         bool saved = SaveBinaryAsBase64(pkFile, pk, pkLen) && SaveBinaryAsBase64(mskFile, msk, mskLen);
         secureWipe(msk, mskLen);
         if (!saved)
-            throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-    });
+            throw Error{HCPABE_ERR_FILE_NOT_FOUND}; });
 }
 
 int covercrypt_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const char *attrs, unsigned char **skBuffer,
@@ -317,21 +328,22 @@ int covercrypt_genkeyBuffer(const unsigned char *mskBuffer, size_t mskLen, const
     *skLen = 0;
     if (!mskBuffer || !mskLen || !attrs)
         return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    return run([&]
+               {
         Buffer user;
         auto policy = normalize_policy(attrs, true);
         check(cc_genkey_ephemeral(mskBuffer, mskLen, policy.c_str(), &user.value));
         // As in v5.2, the buffer interface is stateless. Tracing registration is
         // retained by file-based genkey; no tracing operations are exposed by this API.
-        output(user.value.data, user.value.len, skBuffer, skLen);
-    });
+        output(user.value.data, user.value.len, skBuffer, skLen); });
 }
 
 int covercrypt_genkey(const char *mskFile, const char *attrs, const char *skFile)
 {
     if (!mskFile || !attrs || !skFile || std::strcmp(mskFile, skFile) == 0)
         return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    return run([&]
+               {
         std::string raw;
         Wipe wipe{raw};
         if (!LoadFile(mskFile, raw, "Base64"))
@@ -367,8 +379,7 @@ int covercrypt_genkey(const char *mskFile, const char *attrs, const char *skFile
             throw Error{HCPABE_ERR_FILE_NOT_FOUND};
         }
         if (!SaveBinaryAsBase64(skFile, user.value.data, user.value.len))
-            throw Error{HCPABE_ERR_FILE_NOT_FOUND};
-    });
+            throw Error{HCPABE_ERR_FILE_NOT_FOUND}; });
 }
 
 // Match the existing scheme contract: protect a supplied key buffer. CoverCrypt
@@ -382,7 +393,8 @@ int covercrypt_encapsulate_key(const unsigned char *pkData, size_t pkLen, const 
     *ctLen = 0;
     if (!pkData || !pkLen || !policy || (!plaintext && ptLen))
         return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    return run([&]
+               {
         Buffer secret, encapsulation;
         auto normalized = normalize_policy(policy);
         check(cc_encaps(pkData, pkLen, normalized.c_str(), &secret.value, &encapsulation.value));
@@ -403,8 +415,7 @@ int covercrypt_encapsulate_key(const unsigned char *pkData, size_t pkLen, const 
         if (status != HCPABE_SUCCESS)
             throw Error{status};
         frame.insert(frame.end(), raw, raw + length);
-        output(frame.data(), frame.size(), ciphertext, ctLen);
-    });
+        output(frame.data(), frame.size(), ciphertext, ctLen); });
 }
 
 int covercrypt_decapsulate_key(const unsigned char *skData, size_t skLen, const unsigned char *ciphertext, size_t ctLen,
@@ -416,7 +427,8 @@ int covercrypt_decapsulate_key(const unsigned char *skData, size_t skLen, const 
     *ptLen = 0;
     if (!skData || !skLen || !ciphertext)
         return HCPABE_ERR_INVALID_PARAM;
-    return run([&] {
+    return run([&]
+               {
         const unsigned char magic[] = {'K', 'C', 'C', 1};
         if (ctLen < 37 || std::memcmp(ciphertext, magic, sizeof(magic)))
             throw Error{HCPABE_ERR_UNSUPPORTED_FORMAT};
@@ -437,8 +449,7 @@ int covercrypt_decapsulate_key(const unsigned char *skData, size_t skLen, const 
         if (status != HCPABE_SUCCESS)
             throw Error{status};
         *ptLen = recoveredLen;
-        *plaintext = recovered.release();
-    });
+        *plaintext = recovered.release(); });
 }
 
 int covercrypt_load_pk(const char *file, unsigned char **pkData, size_t *pkLen)
@@ -452,44 +463,37 @@ int covercrypt_load_sk(const char *file, unsigned char **skData, size_t *skLen)
 }
 
 int covercrypt_add_attributeBuffer(const unsigned char *msk, size_t mskLen, const char *dimension,
-    const char *attribute, const char *after, unsigned char **pkOut, size_t *pkLen,
-    unsigned char **mskOut, size_t *mskOutLen)
+                                   const char *attribute, const char *after, unsigned char **pkOut, size_t *pkLen,
+                                   unsigned char **mskOut, size_t *mskOutLen)
 {
-    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
-        return cc_add_attribute(msk, mskLen, dimension, attribute, configured_mode(), after, secret, pub);
-    });
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub)
+                       { return cc_add_attribute(msk, mskLen, dimension, attribute, configured_mode(), after, secret, pub); });
 }
 
 int covercrypt_add_dimensionBuffer_with_mode(const unsigned char *msk, size_t mskLen, const char *json, int mode,
-    unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+                                             unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
 {
-    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
-        return cc_add_dimension(msk, mskLen, json, mode, secret, pub);
-    });
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub)
+                       { return cc_add_dimension(msk, mskLen, json, mode, secret, pub); });
 }
 
 int covercrypt_add_dimensionBuffer(const unsigned char *msk, size_t mskLen, const char *json,
-    unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
+                                   unsigned char **pkOut, size_t *pkLen, unsigned char **mskOut, size_t *mskOutLen)
 {
     // Keep the environment-based CLI/legacy API while servers use explicit mode.
-    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub) {
-        return cc_add_dimension(msk, mskLen, json, configured_mode(), secret, pub);
-    });
+    return grow_buffer(msk, mskLen, pkOut, pkLen, mskOut, mskOutLen, [&](cc_buffer *secret, cc_buffer *pub)
+                       { return cc_add_dimension(msk, mskLen, json, configured_mode(), secret, pub); });
 }
 
 int covercrypt_add_attribute(const char *mskFile, const char *dimension, const char *attribute,
-    const char *after, const char *outPrefix)
+                             const char *after, const char *outPrefix)
 {
-    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len,
-        unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen) {
-        return covercrypt_add_attributeBuffer(msk, len, dimension, attribute, after, pk, pkLen, master, masterLen);
-    });
+    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len, unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen)
+                     { return covercrypt_add_attributeBuffer(msk, len, dimension, attribute, after, pk, pkLen, master, masterLen); });
 }
 
 int covercrypt_add_dimension(const char *mskFile, const char *json, const char *outPrefix)
 {
-    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len,
-        unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen) {
-        return covercrypt_add_dimensionBuffer(msk, len, json, pk, pkLen, master, masterLen);
-    });
+    return grow_file(mskFile, outPrefix, [&](const unsigned char *msk, size_t len, unsigned char **pk, size_t *pkLen, unsigned char **master, size_t *masterLen)
+                     { return covercrypt_add_dimensionBuffer(msk, len, json, pk, pkLen, master, masterLen); });
 }

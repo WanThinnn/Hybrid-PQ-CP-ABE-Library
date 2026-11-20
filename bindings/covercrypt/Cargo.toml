@@ -10,18 +10,11 @@ name = "covercrypt_ffi"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
-cosmian_cover_crypt = { path = "../../vendor/cover_crypt", default-features = false, features = ["curve25519"] }
+cosmian_cover_crypt = { path = "../../vendor/cover_crypt", default-features = false, features = ["curve25519", "mlkem-768"] }
 cosmian_crypto_core = { version = "11.0", default-features = false, features = ["ser"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 zeroize = "1.8"
-
-# The upstream CoverCrypt provider selects ML-KEM at compile time.
-# Keep the existing build default, while allowing an explicit 512 build.
-[features]
-default = ["mlkem-768"]
-mlkem-512 = ["cosmian_cover_crypt/mlkem-512"]
-mlkem-768 = ["cosmian_cover_crypt/mlkem-768"]
 
 [profile.release]
 opt-level = 3

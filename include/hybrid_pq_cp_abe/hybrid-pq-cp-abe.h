@@ -250,11 +250,11 @@ extern "C"
     LIB_API int hybrid_cpabe_encrypt_and_sign_with_params(
         const char *pk_path, const char *signing_key_path, const char *plaintext_path,
         const char *policy, const char *ct_path, CPABEScheme scheme, int aes_key_bits, int ml_dsa_parameter_set);
-    LIB_API int hybrid_cpabe_setupBuffer_with_pqc_params(
+    LIB_API int hybrid_cpabe_setupBuffer_with_ml_dsa(
         unsigned char **pk, size_t *pk_len, unsigned char **msk, size_t *msk_len,
         unsigned char **verification_key, size_t *verification_key_len,
         unsigned char **signing_key, size_t *signing_key_len, CPABEScheme scheme, int ml_dsa_parameter_set);
-    LIB_API int hybrid_cpabe_setup_with_pqc_params(const char *path, CPABEScheme scheme, int ml_dsa_parameter_set);
+    LIB_API int hybrid_cpabe_setup_with_ml_dsa(const char *path, CPABEScheme scheme, int ml_dsa_parameter_set);
     LIB_API int hybrid_cpabe_covercrypt_ml_kem_parameter_set(void);
 
     // ========================================================================

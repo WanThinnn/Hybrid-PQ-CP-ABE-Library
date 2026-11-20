@@ -27,7 +27,7 @@ void printCovercryptHelp(const char *programName)
               << "  PowerShell: $env:HCPABE_COVERCRYPT_CONFIG = (Resolve-Path .\\scripts\\covercrypt-demo.json).Path\n"
               << "  Linux/macOS: export HCPABE_COVERCRYPT_CONFIG=\"$PWD/scripts/covercrypt-demo.json\"\n"
               << "  Optional HCPABE_COVERCRYPT_MODE: hybridized (default), post_quantum, classic.\n"
-              << "  Hybridized includes ML-KEM; --pqc separately adds ML-DSA-87 signatures.\n"
+              << "  Hybridized uses ML-KEM-768; --pqc adds ML-DSA signatures (87 by default, --ml-dsa selects 44/65/87).\n"
               << "  User keys grant explicitly named attributes only; omitted dimensions grant no rights.\n"
               << "  Create an output directory first (e.g. mkdir keys), then run:\n"
               << "  " << programName << " setup --scheme covercrypt ./keys/demo\n"
@@ -47,8 +47,10 @@ void printUsage(const char *programName)
     std::cout << "Usage: " << programName << " [command] [options] <args>" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --pqc               - Add ML-DSA-87 signatures (separate from Covercrypt's KEM mode)" << std::endl;
+    std::cout << "  --pqc               - Add ML-DSA signatures (default 87; separate from Covercrypt's KEM mode)" << std::endl;
     std::cout << "  --scheme <name>     - Specify scheme: 'ac17' (default), 'tkn20' or 'covercrypt'" << std::endl;
+    std::cout << "  --aes-bits <bits>   - Encrypt with 128, 192 or 256 bits (explicit choice emits V3)" << std::endl;
+    std::cout << "  --ml-dsa <set>      - With --pqc: setup/sign using 44, 65 or 87 (default 87)" << std::endl;
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "  setup   <path_or_prefix>                             - Generate Master Key and Public Key" << std::endl;
@@ -82,6 +84,8 @@ int main(int argc, char *argv[])
 
     std::vector<std::string> args;
     bool use_pqc = false;
+    int aes_bits = 256, ml_dsa = 87;
+    bool explicit_aes = false, explicit_dsa = false;
     CPABEScheme scheme = CPABE_SCHEME_AC17;
 
     for (int i = 0; i < argc; ++i)
@@ -90,6 +94,22 @@ int main(int argc, char *argv[])
         if (arg == "--pqc")
         {
             use_pqc = true;
+        }
+        else if (arg == "--aes-bits" || arg == "--ml-dsa")
+        {
+            if (i + 1 >= argc) { std::cerr << arg << " requires a value\n"; return 1; }
+            const std::string value = argv[++i];
+            if (arg == "--aes-bits") {
+                if (value != "128" && value != "192" && value != "256") {
+                    std::cerr << "AES bits must be 128, 192 or 256\n"; return 1;
+                }
+                aes_bits = std::stoi(value); explicit_aes = true;
+            } else {
+                if (value != "44" && value != "65" && value != "87") {
+                    std::cerr << "ML-DSA parameter set must be 44, 65 or 87\n"; return 1;
+                }
+                ml_dsa = std::stoi(value); explicit_dsa = true;
+            }
         }
         else if (arg == "--scheme")
         {
@@ -158,6 +178,11 @@ int main(int argc, char *argv[])
     }
 
     int result = HCPABE_SUCCESS;
+    if ((explicit_aes && mode != "encrypt" && mode != "encrypt_buffer") ||
+        (explicit_dsa && (!use_pqc || (mode != "setup" && mode != "setup_buffer" && mode != "encrypt" && mode != "encrypt_buffer")))) {
+        std::cerr << "--aes-bits is for encryption; --ml-dsa requires --pqc setup/encryption. Decryption detects parameters.\n";
+        return 1;
+    }
 
     try
     {
@@ -172,7 +197,9 @@ int main(int argc, char *argv[])
             }
             if (use_pqc)
             {
-                result = hybrid_cpabe_setup_with_pqc_scheme(args[2].c_str(), scheme);
+                result = explicit_dsa
+                    ? hybrid_cpabe_setup_with_ml_dsa(args[2].c_str(), scheme, ml_dsa)
+                    : hybrid_cpabe_setup_with_pqc_scheme(args[2].c_str(), scheme);
             }
             else
             {
@@ -232,7 +259,9 @@ int main(int argc, char *argv[])
                     std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] --pqc <public_key_file> <pqc_private_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
-                result = hybrid_cpabe_encrypt_and_sign_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme);
+                result = (explicit_aes || explicit_dsa)
+                    ? hybrid_cpabe_encrypt_and_sign_with_params(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme, aes_bits, ml_dsa)
+                    : hybrid_cpabe_encrypt_and_sign_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme);
             }
             else
             {
@@ -241,7 +270,9 @@ int main(int argc, char *argv[])
                     std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] <public_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
                     return 1;
                 }
-                result = hybrid_cpabe_encrypt_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), scheme);
+                result = explicit_aes
+                    ? hybrid_cpabe_encrypt_with_params(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), scheme, aes_bits)
+                    : hybrid_cpabe_encrypt_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), scheme);
             }
         }
         else if (mode == "decrypt")
@@ -294,7 +325,12 @@ int main(int argc, char *argv[])
                 unsigned char *ct = nullptr;
                 size_t ctLen = 0;
 
-                result = hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
+                if (explicit_aes || explicit_dsa) result = hybrid_cpabe_encryptBuffer_and_sign_with_params(
+                    (const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                    (const unsigned char *)decodedMskStr.data(), decodedMskStr.size(),
+                    (const unsigned char *)ptStr.data(), ptStr.size(),
+                    args[5].c_str(), &ct, &ctLen, scheme, aes_bits, ml_dsa);
+                else result = hybrid_cpabe_encryptBuffer_and_sign_with_scheme(
                     (const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
                     (const unsigned char *)decodedMskStr.data(), decodedMskStr.size(),
                     (const unsigned char *)ptStr.data(), ptStr.size(),
@@ -330,7 +366,10 @@ int main(int argc, char *argv[])
                 unsigned char *ct = nullptr;
                 size_t ctLen = 0;
 
-                result = hybrid_cpabe_encryptBuffer_with_scheme((const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                if (explicit_aes) result = hybrid_cpabe_encryptBuffer_with_params(
+                    (const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
+                    (const unsigned char *)ptStr.data(), ptStr.size(), args[4].c_str(), &ct, &ctLen, scheme, aes_bits);
+                else result = hybrid_cpabe_encryptBuffer_with_scheme((const unsigned char *)decodedPkStr.data(), decodedPkStr.size(),
                                                                 (const unsigned char *)ptStr.data(), ptStr.size(),
                                                                 args[4].c_str(), &ct, &ctLen, scheme);
                 if (result == HCPABE_SUCCESS)
@@ -443,7 +482,9 @@ int main(int argc, char *argv[])
                 unsigned char *pqcMsk = nullptr;
                 size_t pqcMskLen = 0;
 
-                result = hybrid_cpabe_setupBuffer_with_pqc_scheme(&abePk, &abePkLen, &abeMsk, &abeMskLen, &pqcPk, &pqcPkLen, &pqcMsk, &pqcMskLen, scheme);
+                result = explicit_dsa
+                    ? hybrid_cpabe_setupBuffer_with_ml_dsa(&abePk, &abePkLen, &abeMsk, &abeMskLen, &pqcPk, &pqcPkLen, &pqcMsk, &pqcMskLen, scheme, ml_dsa)
+                    : hybrid_cpabe_setupBuffer_with_pqc_scheme(&abePk, &abePkLen, &abeMsk, &abeMskLen, &pqcPk, &pqcPkLen, &pqcMsk, &pqcMskLen, scheme);
                 if (result == HCPABE_SUCCESS)
                 {
                     std::string pkBase64, mskBase64, pqcPkBase64, pqcMskBase64;

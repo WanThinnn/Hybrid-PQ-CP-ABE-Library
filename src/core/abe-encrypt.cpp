@@ -5,7 +5,8 @@ int hybrid_cpabe_encryptBuffer_with_scheme_impl(const unsigned char *publicKey, 
                                                 const unsigned char *plaintext, size_t ptLen, const char *policy,
                                                 unsigned char **ciphertext, size_t *ctLen, CPABEScheme scheme)
 {
-    if (!ciphertext || !ctLen) return HCPABE_ERR_INVALID_PARAM;
+    if (!ciphertext || !ctLen)
+        return HCPABE_ERR_INVALID_PARAM;
     *ciphertext = nullptr;
     *ctLen = 0;
     std::string aesKey;
@@ -198,7 +199,8 @@ int hybrid_cpabe_encryptBuffer_and_sign_with_scheme_impl(const unsigned char *pu
                                                          const char *policy, unsigned char **ciphertext, size_t *ctLen,
                                                          CPABEScheme scheme)
 {
-    if (!ciphertext || !ctLen) return HCPABE_ERR_INVALID_PARAM;
+    if (!ciphertext || !ctLen)
+        return HCPABE_ERR_INVALID_PARAM;
     *ciphertext = nullptr;
     *ctLen = 0;
     if (!publicKey || !pkLen || !pqcPrivKey || !pqcPrivLen || (!plaintext && ptLen) || !policy)
@@ -206,8 +208,10 @@ int hybrid_cpabe_encryptBuffer_and_sign_with_scheme_impl(const unsigned char *pu
     std::string pqcPrivBase64(reinterpret_cast<const char *>(pqcPrivKey), pqcPrivLen);
     std::string pqcPrivRaw;
     CryptoPP::StringSource(pqcPrivBase64, true, new CryptoPP::Base64Decoder(new CryptoPP::StringSink(pqcPrivRaw)));
-    if (pqcPrivRaw.size() != ml_dsa_87_secret_key_size()) {
-        if (!pqcPrivRaw.empty()) secureWipe(&pqcPrivRaw[0], pqcPrivRaw.size());
+    if (pqcPrivRaw.size() != ml_dsa_87_secret_key_size())
+    {
+        if (!pqcPrivRaw.empty())
+            secureWipe(&pqcPrivRaw[0], pqcPrivRaw.size());
         return HCPABE_ERR_INVALID_KEY;
     }
 
@@ -218,7 +222,8 @@ int hybrid_cpabe_encryptBuffer_and_sign_with_scheme_impl(const unsigned char *pu
     dataToSign.insert(dataToSign.end(), plen_ptr, plen_ptr + 4);
     dataToSign.insert(dataToSign.end(), reinterpret_cast<const uint8_t *>(policy),
                       reinterpret_cast<const uint8_t *>(policy) + pol_len_32);
-    if (ptLen) dataToSign.insert(dataToSign.end(), plaintext, plaintext + ptLen);
+    if (ptLen)
+        dataToSign.insert(dataToSign.end(), plaintext, plaintext + ptLen);
 
     unsigned char *signature = nullptr;
     size_t sig_len = 0;
