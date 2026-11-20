@@ -19,6 +19,13 @@ RUNTIME = {
     "lib/wasm/loader.mjs", "lib/wasm/api.mjs", "lib/wasm/loader.d.mts", "lib/wasm/hybrid-pq-cp-abe.mjs",
     "lib/wasm/hybrid-pq-cp-abe.wasm", "lib/wasm/tkn20.wasm",
     "lib/wasm/wasm_exec.js",
+    "lib/wasm/api/legacy.mjs", "lib/wasm/api/functional.mjs",
+    "lib/wasm/runtime/native.mjs", "lib/wasm/runtime/buffers.mjs",
+    "lib/wasm/models/enums.mjs", "lib/wasm/utils/errors.mjs", "lib/wasm/utils/validation.mjs",
+    "lib/wasm/utils/encoding.mjs", "lib/wasm/pq_cp_abe.mjs", "lib/wasm/abe/index.mjs", "lib/wasm/abe/base.mjs",
+    "lib/wasm/abe/ac17.mjs", "lib/wasm/abe/tkn20.mjs", "lib/wasm/abe/covercrypt.mjs",
+    "lib/wasm/primitives/index.mjs", "lib/wasm/primitives/aes_gcm.mjs", "lib/wasm/primitives/ml_dsa.mjs",
+    "lib/wasm/primitives/ml_kem.mjs", "lib/wasm/runtime/primitive.mjs",
 }
 REQUIRED_NOTICES = {
     "LICENSE", "NOTICE", "licenses/go-runtime/LICENSE",
@@ -114,7 +121,7 @@ def main():
         entry = consumer / "package-entry.mjs"
         entry.write_text(
             f'import createHybridCPABE from {json.dumps(name)};\n'
-            f'import {{ createHybridCpAbe, Scheme }} from {json.dumps(name)};\n'
+            f'import {{ createHybridCpAbe, PqCpAbe, Scheme }} from {json.dumps(name)};\n'
             'import assert from "node:assert/strict";\n'
             'const abe = await createHybridCPABE();\n'
             'assert.equal(abe.ccall("getVersion", "string", [], []), process.argv[2]);\n'
@@ -124,7 +131,9 @@ def main():
             'const secretKey = modern.generateSecretKey({ masterSecretKey: keys.masterSecretKey, attributes: "admin", scheme });\n'
             'const plaintext = Uint8Array.of(0, 1, 255);\n'
             'const ciphertext = modern.encrypt({ publicKey: keys.publicKey, plaintext, policy: "admin", scheme });\n'
-            'assert.deepEqual(modern.decrypt({ secretKey, ciphertext }), plaintext);\n',
+            'assert.deepEqual(modern.decrypt({ secretKey, ciphertext }), plaintext);\n'
+            'const object = new PqCpAbe(abe, { scheme });\n'
+            'assert.deepEqual(object.decrypt({ secretKey, ciphertext }), plaintext);\n',
             encoding="utf-8",
         )
         subprocess.run(["node", str(entry), version], cwd=consumer, check=True)

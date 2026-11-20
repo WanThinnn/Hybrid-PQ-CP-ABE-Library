@@ -38,6 +38,7 @@ namespace HybridCPABE {
     constexpr size_t AES_KEY_SIZE = 32;         // 256-bit AES key
     constexpr uint8_t FORMAT_VERSION = 0x01;    // Ciphertext format version
     constexpr uint8_t FORMAT_VERSION_2 = 0x02;  // V2 format with scheme indicator
+    constexpr uint8_t FORMAT_VERSION_3 = 0x03;  // Authenticated runtime parameters
     const char* const LIB_VERSION = HCPABE_LIB_VERSION;
     const char* const DEFAULT_KEY_FORMAT = "Base64";
 }
@@ -210,6 +211,51 @@ extern "C"
     LIB_API int ml_dsa_87_generate_keypair(unsigned char **pk, size_t *pk_len, unsigned char **sk, size_t *sk_len);
     LIB_API int ml_dsa_87_sign(const unsigned char *msg, size_t msg_len, const unsigned char *sk, unsigned char **sig, size_t *sig_len);
     LIB_API int ml_dsa_87_verify(const unsigned char *msg, size_t msg_len, const unsigned char *sig, size_t sig_len, const unsigned char *pk);
+
+    /* Parameterized primitives. ML-DSA={44,65,87}, ML-KEM={512,768,1024}.
+     * Keys are raw bytes. Output locations must be distinct; valid outputs
+     * become NULL/0 on failure. Free successful outputs with freeBuffer.
+     * These functions check exact key/ciphertext lengths before calling liboqs.
+     */
+    LIB_API int ml_dsa_get_sizes(int parameter_set, size_t *pk_len, size_t *sk_len, size_t *sig_len);
+    LIB_API int ml_dsa_generate_keypair(int parameter_set, unsigned char **pk, size_t *pk_len, unsigned char **sk, size_t *sk_len);
+    LIB_API int ml_dsa_sign(int parameter_set, const unsigned char *msg, size_t msg_len, const unsigned char *sk, size_t sk_len, unsigned char **sig, size_t *sig_len);
+    LIB_API int ml_dsa_verify(int parameter_set, const unsigned char *msg, size_t msg_len, const unsigned char *sig, size_t sig_len, const unsigned char *pk, size_t pk_len);
+    LIB_API int ml_kem_get_sizes(int parameter_set, size_t *pk_len, size_t *sk_len, size_t *ct_len, size_t *ss_len);
+    LIB_API int ml_kem_generate_keypair(int parameter_set, unsigned char **pk, size_t *pk_len, unsigned char **sk, size_t *sk_len);
+    LIB_API int ml_kem_encapsulate(int parameter_set, const unsigned char *pk, size_t pk_len, unsigned char **ct, size_t *ct_len, unsigned char **ss, size_t *ss_len);
+    /* Implicit rejection: a modified ciphertext of the correct length can
+     * return success with a different shared secret. Authenticate payloads. */
+    LIB_API int ml_kem_decapsulate(int parameter_set, const unsigned char *sk, size_t sk_len, const unsigned char *ct, size_t ct_len, unsigned char **ss, size_t *ss_len);
+    LIB_API int aes_gcm_generate_key(int key_size_bits, unsigned char **key, size_t *key_len);
+
+    /* 6.1 additive hybrid API. AES bits={128,192,256}; ML-DSA={44,65,87}.
+     * Passing 0 selects legacy defaults (256/87); scheme remains explicit.
+     * Hybrid signing keys retain the legacy Base64-encoded byte format, unlike
+     * raw keys used by ml_dsa_*. Output ownership is unchanged (freeBuffer).
+     * These encryptors emit V3. Existing decrypt/verify APIs detect V1/V2/V3.
+     * Existing encrypt/setup APIs retain their V2 and ML-DSA-87 behavior.
+     * CoverCrypt ABE uses ML-KEM-768; independent ML-KEM APIs are configurable.
+     */
+    LIB_API int hybrid_cpabe_encryptBuffer_with_params(
+        const unsigned char *pk, size_t pk_len, const unsigned char *plaintext, size_t pt_len,
+        const char *policy, unsigned char **ct, size_t *ct_len, CPABEScheme scheme, int aes_key_bits);
+    LIB_API int hybrid_cpabe_encryptBuffer_and_sign_with_params(
+        const unsigned char *pk, size_t pk_len, const unsigned char *signing_key, size_t signing_key_len,
+        const unsigned char *plaintext, size_t pt_len, const char *policy, unsigned char **ct, size_t *ct_len,
+        CPABEScheme scheme, int aes_key_bits, int ml_dsa_parameter_set);
+    LIB_API int hybrid_cpabe_encrypt_with_params(
+        const char *pk_path, const char *plaintext_path, const char *policy, const char *ct_path,
+        CPABEScheme scheme, int aes_key_bits);
+    LIB_API int hybrid_cpabe_encrypt_and_sign_with_params(
+        const char *pk_path, const char *signing_key_path, const char *plaintext_path,
+        const char *policy, const char *ct_path, CPABEScheme scheme, int aes_key_bits, int ml_dsa_parameter_set);
+    LIB_API int hybrid_cpabe_setupBuffer_with_pqc_params(
+        unsigned char **pk, size_t *pk_len, unsigned char **msk, size_t *msk_len,
+        unsigned char **verification_key, size_t *verification_key_len,
+        unsigned char **signing_key, size_t *signing_key_len, CPABEScheme scheme, int ml_dsa_parameter_set);
+    LIB_API int hybrid_cpabe_setup_with_pqc_params(const char *path, CPABEScheme scheme, int ml_dsa_parameter_set);
+    LIB_API int hybrid_cpabe_covercrypt_ml_kem_parameter_set(void);
 
     // ========================================================================
     // CoverCrypt JSON Configuration and Authority Growth

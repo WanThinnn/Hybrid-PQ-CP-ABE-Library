@@ -211,7 +211,7 @@ func (v randomizedVerifier) Blind(random io.Reader, message, metadata []byte) ([
 	}
 
 	salt := make([]byte, v.hash.Size())
-	_, err := io.ReadFull(rand.Reader, salt)
+	_, err := io.ReadFull(random, salt)
 	if err != nil {
 		return nil, VerifierState{}, err
 	}
@@ -354,7 +354,7 @@ func (signer Signer) BlindSign(data, metadata []byte) ([]byte, error) {
 	}
 
 	m := new(big.Int).SetBytes(data)
-	if m.Cmp(signer.sk.Pk.N) > 0 {
+	if m.Cmp(signer.sk.Pk.N) >= 0 {
 		return nil, common.ErrInvalidMessageLength
 	}
 

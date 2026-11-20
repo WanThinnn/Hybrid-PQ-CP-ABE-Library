@@ -12,7 +12,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from . import api, extended_api, native, __version__
+from . import native, __version__
+from .api import legacy as api, legacy as extended_api
 
 EXPORTS = """aes_gcm_decrypt aes_gcm_encrypt freeBuffer generateSecretKey generateSecretKey_with_scheme
 getErrorMessage getVersion hybrid_cpabe_covercrypt_add_attribute hybrid_cpabe_covercrypt_add_attributeBuffer

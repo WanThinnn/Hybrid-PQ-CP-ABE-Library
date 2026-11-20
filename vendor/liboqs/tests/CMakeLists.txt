@@ -1,7 +1,5 @@
 # SPDX-License-Identifier: MIT
 
-option(OQS_ENABLE_TEST_CONSTANT_TIME "Build test suite with support for Valgrind-based detection of non-constant time behaviour." OFF)
-
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wbad-function-cast)
@@ -31,7 +29,7 @@ endif()
 
 # List oqs-internal after oqs so that oqs has linking precedence.
 if(${OQS_USE_OPENSSL})
-    find_package(OpenSSL 1.1.1 REQUIRED)
+    find_package(OpenSSL 3.0 REQUIRED)
     set(TEST_DEPS oqs oqs-internal ${LIBM} OpenSSL::Crypto)
 else()
     set(TEST_DEPS oqs oqs-internal ${LIBM})
@@ -106,6 +104,7 @@ add_executable(speed_kem speed_kem.c)
 target_link_libraries(speed_kem PRIVATE ${TEST_DEPS})
 
 set(KEM_TESTS example_kem kat_kem test_kem test_kem_mem speed_kem vectors_kem)
+
 
 # SIG API tests
 add_executable(example_sig example_sig.c)
@@ -228,9 +227,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows" AND BUILD_SHARED_LIBS)
 endif()
 
 # Enable Valgrind-based timing side-channel analysis for test_kem and test_sig
-if(OQS_ENABLE_TEST_CONSTANT_TIME AND NOT OQS_DEBUG_BUILD)
-    message(WARNING "OQS_ENABLE_TEST_CONSTANT_TIME is incompatible with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}.")
-    set(OQS_ENABLE_TEST_CONSTANT_TIME OFF)
+if(OQS_ENABLE_TEST_CONSTANT_TIME_VALGRIND AND NOT OQS_DEBUG_BUILD)
+    message(WARNING "OQS_ENABLE_TEST_CONSTANT_TIME_VALGRIND is incompatible with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}.")
+    set(OQS_ENABLE_TEST_CONSTANT_TIME_VALGRIND OFF)
+endif()
+
+# Enable MemSan-based timing side-channel analysis for test_kem and test_sig
+if(OQS_ENABLE_TEST_CONSTANT_TIME_MEMSAN AND NOT OQS_DEBUG_BUILD)
+    message(WARNING "OQS_ENABLE_TEST_CONSTANT_TIME_MEMSAN is incompatible with CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}.")
+    set(OQS_ENABLE_TEST_CONSTANT_TIME_MEMSAN OFF)
 endif()
 
 # Record compile options -- from target speed_kem - don't set any options only for speed_kem!
@@ -259,3 +264,22 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS oqs dump_alg_info ${KEM_TESTS} ${SIG_TESTS} ${SIG_STFL_TESTS} ${UNIX_TESTS}
     USES_TERMINAL)
+
+# One target per test suite. tests/conftest.py is the source of truth for
+# suite definitions; tests/test_suites.py checks this list matches it.
+# Set OQS_TEST_ALGS=ALG[,ALG...] in the environment to limit per-algorithm tests.
+set(OQS_TEST_SUITES basic build correctness extensive vectors leaks distbuild)
+foreach(suite ${OQS_TEST_SUITES})
+    if(suite STREQUAL "basic" OR suite STREQUAL "build")
+        # Source-level and CMake-configure checks: nothing needs to be built first.
+        set(suite_depends "")
+    else()
+        set(suite_depends oqs dump_alg_info ${KEM_TESTS} ${SIG_TESTS} ${SIG_STFL_TESTS} ${UNIX_TESTS})
+    endif()
+    add_custom_target(
+        run_tests_${suite}
+        COMMAND ${CMAKE_COMMAND} -E env OQS_BUILD_DIR=${CMAKE_BINARY_DIR} ${PYTHON3_EXEC} -m pytest tests --verbose --numprocesses=${OQS_PYTEST_NUMPROCESSES} --suite ${suite}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS ${suite_depends}
+        USES_TERMINAL)
+endforeach()

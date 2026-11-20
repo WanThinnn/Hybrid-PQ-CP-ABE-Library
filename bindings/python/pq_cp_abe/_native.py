@@ -190,3 +190,27 @@ _declare("aes_gcm_encrypt",
 _declare("aes_gcm_decrypt",
          [c_ubyte_p, c_size_t, c_ubyte_p, c_size_t,
           c_ubyte_p, c_size_t, c_ubyte_p, c_size_t, _out_buf, _out_len])
+
+# Additive primitives are optional so legacy releases can still be imported.
+# Calling an unavailable modern operation gives a clear capability error.
+def get_function(name):
+    function = getattr(abe_lib, name, None)
+    if function is None:
+        raise NotImplementedError(f"Native library does not support {name}; rebuild or install a matching release")
+    return function
+
+_parameterized_exports = {
+    "hybrid_cpabe_covercrypt_setupBuffer_from_json": [c_char_p, ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],
+    "aes_gcm_generate_key": [ctypes.c_int, _out_buf, _out_len],
+    "ml_dsa_get_sizes": [ctypes.c_int, _out_len, _out_len, _out_len],
+    "ml_dsa_generate_keypair": [ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],
+    "ml_dsa_sign": [ctypes.c_int, c_ubyte_p, c_size_t, c_ubyte_p, c_size_t, _out_buf, _out_len],
+    "ml_dsa_verify": [ctypes.c_int, c_ubyte_p, c_size_t, c_ubyte_p, c_size_t, c_ubyte_p, c_size_t],
+    "ml_kem_get_sizes": [ctypes.c_int, _out_len, _out_len, _out_len, _out_len],
+    "ml_kem_generate_keypair": [ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],
+    "ml_kem_encapsulate": [ctypes.c_int, c_ubyte_p, c_size_t, _out_buf, _out_len, _out_buf, _out_len],
+    "ml_kem_decapsulate": [ctypes.c_int, c_ubyte_p, c_size_t, c_ubyte_p, c_size_t, _out_buf, _out_len],
+}
+for _name, _arguments in _parameterized_exports.items():
+    if hasattr(abe_lib, _name):
+        _declare(_name, _arguments)

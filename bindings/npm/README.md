@@ -1,5 +1,61 @@
 # PQ-CP-ABE JavaScript SDK
 
+## Object API
+
+The named `PqCpAbe` class offers the same scheme interface as Python, with
+camelCase methods. Async factories initialize WASM; cryptographic methods
+then run synchronously. Pass an existing initialized native module to a
+constructor to share one runtime between multiple objects.
+
+```js
+import { PqCpAbe, AesGcm, MlDsa, MlKem, MlDsaParameterSet, MlKemParameterSet }
+  from '@wanthinnn/pq-cp-abe';
+
+const abe = await PqCpAbe.create({ config: { dimensions: [
+  { name: 'role', attributes: ['admin', 'analyst'] },
+  { name: 'department', attributes: ['finance', 'engineering'] },
+] } });
+const keys = abe.setup();
+const secretKey = abe.keygen({ masterSecretKey: keys.masterSecretKey,
+  attributes: 'role::admin department::finance' });
+const ciphertext = abe.encrypt({ publicKey: keys.publicKey,
+  plaintext: new TextEncoder().encode('Hello'), policy: 'role::admin && department::finance' });
+console.log(new TextDecoder().decode(abe.decrypt({ secretKey, ciphertext })));
+
+const aes = new AesGcm(abe.native, { keySizeBits: 192 });
+const signer = new MlDsa(abe.native, { parameterSet: MlDsaParameterSet.ML_DSA_65 });
+const kem = new MlKem(abe.native, { parameterSet: MlKemParameterSet.ML_KEM_1024 });
+```
+
+`AC17CPABE`, `TKN20CPABE` and `CoverCryptABE` implement `BaseCPABE`.
+Each supports `setup`, `keygen` (alias `generateSecretKey`), `encrypt`,
+`decrypt`, `setupWithSigning`, `encryptAndSign` and `decryptAndVerify`.
+For example `await AC17CPABE.create()` initializes an AC17 object;
+`new AC17CPABE(abe.native)` reuses a runtime. OOP methods use in-memory bytes;
+file methods remain available through the functional API.
+
+`AesGcm` offers `generateKey`, `generateNonce`, `encrypt` and `decrypt`.
+Pass `{ key, nonce, plaintext, aad }` to encrypt; keep the nonce and AAD for
+decryption and use a fresh nonce with each encryption under a given key.
+`MlDsa` offers `generateKeypair`, `sign({ message, secretKey })` and
+`verify({ message, signature, publicKey })`. `MlKem` offers `generateKeypair`,
+`encapsulate({ publicKey })` and `decapsulate({ secretKey, ciphertext })`;
+encapsulation returns `{ ciphertext, sharedSecret }` and decapsulation returns
+the secret bytes. ML-KEM decapsulation alone does not authenticate ciphertexts.
+
+The combined ABE signing flow retains AES-256 / ML-DSA-87. Standalone
+primitive variants require matching exports in the compiled WASM; older
+runtimes still support AES key sizes and fixed ML-DSA-87, but reject unavailable
+ML-KEM or ML-DSA parameter sets. Constructors do not load new crypto algorithms.
+CoverCrypt accepts an instance-local `config` snapshot and `KemMode` value;
+this build uses ML-KEM-768 inside CoverCrypt and rejects other parameter sets.
+No vendor code or vendor key formats are changed.
+
+Source layout separates `api/legacy.mjs` (raw module entry),
+`api/functional.mjs` (modern operations), `abe/`, `primitives/`, `models/`,
+`utils/` and internal `runtime/`. `loader.mjs` remains the public entry;
+its default export retains the raw Emscripten factory.
+
 ## Modern JavaScript / TypeScript API (additive)
 
 Use the named `createHybridCpAbe` factory for camelCase methods and automatic
@@ -61,9 +117,8 @@ Native failures throw `AbeError` with `code` and `operation`; -3 and -9 map to
 failures (-4) remain `AbeError`. Input errors use `TypeError`/`RangeError`.
 Existing low-level operations remain accessible through `abe.native`.
 
-The factory returns an object bound to one WASM instance and holds no keys.
-An application may wrap it in a class for configuration or resource ownership;
-inheritance and stateful key storage are not required by the SDK.
+Both functional and object APIs bind to a WASM instance and hold no keys.
+Applications can share that instance through the OOP constructors.
 
 Encrypt data under a policy such as `role::admin && department::finance`.
 Only a user whose key satisfies that policy can decrypt it. This is

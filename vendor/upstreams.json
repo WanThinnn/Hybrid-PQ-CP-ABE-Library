@@ -5,11 +5,11 @@
   },
   "circl": {
     "url": "https://github.com/cloudflare/circl.git",
-    "commit": "9ab0d912da37755412cfa68cdde5e3f0e1b030b1"
+    "commit": "31be93db4772d9482a06c44eb2ed134fdacd2a2b"
   },
   "liboqs": {
     "url": "https://github.com/open-quantum-safe/liboqs.git",
-    "commit": "a9ad1876e14c2be093a538aca41fd3468fe3cf19"
+    "commit": "f822b059350af22adad99ef6b09a18819bcd49ed"
   },
   "cover_crypt": {
     "url": "https://github.com/Cosmian/cover_crypt.git",

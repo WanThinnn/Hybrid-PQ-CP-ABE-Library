@@ -15,7 +15,7 @@ else:
 
 from ._native import abe_lib as native  # Complete low-level C ABI (33 exported DLL symbols)
 
-from .extended_api import (
+from .api.legacy import (
     setup_buffer,
     setup_buffer_with_pqc,
     genkey_buffer,
@@ -32,7 +32,7 @@ from .extended_api import (
     get_error_message,
 )
 
-from .api import (
+from .api.legacy import (
     CPABE_SCHEME_AC17,
     CPABE_SCHEME_TKN20,
     CPABE_SCHEME_COVERCRYPT,
@@ -116,7 +116,13 @@ __all__ = [
 ]
 
 # Additive public API: existing names and legacy return/error behavior stay intact.
-from . import modern_api as _modern_api
-from .modern_api import *
+from .api import functional as _modern_api
+from .api.functional import *
 
 __all__ += _modern_api.__all__
+
+from .abe import BaseCPABE, AC17CPABE, TKN20CPABE, CoverCryptABE
+from .pq_cp_abe import PqCpAbe
+from .primitives import AesGcm, MlDsa, MlKem
+
+__all__ += ["BaseCPABE", "AC17CPABE", "TKN20CPABE", "CoverCryptABE", "PqCpAbe", "AesGcm", "MlDsa", "MlKem"]

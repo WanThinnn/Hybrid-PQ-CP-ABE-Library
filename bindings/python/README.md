@@ -1,5 +1,79 @@
 # PQ-CP-ABE Python SDK
 
+## Object API
+
+`PqCpAbe` delegates to `AC17CPABE`, `TKN20CPABE`, or `CoverCryptABE` through
+the `BaseCPABE` interface. Objects keep configuration rather than secret keys.
+The OOP API operates on bytes; existing file operations remain in the functional API.
+
+```python
+from pq_cp_abe import PqCpAbe, KemMode
+
+abe = PqCpAbe(config={"dimensions": [
+    {"name": "role", "attributes": ["admin", "analyst"]},
+    {"name": "department", "attributes": ["finance", "engineering"]},
+]}, mode=KemMode.HYBRIDIZED)
+keys = abe.setup()
+secret_key = abe.keygen(keys.master_secret_key, "role::admin department::finance")
+ciphertext = abe.encrypt(keys.public_key, b"Hello", "role::admin && department::finance")
+assert abe.decrypt(secret_key, ciphertext) == b"Hello"
+```
+
+Use `PqCpAbe(scheme=Scheme.AC17)`, `AC17CPABE()`, or `TKN20CPABE()` for the
+classical backends. `keygen` and `generate_secret_key` are equivalent. All
+objects also offer `setup_with_signing`, `encrypt_and_sign`, and
+`decrypt_and_verify`; the combined signing flow retains ML-DSA-87 and AES-256
+to preserve native formats. Standalone primitives select their own parameters:
+
+```python
+from pq_cp_abe import AesGcm, MlDsa, MlKem, MlDsaParameterSet, MlKemParameterSet
+
+aes = AesGcm(key_size_bits=192)
+key, nonce = aes.generate_key(), aes.generate_nonce()
+ciphertext = aes.encrypt(key, nonce, b"payload", aad=b"context")
+assert aes.decrypt(key, nonce, ciphertext, aad=b"context") == b"payload"
+
+signer = MlDsa(parameter_set=MlDsaParameterSet.ML_DSA_65)
+signing_keys = signer.generate_keypair()
+signature = signer.sign(b"payload", signing_keys.secret_key)
+assert signer.verify(b"payload", signature, signing_keys.public_key)
+
+kem = MlKem(parameter_set=MlKemParameterSet.ML_KEM_1024)
+kem_keys = kem.generate_keypair()
+sealed = kem.encapsulate(kem_keys.public_key)
+assert kem.decapsulate(kem_keys.secret_key, sealed.ciphertext) == sealed.shared_secret
+```
+
+Use a new nonce for each AES-GCM encryption with a given key. ML-KEM implicit
+rejection can yield a different secret for a modified ciphertext without an
+error; authenticate encrypted payloads. Primitive objects keep their selected
+key size/parameter set fixed. ML-DSA verification returns `False` for an invalid
+signature; operational errors raise exceptions.
+
+CoverCrypt snapshots its configuration on construction (including the config
+file from `HCPABE_COVERCRYPT_CONFIG` when no explicit config is given). Its
+mode is instance-local: `CLASSIC`, `POST_QUANTUM`, or `HYBRIDIZED`. This build's
+CoverCrypt provider uses ML-KEM-768, independently of the standalone `MlKem`
+class. It rejects other CoverCrypt parameter sets rather than changing vendor
+formats. New primitive exports and explicit CoverCrypt setup require a rebuilt
+native runtime; older binaries retain fixed ML-DSA-87 support. AES key generation
+uses the OS CSPRNG when the newer native key-generation helper is absent.
+
+Canonical module layout:
+
+| Module | Responsibility |
+| --- | --- |
+| `_native.py` | C ABI declarations and shared-library loading |
+| `api/legacy.py` | Historical `call_*` and helper behavior |
+| `api/functional.py` | Modern functions, native buffer ownership and error handling |
+| `abe/`, `pq_cp_abe.py` | Scheme objects and `PqCpAbe` facade |
+| `primitives/` | `AesGcm`, `MlDsa`, `MlKem` objects |
+| `models/`, `utils/` | Shared results, enums, validation and errors |
+
+The old `extended_api.py` and `modern_api.py` modules were removed. Import
+modern functions from `pq_cp_abe` or `pq_cp_abe.api.functional`; compatibility
+functions live in `pq_cp_abe.api.legacy` and remain exported at package root.
+
 ## Modern Python API (additive)
 
 New integrations can use `setup`, `generate_secret_key`, `encrypt`, and
@@ -55,10 +129,8 @@ Other native failures remain `AbeError`, including -4 for a generic
 cryptographic failure. Invalid Python inputs raise `TypeError`/`ValueError`.
 The package ships annotations and a `py.typed` marker.
 
-The public API uses functions and small data types, with no stateful crypto
-class required. A future context object can hold configuration and delegate
-to these same functions without breaking callers. Raw key bytes remain
-application-owned; Python does not guarantee secure erasure of immutable bytes.
+The functional and object APIs share the same implementation. Raw key bytes
+remain application-owned; Python does not guarantee secure erasure of immutable bytes.
 
 Encrypt data under a policy such as `role::admin && department::finance`.
 Only a user whose key grants the admin role in the finance department can

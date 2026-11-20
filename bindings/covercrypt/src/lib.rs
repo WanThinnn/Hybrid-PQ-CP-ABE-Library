@@ -1,4 +1,9 @@
 //! Native C ABI for the vendored CoverCrypt KEM. No cryptographic primitives are reimplemented.
+#[cfg(all(feature = "mlkem-512", feature = "mlkem-768"))]
+compile_error!("Select exactly one ML-KEM feature; use --no-default-features --features mlkem-512 for a 512 build.");
+#[cfg(not(any(feature = "mlkem-512", feature = "mlkem-768")))]
+compile_error!("Select one ML-KEM feature: mlkem-512 or mlkem-768.");
+
 use cosmian_cover_crypt::{traits::KemAc, AccessPolicy, Covercrypt, EncryptionHint,
     MasterPublicKey, MasterSecretKey, QualifiedAttribute, UserSecretKey, XEnc};
 use cosmian_crypto_core::bytes_ser_de::Serializable;

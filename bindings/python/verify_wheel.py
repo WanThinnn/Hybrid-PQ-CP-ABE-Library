@@ -22,7 +22,12 @@ def verify(wheel_path: Path):
         names = set(archive.namelist())
         lib_prefix = "pq_cp_abe/_libs/"
         required = {lib_prefix + f"libhybrid-pq-cp-abe.{EXTENSION}",
-                    "pq_cp_abe/modern_api.py", "pq_cp_abe/py.typed"}
+                    "pq_cp_abe/api/functional.py", "pq_cp_abe/api/legacy.py",
+                    "pq_cp_abe/models/enums.py", "pq_cp_abe/models/keys.py",
+                    "pq_cp_abe/utils/errors.py", "pq_cp_abe/utils/validation.py",
+                    "pq_cp_abe/abe/base.py", "pq_cp_abe/abe/covercrypt.py", "pq_cp_abe/pq_cp_abe.py",
+                    "pq_cp_abe/primitives/aes_gcm.py", "pq_cp_abe/primitives/ml_dsa.py",
+                    "pq_cp_abe/primitives/ml_kem.py", "pq_cp_abe/py.typed"}
         if EXTENSION == "dll":
             required.add(lib_prefix + "libcpabe_tkn20.dll")
         missing = required - names

@@ -7,6 +7,8 @@ int hybrid_cpabe_decryptBuffer_impl(const unsigned char *privateKey, size_t skLe
     if (!plaintext || !ptLen) return HCPABE_ERR_INVALID_PARAM;
     *plaintext = nullptr;
     *ptLen = 0;
+    if (ciphertext && ctLen && ciphertext[0] == HybridCPABE::FORMAT_VERSION_3)
+        return hybrid_cpabe_decrypt_v3(privateKey, skLen, nullptr, 0, ciphertext, ctLen, plaintext, ptLen, false);
     std::string aesKey;
     std::string recoveredKeyStr;
 
@@ -164,7 +166,7 @@ int hybrid_cpabe_decrypt_impl(const char *privateKeyFile, const char *ciphertext
         uint8_t version = static_cast<uint8_t>(decodedCiphertext[0]);
         CPABEScheme scheme = CPABE_SCHEME_AC17;
         // Old format (AC17 only): FORMAT_VERSION (1 byte) || CP-ABE Ciphertext Length (8 bytes) || ...
-        if (version == HybridCPABE::FORMAT_VERSION_2 && decodedCiphertext.size() > 1)
+        if ((version == HybridCPABE::FORMAT_VERSION_2 || version == HybridCPABE::FORMAT_VERSION_3) && decodedCiphertext.size() > 1)
         {
             scheme = static_cast<CPABEScheme>(decodedCiphertext[1]);
         }
@@ -230,6 +232,8 @@ int hybrid_cpabe_decryptBuffer_and_verify_impl(const unsigned char *privateKey, 
     *plaintext = nullptr;
     *ptLen = 0;
     if (!pqcPubKey || !pqcPubLen) return HCPABE_ERR_INVALID_PARAM;
+    if (ciphertext && ctLen && ciphertext[0] == HybridCPABE::FORMAT_VERSION_3)
+        return hybrid_cpabe_decrypt_v3(privateKey, skLen, pqcPubKey, pqcPubLen, ciphertext, ctLen, plaintext, ptLen, true);
     unsigned char *payload = nullptr;
     size_t payloadLen = 0;
     // Automatically detect scheme from ciphertext (in hybrid_cpabe_decryptBuffer)

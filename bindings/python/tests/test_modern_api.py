@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pq_cp_abe as abe
-from pq_cp_abe import modern_api
+from pq_cp_abe.api import functional as modern_api
 from pq_cp_abe.selftest import _covercrypt_settings
 
 

@@ -18,7 +18,12 @@ TARGETS = (("linux", "x86_64"), ("windows", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64"))
 VAULT_TARGETS = (("linux", "x86_64"),)
 WASM_FILES = ("loader.mjs", "api.mjs", "loader.d.mts", "hybrid-pq-cp-abe.mjs", "hybrid-pq-cp-abe.wasm",
-              "tkn20.wasm", "wasm_exec.js", f"{LIBRARY}.a")
+              "tkn20.wasm", "wasm_exec.js", f"{LIBRARY}.a",
+              "api/legacy.mjs", "api/functional.mjs", "runtime/native.mjs", "runtime/buffers.mjs",
+              "models/enums.mjs", "utils/errors.mjs", "utils/validation.mjs", "utils/encoding.mjs",
+              "pq_cp_abe.mjs", "abe/index.mjs", "abe/base.mjs", "abe/ac17.mjs", "abe/tkn20.mjs", "abe/covercrypt.mjs",
+              "primitives/index.mjs", "primitives/aes_gcm.mjs", "primitives/ml_dsa.mjs", "primitives/ml_kem.mjs",
+              "runtime/primitive.mjs")
 
 
 def version_string(value):
@@ -195,6 +200,7 @@ def stage_wasm_package(root, package):
     runtime = package / "lib/wasm"
     runtime.mkdir(parents=True)
     for name in WASM_FILES:
+        (package / "lib/wasm" / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(require_file(root / "lib/wasm" / name), runtime / name)
     headers = package / "include/hybrid_pq_cp_abe"
     require_file(root / "include/hybrid_pq_cp_abe/version.h")
@@ -219,6 +225,8 @@ def verify_wasm_runtime(root, archive, version):
         subprocess.run(["node", str(root / "tests/wasm/smoke.mjs"), str(loader), version],
                        cwd=package, check=True)
         subprocess.run(["node", str(root / "tests/wasm/modern-api.mjs"), str(loader)],
+                       cwd=package, check=True)
+        subprocess.run(["node", str(root / "tests/wasm/oop.mjs"), str(loader)],
                        cwd=package, check=True)
 
 

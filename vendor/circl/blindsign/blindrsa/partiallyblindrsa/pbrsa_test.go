@@ -345,6 +345,25 @@ func TestNonCanonicalSignatureRejection(t *testing.T) {
 	}
 }
 
+func TestBlindSignRejectsModulus(t *testing.T) {
+	key := loadStrongRSAKey()
+	signer, err := NewSigner(key, crypto.SHA384)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// RFC 8017, Section 5.2.1: RSASP1 requires 0 <= m < n, so a blinded
+	// message equal to the modulus must be rejected before signing.
+	kLen := (key.N.BitLen() + 7) / 8
+	blindedMsg := make([]byte, kLen)
+	key.N.FillBytes(blindedMsg)
+
+	_, err = signer.BlindSign(blindedMsg, []byte("metadata"))
+	if !errors.Is(err, ErrInvalidMessageLength) {
+		t.Fatalf("expected ErrInvalidMessageLength, got %v", err)
+	}
+}
+
 func TestInvalidPublicKeyRejection(t *testing.T) {
 	oversizedN := new(big.Int).Lsh(big.NewInt(1), 195599)
 	oversizedN.SetBit(oversizedN, 0, 1)
@@ -435,5 +454,40 @@ func BenchmarkPBRSA(b *testing.B) {
 	err = verifier.Verify(message, metadata, sig)
 	if err != nil {
 		b.Fatal(err)
+	}
+}
+
+// seqReader is a deterministic io.Reader: it emits an incrementing byte
+// sequence, so two fresh instances produce identical streams.
+type seqReader struct{ next byte }
+
+func (r *seqReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = r.next
+		r.next++
+	}
+	return len(p), nil
+}
+
+// TestBlindUsesSuppliedReader pins Blind to its caller supplied source of
+// randomness: two calls with identical deterministic readers must produce
+// identical blinded messages. It fails if any part of Blind (for example
+// the salt) draws from crypto/rand instead of the supplied reader.
+func TestBlindUsesSuppliedReader(t *testing.T) {
+	key := loadStrongRSAKey()
+	verifier := NewVerifier(&key.PublicKey, crypto.SHA384)
+	message := []byte("hello world")
+	metadata := []byte("metadata")
+
+	blinded1, _, err := verifier.Blind(&seqReader{}, message, metadata)
+	if err != nil {
+		t.Fatal(err)
+	}
+	blinded2, _, err := verifier.Blind(&seqReader{}, message, metadata)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(blinded1, blinded2) {
+		t.Fatal("Blind with identical deterministic readers produced different blinded messages: some randomness did not come from the supplied reader")
 	}
 }

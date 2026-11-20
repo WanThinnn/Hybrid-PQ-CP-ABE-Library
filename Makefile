@@ -79,13 +79,15 @@ SRCS = $(SCHEMES_DIR)/ac17.cpp \
        $(CORE_DIR)/abe-genkey.cpp \
        $(CORE_DIR)/abe-encrypt.cpp \
        $(CORE_DIR)/abe-decrypt.cpp \
+       $(CORE_DIR)/abe-params.cpp \
        $(CRYPTO_DIR)/ml-dsa.cpp \
+       $(CRYPTO_DIR)/ml-kem.cpp \
        $(CRYPTO_DIR)/aes-gcm.cpp
 
 MAIN_SRC = src/main.cpp
 SOURCE_NAMES = $(notdir $(SRCS:.cpp=))
 
-PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) $(VERSION_HEADER) $(CORE_DIR)/abe-internal.h
+PROJECT_HEADERS = $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) $(wildcard $(CRYPTO_DIR)/*.h) $(VERSION_HEADER) $(CORE_DIR)/abe-internal.h
 RABE_HEADER = $(DEPS_INC_DIR)/rabe/rabe.h
 OQS_HEADER = $(OQS_INC_DIR)/oqs/oqs.h
 TKN20_HEADER = $(TKN20_INC_DIR)/cpabe_tkn20.h

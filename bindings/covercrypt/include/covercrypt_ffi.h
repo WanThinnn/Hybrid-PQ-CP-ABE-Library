@@ -32,7 +32,9 @@ extern "C"
      * Free only original bridge-owned buffers with cc_buffer_free (never free/delete).
      * Serialized keys/encapsulations are opaque and use CoverCrypt v16 formats.
      * KEM operations generate/recover a 32-byte shared secret, not a data ciphertext.
-     * Build configuration: Curve25519 provider + ML-KEM-768.
+     * Build configuration: Curve25519 + one ML-KEM Cargo feature (default 768,
+     * optional 512). This is a build-time choice, not runtime negotiation.
+     * Serialized objects from different parameter builds are not interchangeable.
      */
     int cc_setup(const char *dimensions_json, int mode, cc_buffer *msk, cc_buffer *mpk);
     /* Add a new dimension to the same authority. JSON is a single dimension:

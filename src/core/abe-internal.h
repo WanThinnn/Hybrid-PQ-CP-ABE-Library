@@ -86,4 +86,9 @@ int hybrid_cpabe_decryptBuffer_and_verify_impl(const unsigned char *privateKey, 
 int hybrid_cpabe_decrypt_and_verify_impl(const char *privateKeyFile, const char *pqcPublicKeyFile,
                                          const char *ciphertextFile, const char *recovertextFile);
 
+// V3 dispatcher shared by the legacy-compatible decrypt entry points.
+int hybrid_cpabe_decrypt_v3(const unsigned char *sk, size_t sk_len,
+    const unsigned char *verification_key, size_t verification_key_len,
+    const unsigned char *ct, size_t ct_len, unsigned char **pt, size_t *pt_len, bool verify);
+
 #endif // ABE_INTERNAL_H

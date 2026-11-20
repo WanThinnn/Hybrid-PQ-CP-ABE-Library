@@ -17,8 +17,9 @@ CXXFLAGS := -O2 -std=c++17 -fexceptions -MMD -MP
 SRCS := src/hybrid-pq-cp-abe.cpp $(wildcard src/core/*.cpp src/schemes/*.cpp src/crypto/*.cpp) bindings/wasm/tkn20.cpp
 OBJS := $(patsubst %.cpp,$(BUILD_DIR)/obj/%.o,$(SRCS))
 DEPS := $(DEPS_DIR)/lib/cryptopp/libcryptopp.a $(DEPS_DIR)/lib/rabe/librabe_ffi.a $(DEPS_DIR)/lib/covercrypt/libcovercrypt_ffi.a $(DEPS_DIR)/lib/liboqs/liboqs.a
-HEADERS := $(wildcard include/hybrid_pq_cp_abe/*.h) src/core/abe-internal.h
+HEADERS := $(wildcard include/hybrid_pq_cp_abe/*.h src/crypto/*.h) src/core/abe-internal.h
 MODULE := $(BUILD_DIR)/hybrid-pq-cp-abe.mjs
+SDK_FILES := bindings/wasm/loader.mjs bindings/wasm/api.mjs bindings/wasm/pq_cp_abe.mjs bindings/wasm/loader.d.mts $(wildcard bindings/wasm/api/*.mjs bindings/wasm/abe/*.mjs bindings/wasm/primitives/*.mjs bindings/wasm/runtime/*.mjs bindings/wasm/models/*.mjs bindings/wasm/utils/*.mjs)
 STATIC := $(BUILD_DIR)/libhybrid-pq-cp-abe.a
 READY := $(DEPS_DIR)/lib/.ready
 LINKFLAGS := -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createHybridCPABE -sENVIRONMENT=web,node \
@@ -61,12 +62,16 @@ $(MODULE): $(STATIC) $(BUILD_DIR)/obj/src/main.o $(BUILD_DIR)/exports.json Makef
 
 # The CLI uses the same module; callMain runs after both runtimes are ready.
 shared executable: publish
-publish: $(MODULE) bindings/wasm/loader.mjs bindings/wasm/api.mjs bindings/wasm/loader.d.mts | $(READY)
+publish: $(MODULE) $(SDK_FILES) | $(READY)
 	@mkdir -p $(LIB_DIR)
 	install -m 644 $(MODULE) $(BUILD_DIR)/hybrid-pq-cp-abe.wasm $(DEPS_DIR)/lib/tkn20/tkn20.wasm $(DEPS_DIR)/lib/tkn20/wasm_exec.js bindings/wasm/loader.mjs bindings/wasm/api.mjs bindings/wasm/loader.d.mts $(LIB_DIR)/
+	install -m 644 bindings/wasm/pq_cp_abe.mjs $(LIB_DIR)/
+	@for directory in api abe primitives runtime models utils; do mkdir -p $(LIB_DIR)/$$directory; install -m 644 bindings/wasm/$$directory/*.mjs $(LIB_DIR)/$$directory/; done
 
 test: all
 	node tests/wasm/smoke.mjs
+	node tests/wasm/modern-api.mjs
+	node tests/wasm/oop.mjs
 
 clean:
 	rm -rf $(BUILD_DIR) $(LIB_DIR)
