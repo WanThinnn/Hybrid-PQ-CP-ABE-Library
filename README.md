@@ -7,6 +7,10 @@ encapsulation. AC17 and TKN20 use classical ABE.
 
 [Latest release](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest) · [Release notes](release_notes/)
 
+<p align="center">
+  <img src="./docs/assets/og-preview.png" alt="OG-Preview" width="900"/>
+</p>
+
 ## Quick install
 
 ### Python
