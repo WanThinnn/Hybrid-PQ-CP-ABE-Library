@@ -1,4 +1,6 @@
 ---
+title: SDKs and attribute-based access control
+description: Learn how PQ-CP-ABE protects data with attribute policies, then install or build the Python and JavaScript/WebAssembly SDKs.
 icon: lucide/boxes
 ---
 
@@ -132,5 +134,19 @@ The repository provides two primary developer SDKs. The native library and comma
 - Python package: [`pq-cp-abe` on PyPI](https://pypi.org/project/pq-cp-abe/).
 - JavaScript package: [`@wanthinnn/pq-cp-abe` on npm](https://www.npmjs.com/package/@wanthinnn/pq-cp-abe).
 - [Architecture and cryptographic modes](../architecture/README.md) · [Parameters and wire format](../native/parameters.md).
+
+## Build the SDKs from source
+
+Choose the build for the runtime your application uses:
+
+| SDK | What is built | Build guide |
+| --- | --- | --- |
+| Python | Native DLL/SO/DYLIB, editable Python installation, or a platform wheel | [Build Python SDK](python/build.md) |
+| JavaScript / WASM | Emscripten C++/Rust module and the Go TKN20 WASM runtime for Node.js and browsers | [Build JavaScript / WASM SDK](wasm/build.md) |
+
+Python loads native libraries and does not need Emscripten. JavaScript uses the
+WASM artifacts in `lib/wasm/`. These guides reuse the build documentation under
+[`bindings/python/BUILD.md`](../../bindings/python/BUILD.md) and
+[`bindings/wasm/README.md`](../../bindings/wasm/README.md).
 
 **Security boundary:** AC17 and TKN20 are classical ABE schemes. CoverCrypt supports ML-KEM-768 in `HYBRIDIZED` and `POST_QUANTUM` modes. Optional ML-DSA signing is independent and does not turn classical ABE into quantum-resistant ABE.

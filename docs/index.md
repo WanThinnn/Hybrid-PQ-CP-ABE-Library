@@ -1,5 +1,6 @@
 ---
-title: Home
+title: Post-Quantum Access Control SDK
+description: Encrypt data under attribute policies with PQ-CP-ABE for Python, JavaScript/WASM and C/C++, including CoverCrypt ML-KEM and optional ML-DSA signatures.
 icon: lucide/house
 ---
 

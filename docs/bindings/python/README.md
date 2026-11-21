@@ -1,13 +1,16 @@
 ---
+title: Python SDK
+description: Install pq-cp-abe for Python and use typed CP-ABE objects, hybrid encryption, ML-DSA signatures and native file or buffer operations.
 icon: lucide/file-code-2
 ---
 
-# Guide
+# Python SDK
 
 The `pq-cp-abe` Python package exposes the project's native C ABI using `ctypes`. It **does not run WebAssembly**. On supported operating systems, a compatible platform wheel includes the native runtime.
 
 ## Contents
 
+- [Build from source](build.md) — native runtime, editable installation and platform wheels.
 - [API reference](api.md) — object/functional methods, parameters, return types, exceptions and standalone cryptographic primitives.
 - [Python CLI and file operations](cli.md) — named flags, signed workflows, CoverCrypt configuration and file naming.
 - [Automatic API documentation](api-generation.md) — generate class/function docs from type annotations and docstrings.

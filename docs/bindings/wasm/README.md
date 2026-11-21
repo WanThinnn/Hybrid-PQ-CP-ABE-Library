@@ -1,13 +1,16 @@
 ---
+title: JavaScript / WebAssembly SDK
+description: Use PQ-CP-ABE from Node.js and browsers with the JavaScript/WebAssembly SDK, TypeScript declarations and policy-based hybrid encryption.
 icon: lucide/cpu
 ---
 
-# WebAssembly SDK
+# JavaScript / WebAssembly SDK
 
 The `@wanthinnn/pq-cp-abe` npm package executes the project's cryptographic code through **WebAssembly**, not a native Node.js `.node` addon. It supports Node.js and modern browsers. C++/Rust/Crypto++/liboqs run in an Emscripten module, while CIRCL/TKN20 uses a separate Go `js/wasm` runtime.
 
 ## Documentation
 
+- [Build from source](build.md) — Emscripten, Rust and Go toolchains, commands and deployment artifacts.
 - [API reference](api.md) — objects, functional methods, enums, primitives, return values, errors.
 - [CLI and build guide](cli.md) — host files, signed workflows, source builds and publishing.
 - [Architecture and schemes](../../architecture/README.md) · [Native parameters and wire format](../../native/parameters.md).

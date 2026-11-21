@@ -1,4 +1,6 @@
 ---
+title: JavaScript / WASM CLI
+description: Use the Node.js PQ-CP-ABE CLI for policy-based file encryption, signed workflows and verification, with WASM runtime and package details.
 icon: lucide/terminal
 ---
 

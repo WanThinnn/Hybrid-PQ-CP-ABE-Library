@@ -1,4 +1,6 @@
 ---
+title: Generate Python API documentation
+description: Generate PQ-CP-ABE Python class and function documentation from source annotations and docstrings using the repository documentation tools.
 icon: lucide/file-cog
 ---
 

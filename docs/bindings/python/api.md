@@ -1,4 +1,6 @@
 ---
+title: Python API reference
+description: Reference for PQ-CP-ABE Python classes, functional encryption APIs, key result types, exceptions and AES-GCM, ML-DSA and ML-KEM primitives.
 icon: lucide/braces
 ---
 

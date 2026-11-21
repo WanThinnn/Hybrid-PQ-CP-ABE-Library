@@ -1,4 +1,6 @@
 ---
+title: Python CLI and file workflows
+description: Run the PQ-CP-ABE Python CLI for setup, key generation, file encryption, ML-DSA signing and verified decryption with explicit parameters.
 icon: lucide/terminal
 ---
 

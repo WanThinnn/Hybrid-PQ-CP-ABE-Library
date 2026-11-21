@@ -1,4 +1,6 @@
 ---
+title: JavaScript / WASM API reference
+description: Reference for PQ-CP-ABE JavaScript classes, TypeScript types, functional APIs, cryptographic primitives and the WebAssembly virtual filesystem.
 icon: lucide/braces
 ---
 
