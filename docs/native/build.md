@@ -21,11 +21,12 @@ For maintainer-only upstream Git histories and update commands, see
 [vendor/README.md](../../vendor/README.md). Source stays vendored; ordinary clones do
 not require submodule initialization.
 
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE.git
-    cd Hybrid-PQ-CP-ABE
-    ```
+### 1. Clone the repository
+
+```sh
+git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE.git
+cd Hybrid-PQ-CP-ABE
+```
 
 Required toolchains include CMake, Rust/Cargo, GNU Make, and a native C/C++
 compiler with C++17 support (the default native build standard). Use the Go version declared in [the TKN20 module](../../bindings/tkn20/go.mod)
@@ -38,7 +39,7 @@ The root `VERSION` file is the version source of truth. Make generates the publi
 and CLI. Changing `VERSION` triggers an incremental rebuild; deployed binaries
 do not need to find a `VERSION` file at runtime.
 
-### Configure a new machine
+### 2. Configure a new machine
 
 The single `configure` file checks the host toolchain without installing or
 downloading anything. Missing tools produce a nonzero exit status. Use
@@ -91,40 +92,42 @@ Use the activated x64 command prompt for subsequent `make` commands; it keeps
 MSVC's linker ahead of the unrelated MSYS `link.exe`. No `make prepare` or
 library-specific Make targets are needed.
 
-Build order from a fresh clone:
+### 3. Build native dependencies
 
-1. **Build native dependencies**
-   ```sh
-   make deps -j8
-   ```
-   This builds Crypto++, liboqs, librabe-ffi, CIRCL/TKN20, and CoverCrypt. liboqs is configured as a minimal ML-KEM + ML-DSA build only: ML-KEM-512/768/1024 and ML-DSA-44/65/87. The `-jN` budget is distributed across the five dependency builds without oversubscribing the requested total.
+```sh
+make deps -j8
+```
+This builds Crypto++, liboqs, librabe-ffi, CIRCL/TKN20, and CoverCrypt. liboqs is configured as a minimal ML-KEM + ML-DSA build only: ML-KEM-512/768/1024 and ML-DSA-44/65/87. The `-jN` budget is distributed across the five dependency builds without oversubscribing the requested total.
 
-2. **Dependency output**
-   ```text
-   build/deps/<platform>/
-   ├── include/
-   │   ├── cryptopp/
-   │   ├── liboqs/
-   │   ├── rabe/
-   │   └── tkn20/
-   └── lib/
-       ├── cryptopp/
-       ├── liboqs/
-       ├── rabe/
-       └── tkn20/
-   ```
-   Temporary CMake/Cargo/Go/Crypto++ build trees are removed after success. Fingerprint metadata is kept inside each `lib/<dep>/` directory so unchanged dependencies can be skipped on the next build.
+**Dependency output**
 
-3. **Build the Hybrid-CP-ABE native core**
-   ```sh
-   make -j8
-   ```
-   The core consumes headers and libraries directly from `build/deps/<platform>/`. After a successful dependency build, `build/deps/<platform>/lib/.ready` marks the dependency set as ready; normal `make -jN` builds do not run the dependency scripts again and go straight to the native core.
+```text
+build/deps/<platform>/
+├── include/
+│   ├── cryptopp/
+│   ├── liboqs/
+│   ├── rabe/
+│   └── tkn20/
+└── lib/
+    ├── cryptopp/
+    ├── liboqs/
+    ├── rabe/
+    └── tkn20/
+```
+Temporary CMake/Cargo/Go/Crypto++ build trees are removed after success. Fingerprint metadata is kept inside each `lib/<dep>/` directory so unchanged dependencies can be skipped on the next build.
 
-4. **Run tests**
-   ```sh
-   make test -j8
-   ```
+### 4. Build the Hybrid-CP-ABE native core
+
+```sh
+make -j8
+```
+The core consumes headers and libraries directly from `build/deps/<platform>/`. After a successful dependency build, `build/deps/<platform>/lib/.ready` marks the dependency set as ready; normal `make -jN` builds do not run the dependency scripts again and go straight to the native core.
+
+### 5. Run tests
+
+```sh
+make test -j8
+```
 
 On Windows, run these commands from an **x64 Native Tools Command Prompt for VS 2022**. Windows uses the MSVC x64 ABI; `librabe-ffi` is forced to `x86_64-pc-windows-msvc`, while TKN20 uses Go/MinGW only behind a C ABI DLL plus an MSVC import `.lib`.
 
