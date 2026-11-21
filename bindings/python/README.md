@@ -383,7 +383,7 @@ with `macos12_backfill=true` and `publish=false`. The workflow builds from tag
 each architecture.
 
 On matching Intel and Apple Silicon systems running macOS 12, extract each
-native ZIP and run `bin/main version`, then install its wheel and run
+native ZIP and run `bin/pq-cp-abe version`, then install its wheel and run
 `python -m pq_cp_abe --test`. With `publish=true`, the same mode adds
 `libhybrid-pq-cp-abe_macos12_<arch>_v6.0.2.zip` and `SHA256SUMS-macos12.txt`
 to the GitHub Release and publishes the two `macosx_12_0` wheels to PyPI.

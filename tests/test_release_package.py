@@ -40,7 +40,7 @@ class ReleasePackageTests(unittest.TestCase):
                 PACKAGE.stage_package(root, package, target)
                 core, dependencies = PACKAGE.required_outputs(target)
                 for name in core:
-                    folder = "bin" if name in {"main", "main.exe"} else "lib"
+                    folder = "bin" if name in {"pq-cp-abe", "pq-cp-abe.exe"} else "lib"
                     self.assertTrue((package / folder / name).is_file())
                 for name in dependencies:
                     self.assertTrue((package / "lib/deps" / name).is_file())

@@ -136,7 +136,7 @@ ifeq ($(COMPILER),msvc)
     STATIC_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.lib
     SHARED_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.dll
     SHARED_IMPORT_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe_dll.lib
-    EXEC = $(BUILD_DIR)/main.exe
+    EXEC = $(BUILD_DIR)/pq-cp-abe.exe
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.lib
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test.exe
     PARAMS_TEST = $(BUILD_DIR)/params-test.exe
@@ -159,9 +159,10 @@ else
         CXX_BASE = g++
         # TKN20's static archive embeds a Go runtime. Keep archive symbols
         # private so a Go/CGO consumer (Vault) cannot interpose its own runtime.
-        SHARED_FLAG = -DBUILD_DLL -shared -Wl,--exclude-libs,ALL -Wl,-z,noexecstack
+        SHARED_FLAG = -DBUILD_DLL -shared -Wl,--exclude-libs,ALL
         SHARED_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.so
-        LDFLAGS = -lpthread -ldl -lm
+        # Keep the stack non-executable even when an archive member lacks .note.GNU-stack.
+        LDFLAGS = -lpthread -ldl -lm -Wl,-z,noexecstack
     endif
 
     CXX = $(CXX_WRAPPER) $(CXX_BASE)
@@ -175,7 +176,7 @@ else
 
     STATIC_LIB = $(BUILD_DIR)/libhybrid-pq-cp-abe.a
     CORE_ARCHIVE = $(BUILD_DIR)/libhybrid-pq-cp-abe_core.a
-    EXEC = $(BUILD_DIR)/main
+    EXEC = $(BUILD_DIR)/pq-cp-abe
     COVERCRYPT_LIB = $(DEPS_LIB_DIR)/covercrypt/libcovercrypt_ffi.a
     COVERCRYPT_TEST = $(BUILD_DIR)/covercrypt-test
     PARAMS_TEST = $(BUILD_DIR)/params-test
@@ -206,7 +207,7 @@ else
 	@printf '%s\n' '// Generated from VERSION; do not edit.' '#ifndef HYBRID_CP_ABE_VERSION_H' '#define HYBRID_CP_ABE_VERSION_H' '#define HCPABE_LIB_VERSION "$(LIB_VERSION)"' '#endif' > "$@"
 endif
 
-.PHONY: all clean deps clean-deps executable shared static benchmark-bridge help test tests abi-info vault test-vault clean-vault
+.PHONY: all clean deps clean-deps executable install shared static benchmark-bridge help test tests abi-info vault test-vault clean-vault
 
 all: static shared executable
 	@echo "================================================================"
@@ -243,6 +244,7 @@ help:
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the CLI"
+	@echo "  make install         Install the pq-cp-abe CLI (override with PREFIX=...)"
 	@echo "  make benchmark-bridge Build the benchmark-only primitive bridge"
 	@echo "  make test -j8        Build incrementally and run tests"
 	@echo "  make tests -j8       Alias for make test -j8"
@@ -386,6 +388,9 @@ $(SHARED_LIB): $(SHARED_OBJS) $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL
 
 executable: $(EXEC) $(PUBLISHED_TKN20_DLL)
 
+install: $(EXEC) $(TKN20_DLL)
+	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-cli.ps1 -Executable "$(EXEC)" -Runtime "$(TKN20_DLL)" $(if $(strip $(PREFIX)),-Prefix "$(PREFIX)") $(if $(filter 0,$(UPDATE_PATH)),-SkipPathUpdate)
+
 benchmark-bridge:
 	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-benchmark-bridge.ps1
 
@@ -409,15 +414,7 @@ $(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(TKN20_IMPO
 	@copy /Y "$(subst /,\,$(TKN20_DLL))" "$(subst /,\,$(BUILD_DIR))\\" >nul
 
 test: $(EXEC) $(COVERCRYPT_TEST) $(PARAMS_TEST) $(PUBLISHED_TKN20_DLL)
-	@"$(COVERCRYPT_TEST)"
-	@cd /d "$(subst /,\,$(BUILD_DIR))" && params-test.exe
-	python tests/test_cli_params.py "$(EXEC)"
-	@echo ================================================================
-	@echo  Running Tests...
-	@if not exist "$(subst /,\,$(TEST_CASE_DIR))" mkdir "$(subst /,\,$(TEST_CASE_DIR))"
-	@echo This is a secret message for testing Hybrid CP-ABE!> "$(subst /,\,$(TEST_CASE_DIR))\plaintext.txt"
-	@"$(subst /,\,$(TEST_DIR))\run_test.bat"
-	@echo Test completed!
+	@python tests/run_native_tests.py "$(EXEC)" "$(COVERCRYPT_TEST)" "$(PARAMS_TEST)"
 
 else
 
@@ -476,6 +473,13 @@ $(SHARED_LIB): $(OBJS) $(STATIC_LIBS_GCC) Makefile
 
 executable: $(EXEC)
 
+PREFIX ?= /usr/local
+bindir ?= $(PREFIX)/bin
+
+install: $(EXEC)
+	install -d "$(DESTDIR)$(bindir)"
+	install -m 755 "$(EXEC)" "$(DESTDIR)$(bindir)/pq-cp-abe"
+
 benchmark-bridge: $(BENCHMARK_BRIDGE)
 
 $(BENCHMARK_BRIDGE): $(BENCHMARK_BRIDGE_SRC) $(STATIC_LIB)
@@ -508,15 +512,7 @@ $(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(PARAMS_TEST_SRC) $(STATIC_LIB) -o "$@" $(LDFLAGS)
 
 test: $(EXEC) $(COVERCRYPT_TEST) $(PARAMS_TEST)
-	@"$(COVERCRYPT_TEST)"
-	@cd "$(BUILD_DIR)" && ./params-test
-	python3 tests/test_cli_params.py "$(EXEC)"
-	@echo "================================================================"
-	@echo " Running Tests..."
-	@mkdir -p $(TEST_CASE_DIR)
-	@chmod +x ./$(TEST_DIR)/run_test.sh
-	@HCPABE_EXEC="./$(EXEC)" ./$(TEST_DIR)/run_test.sh
-	@echo "Test completed!"
+	@python3 tests/run_native_tests.py "$(EXEC)" "$(COVERCRYPT_TEST)" "$(PARAMS_TEST)"
 
 -include $(DEPFILES)
 

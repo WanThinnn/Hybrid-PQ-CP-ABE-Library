@@ -10,7 +10,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = platform.system()
 TARGET = {'Windows': 'windows', 'Darwin': 'macos'}.get(SYSTEM, 'linux')
-CLI = ROOT / 'build/artifacts' / TARGET / ('main.exe' if SYSTEM == 'Windows' else 'main')
+CLI = ROOT / 'build/artifacts' / TARGET / ('pq-cp-abe.exe' if SYSTEM == 'Windows' else 'pq-cp-abe')
 
 
 @unittest.skipUnless(CLI.is_file(), 'Build the CLI first')

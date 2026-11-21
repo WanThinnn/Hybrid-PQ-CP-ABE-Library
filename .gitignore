@@ -365,6 +365,7 @@ benchmark/results/
 /include/hybrid_pq_cp_abe/version.h
 vendor/cover_crypt/target/
 tmp/
+tmp*
 release_notes/pre-*
 .env
 env/

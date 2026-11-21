@@ -68,7 +68,7 @@ use qualified policies such as `Department::FIN && Security::TOP`. CoverCrypt
 does not translate the TKN20 `NOT` syntax; unsupported policies fail explicitly.
 
 For a quick CLI smoke test, use the checked-in [scripts/covercrypt-demo.json](../scripts/covercrypt-demo.json)
-with `Department::{IT,HR}` and `Level::{USER,ADMIN}`. Run `main --help` for CMD,
+with `Department::{IT,HR}` and `Level::{USER,ADMIN}`. Run `pq-cp-abe --help` for CMD,
 PowerShell and Linux/macOS environment commands and a setup/keygen/encrypt/decrypt
 example. The demo contains only attribute definitions, not keys. Setup requires
 `HCPABE_COVERCRYPT_CONFIG`; the CLI does not automatically read `.env` files.
@@ -76,22 +76,20 @@ example. The demo contains only attribute definitions, not keys. Setup requires
 ### Native PQC with CoverCrypt
 
 CoverCrypt's native PQC mode protects the ABE key-encapsulation path with
-ML-KEM-768. It does not require the `--pqc` signing option. For example, on
-Linux/macOS:
+ML-KEM-768. This depends on the selected CoverCrypt mode. On Linux/macOS:
 
 ```sh
 export HCPABE_COVERCRYPT_CONFIG=scripts/covercrypt-demo.json
 export HCPABE_COVERCRYPT_MODE=hybridized
 mkdir -p keys
-build/artifacts/linux/main setup --scheme covercrypt ./keys/demo
-build/artifacts/linux/main genkey --scheme covercrypt ./keys/demo_msk.key "Department::IT Level::ADMIN" ./keys/user.key
+build/artifacts/linux/pq-cp-abe setup --scheme covercrypt ./keys/demo
+build/artifacts/linux/pq-cp-abe genkey --scheme covercrypt ./keys/demo_msk.key "Department::IT Level::ADMIN" ./keys/user.key
 ```
 
 Use `post_quantum` to select CoverCrypt's post-quantum mode or `classic` for
-its classical mode. The default is `hybridized`. The optional `--pqc` flag is
-a separate feature: it adds ML-DSA-87 signing/verification to the
-Sign-then-Encrypt flow for any scheme. AC17 and TKN20 remain classical ABE
-schemes regardless of that flag.
+its classical mode. The default is `hybridized`. For optional ML-DSA signatures
+on any scheme, use `setup --with-signing-keys`, `encrypt --sign`, and
+`decrypt --verify`. The default signature parameter set is ML-DSA-87.
 
 User keys grant only the named dimensions and their hierarchy inheritance. A
 `Department::IT` key can decrypt that department's policy, but cannot decrypt
@@ -117,17 +115,17 @@ MSK/PK pair under an unused output prefix; the input keys are left unchanged.
 Add a new E dimension to the demo authority:
 
 ```sh
-build/artifacts/windows/main.exe add_dimension --scheme covercrypt ./keys/demo_msk.key scripts/covercrypt-add-e.json ./keys/demo-v2
+build/artifacts/windows/pq-cp-abe.exe add_dimension --scheme covercrypt ./keys/demo_msk.key scripts/covercrypt-add-new-attrbutes.json ./keys/demo-v2
 ```
 
-On Linux/macOS, use `build/artifacts/linux/main` or
-`build/artifacts/macos/main` respectively. `scripts/covercrypt-add-e.json` is one
+On Linux/macOS, use `build/artifacts/linux/pq-cp-abe` or
+`build/artifacts/macos/pq-cp-abe` respectively. `scripts/covercrypt-add-new-attrbutes.json` is one
 dimension object, whereas the setup JSON contains a `dimensions` array.
 
 For a new value in an existing dimension:
 
 ```sh
-build/artifacts/windows/main.exe add_attribute --scheme covercrypt ./keys/demo-v2_msk.key Department SALES ./keys/demo-v3
+build/artifacts/windows/pq-cp-abe.exe add_attribute --scheme covercrypt ./keys/demo-v2_msk.key Department SALES ./keys/demo-v3
 ```
 
 For hierarchical dimensions, the optional final argument is the existing
@@ -140,10 +138,10 @@ ciphertexts using those rights. They do not automatically gain E. Grant E by
 issuing a new authorized key from the updated MSK, for example:
 
 ```sh
-build/artifacts/windows/main.exe genkey --scheme covercrypt ./keys/demo-v2_msk.key "Department::IT && Level::ADMIN && E::present" ./keys/user-e.key
+build/artifacts/windows/pq-cp-abe.exe genkey --scheme covercrypt ./keys/demo-v2_msk.key "Department::IT && Level::ADMIN && E::present" ./keys/user-e.key
 ```
 
-Signing keys are unchanged and can be reused. Omit `--pqc` on growth commands.
+Signing keys can be reused after growing an authority.
 Serialize authority-management operations and review the new pair before
 switching applications to it. Output files must not already exist.
 
@@ -157,7 +155,7 @@ The library uses a **hybrid KEM/DEM-style architecture**: ABE protects a
 randomly generated secret under the access policy, SHA3-256 derives the
 AES-256 key, and AES-GCM handles the bulk payload. CoverCrypt's `hybridized`
 or `post_quantum` mode uses ML-KEM-768 in the ABE encapsulation path.
-Separately, the optional `--pqc` path adds **ML-DSA-87 Sign-then-Encrypt**
+With `encrypt --sign`, the CLI applies **ML-DSA Sign-then-Encrypt**
 before the payload enters the hybrid encryption pipeline.
 
 For the current binary format, AES-GCM authenticates the header as AAD:

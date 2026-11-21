@@ -93,7 +93,7 @@ void check_scheme(CPABEScheme scheme) {
         success(hybrid_cpabe_genkeyBuffer_with_scheme(msk.data, msk.size, "admin it", &user.data, &user.size, scheme));
         success(hybrid_cpabe_genkeyBuffer_with_scheme(msk.data, msk.size, "admin", &denied.data, &denied.size, scheme));
         for (int bits : {128, 192, 256}) {
-            for (const std::string message : {std::string(), std::string("hello\0\xff", 7)}) {
+            for (const std::string &message : {std::string(), std::string("hello\0\xff", 7)}) {
                 Buffer ct, pt, signed_ct, verified;
                 success(hybrid_cpabe_encryptBuffer_with_params(pk.data, pk.size,
                     reinterpret_cast<const unsigned char *>(message.data()), message.size(), policy.c_str(),

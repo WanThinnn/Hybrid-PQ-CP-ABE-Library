@@ -31,10 +31,14 @@ Download the ZIP for your platform from the
 Extract it and run the CLI from the package root:
 
 ```sh
-./bin/main version
+./bin/pq-cp-abe version
 ```
 
-On Windows, run `bin\main.exe version`. The archive includes headers and
+When building from source, run `make install` to make `pq-cp-abe` available
+from your shell. See the [CLI installation guide](docs/cli.md) for the default
+location on each platform and how to set `PREFIX`.
+
+On Windows, run `bin\pq-cp-abe.exe version`. The archive includes headers and
 libraries for C/C++ integration. See the [CLI examples](docs/cli.md) and
 [build guide](docs/build.md) for source builds and toolchain setup.
 

@@ -4,9 +4,9 @@
 if [ -n "$HCPABE_EXEC" ]; then
     EXEC="$HCPABE_EXEC"
 elif [ "$(uname -s)" = "Darwin" ]; then
-    EXEC="./build/artifacts/macos/main"
+    EXEC="./build/artifacts/macos/pq-cp-abe"
 else
-    EXEC="./build/artifacts/linux/main"
+    EXEC="./build/artifacts/linux/pq-cp-abe"
 fi
 TC="tests/cpp/cases"
 PASS=0

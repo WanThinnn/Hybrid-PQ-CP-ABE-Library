@@ -347,8 +347,14 @@ extern "C"
 
     int hybrid_cpabe_setup_with_ml_dsa(const char *path, CPABEScheme scheme, int parameter)
     {
-        return run([&]
-                   {
+        return setup_with_ml_dsa_files(path, scheme, parameter, "pqc");
+    }
+}
+
+int setup_with_ml_dsa_files(const char *path, CPABEScheme scheme, int parameter, const char *key_label)
+{
+    return run([&]
+               {
         require(path && scheme_valid(scheme)); parameter = dsa_parameter(parameter);
         Buffer pk, sk;
         check(ml_dsa_generate_keypair(parameter, &pk.data, &pk.size, &sk.data, &sk.size));
@@ -361,9 +367,9 @@ extern "C"
         } else if (!prefix.empty()) prefix += '_';
         auto public_key = base64(pk), secret_key = base64(sk);
         Wipe wipe{secret_key};
-        require(SaveFile(prefix + "pqc_pk.key", public_key.c_str(), "Base64"), HCPABE_ERR_FILE_NOT_FOUND);
-        require(SaveFile(prefix + "pqc_sk.key", secret_key.c_str(), "Base64"), HCPABE_ERR_FILE_NOT_FOUND); });
-    }
+        prefix += key_label;
+        require(SaveFile(prefix + "_pk.key", public_key.c_str(), "Base64"), HCPABE_ERR_FILE_NOT_FOUND);
+        require(SaveFile(prefix + "_sk.key", secret_key.c_str(), "Base64"), HCPABE_ERR_FILE_NOT_FOUND); });
 }
 
 int hybrid_cpabe_decrypt_v3(const unsigned char *sk, size_t sk_len,

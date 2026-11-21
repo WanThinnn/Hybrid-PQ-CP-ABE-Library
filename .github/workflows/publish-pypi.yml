@@ -267,7 +267,7 @@ jobs:
               packager["stage_package"](root, package, "macos")
               packager["prepare_shared_libraries"](package, "macos")
               packager["collect_notices"](root, package)
-              cli = package / "bin/main"
+              cli = package / "bin/pq-cp-abe"
               binary = package / "lib/libhybrid-pq-cp-abe.dylib"
               for item in (cli, *sorted((package / "lib").rglob("*.dylib"))):
                   slices = subprocess.check_output(["lipo", "-archs", item], text=True).split()

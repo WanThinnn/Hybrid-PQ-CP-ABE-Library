@@ -1,8 +1,6 @@
 /**
  * @file main.cpp
- * @brief CLI wrapper for the Hybrid CP-ABE library (Unified with PQC & Scheme Selection)
- * * This file provides a command-line interface to use the functions
- * of the Hybrid CP-ABE library. It supports the --pqc and --scheme flags.
+ * @brief Command-line interface for scheme selection, encryption, and ML-DSA signatures.
  */
 
 #include <iostream>
@@ -13,87 +11,273 @@
 #include <cryptopp/base64.h>
 #include <cryptopp/filters.h>
 #include <fstream>
+#include <map>
 #include <sstream>
 
-#include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
+#include "core/abe-internal.h"
 
-void printCovercryptHelp(const char *programName)
+namespace
 {
-    std::cout << "Covercrypt setup (required configuration):\n"
-              << "  Set HCPABE_COVERCRYPT_CONFIG to a dimensions JSON file before setup.\n"
-              << "  The CLI does not automatically load .env files.\n"
-              << "  Demo file: scripts/covercrypt-demo.json (paths below assume the repository root).\n"
-              << "  CMD:        set \"HCPABE_COVERCRYPT_CONFIG=%CD%\\scripts\\covercrypt-demo.json\"\n"
-              << "  PowerShell: $env:HCPABE_COVERCRYPT_CONFIG = (Resolve-Path .\\scripts\\covercrypt-demo.json).Path\n"
-              << "  Linux/macOS: export HCPABE_COVERCRYPT_CONFIG=\"$PWD/scripts/covercrypt-demo.json\"\n"
-              << "  Optional HCPABE_COVERCRYPT_MODE: hybridized (default), post_quantum, classic.\n"
-              << "  Hybridized uses ML-KEM-768; --pqc adds ML-DSA signatures (87 by default, --ml-dsa selects 44/65/87).\n"
-              << "  User keys grant explicitly named attributes only; omitted dimensions grant no rights.\n"
-              << "  Create an output directory first (e.g. mkdir keys), then run:\n"
-              << "  " << programName << " setup --scheme covercrypt ./keys/demo\n"
-              << "  Outputs: ./keys/demo_pk.key and ./keys/demo_msk.key\n"
-              << "  " << programName << " genkey --scheme covercrypt ./keys/demo_msk.key \"Department::IT && Level::ADMIN\" ./keys/user.key\n"
-              << "  " << programName << " encrypt --scheme covercrypt ./keys/demo_pk.key data.txt \"Department::IT && Level::ADMIN\" data.enc\n"
-              << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt\n"
-              << "  Add E without replacing the authority:\n"
-              << "  " << programName << " add_dimension --scheme covercrypt ./keys/demo_msk.key scripts/covercrypt-add-e.json ./keys/demo-v2\n"
-              << "  Use demo-v2_pk.key and demo-v2_msk.key for subsequent encryption/key generation.\n"
-              << "  Old user keys retain old rights; issue an authorized new key to grant E.\n";
+constexpr const char *cliName = "pq-cp-abe";
+
+struct CommandHelp
+{
+    const char *name;
+    const char *syntax;
+    const char *description;
+};
+
+constexpr CommandHelp commands[] = {
+    {"setup", "[--scheme NAME] [--with-signing-keys [--ml-dsa SET]] <path-or-prefix>",
+     "Create an authority public key and master secret key."},
+    {"genkey", "[--scheme NAME] <master-key> <attributes> <user-key>",
+     "Issue a user key for the given attributes."},
+    {"encrypt", "[--scheme NAME] [--aes-bits BITS] [--sign [--ml-dsa SET]]\n"
+                "    <public-key> [signing-key] <input> <policy> <output>",
+     "Encrypt a file. With positional arguments and --sign, pass the signing key after the public key."},
+    {"decrypt", "[--verify] <user-key> [verification-key] <input> <output>",
+     "Decrypt a file. With positional arguments and --verify, pass the verification key after the user key."},
+    {"setup_buffer", "[--scheme NAME] [--with-signing-keys [--ml-dsa SET]]",
+     "Create an authority and print its keys as Base64."},
+    {"genkey_buffer", "[--scheme NAME] <master-key> <attributes>",
+     "Issue a user key and print it as Base64."},
+    {"encrypt_buffer", "[--scheme NAME] [--aes-bits BITS] [--sign [--ml-dsa SET]]\n"
+                       "    <public-key> [signing-key] <text> <policy> <output>",
+     "Encrypt text to a file. With --sign, pass the signing key after the public key."},
+    {"decrypt_buffer", "[--verify] <user-key> [verification-key] <input>",
+     "Decrypt a file and print the plaintext. With --verify, pass the verification key after the user key."},
+    {"add_dimension", "--scheme covercrypt <master-key> <dimension-json> <new-prefix>",
+     "Add a dimension without replacing the authority. Use a new output prefix."},
+    {"add_attribute", "--scheme covercrypt <master-key> <dimension> <attribute>\n"
+                      "    <new-prefix> [after-attribute]",
+     "Add an attribute without replacing the authority. Use a new output prefix."},
+    {"version", "", "Show the library version."},
+    {"help", "[command]", "Show general help or help for one command."},
+};
+
+struct NamedCommand
+{
+    std::string name;
+    const char *syntax;
+    std::vector<std::string> fields;
+    std::string signatureKeyField;
+};
+
+const NamedCommand namedCommands[] = {
+    {"setup", "[--scheme NAME] [--with-signing-keys [--ml-dsa SET]] --file PATH-OR-PREFIX",
+     {"--file"}, ""},
+    {"genkey", "[--scheme NAME] --master-key FILE --attributes ATTRIBUTES --user-key FILE",
+     {"--master-key", "--attributes", "--user-key"}, ""},
+    {"encrypt", "--public-key FILE --file FILE --policy POLICY --ciphertext FILE\n"
+                "    [--scheme NAME] [--aes-bits BITS] [--sign --signing-key FILE [--ml-dsa SET]]",
+     {"--public-key", "--signing-key", "--file", "--policy", "--ciphertext"}, "--signing-key"},
+    {"decrypt", "--user-key FILE --ciphertext FILE --output FILE\n"
+                "    [--verify --verification-key FILE]",
+     {"--user-key", "--verification-key", "--ciphertext", "--output"}, "--verification-key"},
+};
+
+const NamedCommand *findNamedCommand(const std::string &name)
+{
+    for (const auto &command : namedCommands)
+    {
+        if (command.name == name)
+            return &command;
+    }
+    return nullptr;
 }
 
-void printUsage(const char *programName)
+bool isNamedField(const std::string &arg)
 {
-    std::cout << "Hybrid PQ-CP-ABE Library v" << getVersion() << std::endl;
-    std::cout << "Usage: " << programName << " [command] [options] <args>" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << "  --pqc               - Add ML-DSA signatures (default 87; separate from Covercrypt's KEM mode)" << std::endl;
-    std::cout << "  --scheme <name>     - Specify scheme: 'ac17' (default), 'tkn20' or 'covercrypt'" << std::endl;
-    std::cout << "  --aes-bits <bits>   - Encrypt with 128, 192 or 256 bits (explicit choice emits V3)" << std::endl;
-    std::cout << "  --ml-dsa <set>      - With --pqc: setup/sign using 44, 65 or 87 (default 87)" << std::endl;
-    std::cout << std::endl;
-    std::cout << "Commands:" << std::endl;
-    std::cout << "  setup   <path_or_prefix>                             - Generate Master Key and Public Key" << std::endl;
-    std::cout << "  genkey  <master_key> <attrs> <out_file>              - Generate private key from attributes" << std::endl;
-    std::cout << "  encrypt <pub_key> [pqc_priv_key] <file> <policy> <out> - Encrypt (and Sign) file" << std::endl;
-    std::cout << "  decrypt <priv_key> [pqc_pub_key] <file> <out>         - Decrypt (and Verify) file" << std::endl;
-    std::cout << "  setup_buffer [--scheme <name>] [--pqc]                - Setup and print MSK and PK (plus PQC keys if --pqc) to stdout" << std::endl;
-    std::cout << "  genkey_buffer <master_key_file> <attrs>               - GenKey and print SK to stdout" << std::endl;
-    std::cout << "  encrypt_buffer <pub_key> [pqc_priv_key] <text> <policy> <out>  - Encrypt (and Sign) text string to file" << std::endl;
-    std::cout << "  decrypt_buffer <priv_key> [pqc_pub_key] <file>                - Decrypt (and Verify) file to stdout" << std::endl;
-    std::cout << "  add_dimension --scheme covercrypt <msk> <dimension_json_file> <new_prefix>" << std::endl;
-    std::cout << "  add_attribute --scheme covercrypt <msk> <dimension> <attribute> <new_prefix> [after_attribute]" << std::endl;
-    std::cout << "    Growth preserves the authority; outputs must not already exist. --pqc is not used." << std::endl;
-    std::cout << std::endl;
-    std::cout << "Examples:" << std::endl;
-    std::cout << "  " << programName << " setup --scheme tkn20 ./keys/mykey" << std::endl;
-    std::cout << "  " << programName << " genkey --scheme tkn20 ./keys/cpabe_msk.key \"admin it\" ./keys/user.key" << std::endl;
-    std::cout << "  " << programName << " encrypt --scheme tkn20 ./keys/cpabe_pk.key data.txt \"admin and it\" data.enc" << std::endl;
-    std::cout << "  " << programName << " decrypt ./keys/user.key data.enc recovered.txt" << std::endl;
-    std::cout << std::endl;
-    printCovercryptHelp(programName);
+    for (const auto &command : namedCommands)
+    {
+        if (std::find(command.fields.begin(), command.fields.end(), arg) != command.fields.end())
+            return true;
+    }
+    return false;
+}
+
+std::string signingOptionFor(const std::string &mode)
+{
+    if (mode == "setup" || mode == "setup_buffer")
+        return "--with-signing-keys";
+    if (mode == "encrypt" || mode == "encrypt_buffer")
+        return "--sign";
+    if (mode == "decrypt" || mode == "decrypt_buffer")
+        return "--verify";
+    return {};
+}
+
+bool appendNamedArguments(const std::string &mode, bool useSignature,
+                          std::map<std::string, std::string> &fields, std::vector<std::string> &args)
+{
+    const auto *command = findNamedCommand(mode);
+    if (!command || args.size() != 2)
+    {
+        std::cerr << "Use named arguments on their own with setup, genkey, encrypt, or decrypt.\n";
+        return false;
+    }
+
+    if (mode == "setup" && fields.count("--output"))
+    {
+        if (fields.count("--file"))
+        {
+            std::cerr << "For setup, specify only one of --file and --output.\n";
+            return false;
+        }
+        fields.emplace("--file", fields.at("--output"));
+        fields.erase("--output");
+    }
+
+    for (const auto &field : command->fields)
+    {
+        if (field == command->signatureKeyField && !useSignature)
+            continue;
+        const auto value = fields.find(field);
+        if (value == fields.end())
+        {
+            std::cerr << mode << " requires " << field << '\n';
+            return false;
+        }
+        args.push_back(value->second);
+        fields.erase(value);
+    }
+    if (!fields.empty())
+    {
+        if (fields.count(command->signatureKeyField))
+            std::cerr << command->signatureKeyField << " requires " << signingOptionFor(mode) << '\n';
+        else
+            std::cerr << "Unknown argument for " << mode << ": " << fields.begin()->first << '\n';
+        return false;
+    }
+    return true;
+}
+
+void printEncryptionOptions()
+{
+    std::cout << "  --scheme NAME     ac17 (default), tkn20, or covercrypt\n"
+                 "  --aes-bits BITS   128, 192, or 256 (default) when encrypting\n"
+                 "  --ml-dsa SET      44, 65, or 87 (default). Match the signing key's parameter set.\n";
+}
+
+void printCovercryptHelp(std::ostream &out = std::cout)
+{
+    out << "CoverCrypt setup\n"
+                 "  Set HCPABE_COVERCRYPT_CONFIG to a dimensions JSON file.\n"
+                 "  Example: scripts/covercrypt-demo.json. The CLI does not load .env files.\n"
+                 "  HCPABE_COVERCRYPT_MODE: hybridized (default), post_quantum, or classic.\n"
+                 "  Post-quantum modes use ML-KEM-768.\n";
+}
+
+void printCommandUsage(const CommandHelp &command, std::ostream &out)
+{
+    out << "Usage: " << cliName << ' ';
+    if (const auto *named = findNamedCommand(command.name))
+        out << "--" << command.name << ' ' << named->syntax << "\n   or: " << cliName << ' ';
+    out << command.name;
+    if (*command.syntax)
+        out << ' ' << command.syntax;
+    out << '\n';
+}
+
+int invalidCommandArguments(const std::string &name)
+{
+    for (const auto &command : commands)
+    {
+        if (name == command.name)
+        {
+            printCommandUsage(command, std::cerr);
+            break;
+        }
+    }
+    return 1;
+}
+
+bool printCommandHelp(const std::string &name)
+{
+    for (const auto &command : commands)
+    {
+        if (name != command.name)
+            continue;
+        printCommandUsage(command, std::cout);
+        std::cout << '\n' << command.description << '\n';
+        if (name == "setup")
+            std::cout << "  --file sets the output directory or key file prefix (--output is an alias).\n"
+                         "  --with-signing-keys writes ml-dsa_sk.key and ml-dsa_pk.key with the chosen prefix.\n";
+        if (name == "encrypt" || name == "encrypt_buffer")
+        {
+            std::cout << "\nEncryption options\n";
+            printEncryptionOptions();
+        }
+        if (name == "setup" || name == "setup_buffer")
+        {
+            std::cout << "  --with-signing-keys generates an ML-DSA key pair (default set: 87).\n\n";
+            printCovercryptHelp();
+        }
+        return true;
+    }
+    return false;
+}
+
+void printUsage()
+{
+    std::cout << cliName << ' ' << getVersion() << " | PQ-CP-ABE\n\n"
+              << "Usage: pq-cp-abe <command> [options] [arguments]\n\n"
+                 "Commands\n"
+                 "  Keys         setup, genkey (also --setup, --genkey)\n"
+                 "  Files        encrypt, decrypt (also --encrypt, --decrypt)\n"
+                 "  Buffers      setup_buffer, genkey_buffer, encrypt_buffer, decrypt_buffer\n"
+                 "  CoverCrypt   add_dimension, add_attribute\n"
+                 "  Info         version, help\n\n"
+                 "Options\n";
+    printEncryptionOptions();
+    std::cout << "  -h, --help        Show help. Use <command> --help for arguments.\n"
+                 "  -v, --version     Show the library version\n\n";
+    std::cout << "Signature options\n"
+                 "  setup    --with-signing-keys  Generate an ML-DSA key pair\n"
+                 "  encrypt  --sign               Sign the data before encryption\n"
+                 "  decrypt  --verify             Require a valid ML-DSA signature\n"
+                 "  --ml-dsa selects the set with --with-signing-keys or --sign.\n\n";
+    printCovercryptHelp();
+    std::cout << "\nCoverCrypt example\n"
+                 "  Set HCPABE_COVERCRYPT_CONFIG to scripts/covercrypt-demo.json and create data.txt.\n"
+                 "  pq-cp-abe --setup --scheme covercrypt --file demo\n"
+                 "  pq-cp-abe --genkey --scheme covercrypt --master-key demo_msk.key --attributes \"Department::IT && Level::ADMIN\" --user-key user.key\n"
+                 "  pq-cp-abe --encrypt --scheme covercrypt --public-key demo_pk.key --file data.txt --policy \"Department::IT && Level::ADMIN\" --ciphertext data.enc\n"
+                 "  pq-cp-abe --decrypt --user-key user.key --ciphertext data.enc --output recovered.txt\n";
+}
 }
 
 int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        printUsage(argv[0]);
+        printUsage();
         return 1;
     }
 
-    std::vector<std::string> args;
-    bool use_pqc = false;
+    std::vector<std::string> args{argv[0]};
+    std::map<std::string, std::string> namedFields;
+    bool legacyPqc = false;
+    std::string signingOption;
     int aes_bits = 256, ml_dsa = 87;
     bool explicit_aes = false, explicit_dsa = false;
     CPABEScheme scheme = CPABE_SCHEME_AC17;
 
-    for (int i = 0; i < argc; ++i)
+    for (int i = 1; i < argc; ++i)
     {
         std::string arg = argv[i];
         if (arg == "--pqc")
         {
-            use_pqc = true;
+            legacyPqc = true;
+        }
+        else if (arg == "--with-signing-keys" || arg == "--sign" || arg == "--verify")
+        {
+            if (!signingOption.empty() && signingOption != arg)
+            {
+                std::cerr << "Choose one signature action per command.\n";
+                return 1;
+            }
+            signingOption = arg;
         }
         else if (arg == "--aes-bits" || arg == "--ml-dsa")
         {
@@ -141,6 +325,24 @@ int main(int argc, char *argv[])
                 return 1;
             }
         }
+        else if (args.size() == 1 && arg.compare(0, 2, "--") == 0 &&
+                 findNamedCommand(arg.substr(2)))
+        {
+            args.push_back(arg.substr(2));
+        }
+        else if (args.size() >= 2 && findNamedCommand(args[1]) && isNamedField(arg))
+        {
+            if (i + 1 >= argc || std::strncmp(argv[i + 1], "--", 2) == 0)
+            {
+                std::cerr << arg << " requires a value\n";
+                return invalidCommandArguments(args[1]);
+            }
+            if (!namedFields.emplace(arg, argv[++i]).second)
+            {
+                std::cerr << arg << " was specified more than once\n";
+                return invalidCommandArguments(args[1]);
+            }
+        }
         else
         {
             args.push_back(arg);
@@ -149,7 +351,30 @@ int main(int argc, char *argv[])
 
     if (args.size() < 2)
     {
-        printUsage(args[0].c_str());
+        printUsage();
+        return 1;
+    }
+
+    const std::string mode = args[1];
+    const auto isHelp = [](const std::string &value) {
+        return value == "-h" || value == "--help";
+    };
+    if (mode == "help" || isHelp(mode) || (args.size() == 3 && isHelp(args[2])))
+    {
+        if (args.size() == 2)
+        {
+            printUsage();
+            return 0;
+        }
+        if (args.size() == 3)
+        {
+            const auto &command = isHelp(args[2]) ? mode : args[2];
+            if (printCommandHelp(command))
+                return 0;
+            std::cerr << "Unknown command: " << command << '\n';
+        }
+        else
+            std::cerr << "Usage: pq-cp-abe help [command]\n";
         return 1;
     }
 
@@ -163,13 +388,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::string mode = args[1];
-
-    if (mode == "-h" || mode == "--help" || mode == "help")
+    const std::string expectedSigningOption = signingOptionFor(mode);
+    if (!signingOption.empty() && signingOption != expectedSigningOption)
     {
-        printUsage(args[0].c_str());
-        return 0;
+        std::cerr << signingOption << " is not valid for " << mode << ".\n";
+        return invalidCommandArguments(mode);
     }
+    const bool useSignature = legacyPqc || !signingOption.empty();
+    if (!namedFields.empty() && !appendNamedArguments(mode, useSignature, namedFields, args))
+        return invalidCommandArguments(mode);
 
     if (mode == "-v" || mode == "--version" || mode == "version")
     {
@@ -178,10 +405,16 @@ int main(int argc, char *argv[])
     }
 
     int result = HCPABE_SUCCESS;
-    if ((explicit_aes && mode != "encrypt" && mode != "encrypt_buffer") ||
-        (explicit_dsa && (!use_pqc || (mode != "setup" && mode != "setup_buffer" && mode != "encrypt" && mode != "encrypt_buffer")))) {
-        std::cerr << "--aes-bits is for encryption; --ml-dsa requires --pqc setup/encryption. Decryption detects parameters.\n";
-        return 1;
+    if (explicit_aes && expectedSigningOption != "--sign")
+    {
+        std::cerr << "--aes-bits is for encryption. Decryption detects the key size.\n";
+        return invalidCommandArguments(mode);
+    }
+    if (explicit_dsa && (!useSignature || (expectedSigningOption != "--with-signing-keys" &&
+                                           expectedSigningOption != "--sign")))
+    {
+        std::cerr << "--ml-dsa requires --with-signing-keys on setup or --sign on encryption.\n";
+        return invalidCommandArguments(mode);
     }
 
     try
@@ -190,12 +423,16 @@ int main(int argc, char *argv[])
         {
             if (args.size() != 3)
             {
-                std::cerr << "Usage: " << args[0] << " setup [--scheme <name>] [--pqc] <path_or_prefix>" << std::endl;
+                const int status = invalidCommandArguments(mode);
                 if (scheme == CPABE_SCHEME_COVERCRYPT)
-                    printCovercryptHelp(args[0].c_str());
-                return 1;
+                    printCovercryptHelp(std::cerr);
+                return status;
             }
-            if (use_pqc)
+            if (signingOption == "--with-signing-keys")
+            {
+                result = setup_with_ml_dsa_files(args[2].c_str(), scheme, ml_dsa, "ml-dsa");
+            }
+            else if (useSignature)
             {
                 result = explicit_dsa
                     ? hybrid_cpabe_setup_with_ml_dsa(args[2].c_str(), scheme, ml_dsa)
@@ -208,9 +445,9 @@ int main(int argc, char *argv[])
         }
         else if (mode == "add_dimension" || mode == "add_attribute")
         {
-            if (scheme != CPABE_SCHEME_COVERCRYPT || use_pqc)
+            if (scheme != CPABE_SCHEME_COVERCRYPT || useSignature)
             {
-                std::cerr << "Authority growth requires --scheme covercrypt; signing keys remain unchanged (omit --pqc)." << std::endl;
+                std::cerr << "Authority growth requires --scheme covercrypt and takes no signature options.\n";
                 return 1;
             }
             if (mode == "add_dimension")
@@ -244,32 +481,21 @@ int main(int argc, char *argv[])
         else if (mode == "genkey")
         {
             if (args.size() != 5)
-            {
-                std::cerr << "Usage: " << args[0] << " genkey [--scheme <name>] <master_key_file> <attributes> <private_key_file>" << std::endl;
-                return 1;
-            }
+                return invalidCommandArguments(mode);
             result = generateSecretKey_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), scheme);
         }
         else if (mode == "encrypt")
         {
-            if (use_pqc)
+            if (args.size() != (useSignature ? 7 : 6))
+                return invalidCommandArguments(mode);
+            if (useSignature)
             {
-                if (args.size() != 7)
-                {
-                    std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] --pqc <public_key_file> <pqc_private_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
                 result = (explicit_aes || explicit_dsa)
                     ? hybrid_cpabe_encrypt_and_sign_with_params(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme, aes_bits, ml_dsa)
                     : hybrid_cpabe_encrypt_and_sign_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), args[6].c_str(), scheme);
             }
             else
             {
-                if (args.size() != 6)
-                {
-                    std::cerr << "Usage: " << args[0] << " encrypt [--scheme <name>] <public_key_file> <plaintext_file> <policy> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
                 result = explicit_aes
                     ? hybrid_cpabe_encrypt_with_params(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), scheme, aes_bits)
                     : hybrid_cpabe_encrypt_with_scheme(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str(), scheme);
@@ -277,34 +503,23 @@ int main(int argc, char *argv[])
         }
         else if (mode == "decrypt")
         {
-            if (use_pqc)
+            if (args.size() != (useSignature ? 6 : 5))
+                return invalidCommandArguments(mode);
+            if (useSignature)
             {
-                if (args.size() != 6)
-                {
-                    std::cerr << "Usage: " << args[0] << " decrypt --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
-                    return 1;
-                }
                 result = hybrid_cpabe_decrypt_and_verify(args[2].c_str(), args[3].c_str(), args[4].c_str(), args[5].c_str());
             }
             else
             {
-                if (args.size() != 5)
-                {
-                    std::cerr << "Usage: " << args[0] << " decrypt <private_key_file> <ciphertext_file> <recovertext_file>" << std::endl;
-                    return 1;
-                }
                 result = hybrid_cpabe_decrypt(args[2].c_str(), args[3].c_str(), args[4].c_str());
             }
         }
         else if (mode == "encrypt_buffer")
         {
-            if (use_pqc)
+            if (useSignature)
             {
                 if (args.size() != 7)
-                {
-                    std::cerr << "Usage: " << args[0] << " encrypt_buffer [--scheme <name>] --pqc <public_key_file> <pqc_private_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
+                    return invalidCommandArguments(mode);
                 std::ifstream pkFile(args[2], std::ios::binary);
                 if (!pkFile)
                     return 1;
@@ -346,10 +561,7 @@ int main(int argc, char *argv[])
             else
             {
                 if (args.size() != 6)
-                {
-                    std::cerr << "Usage: " << args[0] << " encrypt_buffer [--scheme <name>] <public_key_file> <text_string> <policy> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
+                    return invalidCommandArguments(mode);
                 std::ifstream pkFile(args[2], std::ios::binary);
                 if (!pkFile)
                 {
@@ -383,13 +595,10 @@ int main(int argc, char *argv[])
         }
         else if (mode == "decrypt_buffer")
         {
-            if (use_pqc)
+            if (useSignature)
             {
                 if (args.size() != 5)
-                {
-                    std::cerr << "Usage: " << args[0] << " decrypt_buffer --pqc <private_key_file> <pqc_public_key_file> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
+                    return invalidCommandArguments(mode);
                 std::ifstream skFile(args[2], std::ios::binary);
                 if (!skFile)
                     return 1;
@@ -430,10 +639,7 @@ int main(int argc, char *argv[])
             else
             {
                 if (args.size() != 4)
-                {
-                    std::cerr << "Usage: " << args[0] << " decrypt_buffer <private_key_file> <ciphertext_file>" << std::endl;
-                    return 1;
-                }
+                    return invalidCommandArguments(mode);
                 std::ifstream skFile(args[2], std::ios::binary);
                 if (!skFile)
                 {
@@ -471,7 +677,7 @@ int main(int argc, char *argv[])
         }
         else if (mode == "setup_buffer")
         {
-            if (use_pqc)
+            if (useSignature)
             {
                 unsigned char *abePk = nullptr;
                 size_t abePkLen = 0;
@@ -579,6 +785,14 @@ int main(int argc, char *argv[])
                           << "check HCPABE_COVERCRYPT_MODE as well. Use --help for scripts/covercrypt-demo.json examples."
                           << std::endl;
             }
+        }
+        else if (scheme == CPABE_SCHEME_COVERCRYPT)
+        {
+            // Legacy setup --pqc already reports success when it uses the default parameter set.
+            if (mode == "setup" && (!legacyPqc || explicit_dsa || !signingOption.empty()))
+                std::cout << "CoverCrypt setup successful!\n";
+            else if (mode == "genkey")
+                std::cout << "User key generated successfully: " << args[4] << '\n';
         }
     }
     catch (const std::exception &ex)

@@ -79,18 +79,20 @@ signature in addition to GCM authentication. V1/V2 legacy processing is unchange
 
 ## CLI
 
-No new flags means legacy behavior. Explicit options select V3 encryption:
+Encryption uses the legacy format by default. Passing `--aes-bits` or
+`--ml-dsa` to the encryption command selects V3.
 
 ```sh
-main setup --scheme covercrypt --pqc --ml-dsa 65 keys
-main genkey --scheme covercrypt keys/cpabe_msk.key "admin it" user.key
-main encrypt --scheme covercrypt --pqc --aes-bits 192 --ml-dsa 65 keys/cpabe_pk.key keys/pqc_sk.key message.bin "admin and it" message.enc
-main decrypt --pqc user.key keys/pqc_pk.key message.enc recovered.bin
+pq-cp-abe setup --scheme covercrypt --with-signing-keys --ml-dsa 65 keys
+pq-cp-abe genkey --scheme covercrypt keys/cpabe_msk.key "admin it" user.key
+pq-cp-abe encrypt --scheme covercrypt --sign --aes-bits 192 --ml-dsa 65 keys/cpabe_pk.key keys/ml-dsa_sk.key message.bin "admin and it" message.enc
+pq-cp-abe decrypt --verify user.key keys/ml-dsa_pk.key message.enc recovered.bin
 ```
 
 Create the `keys` directory and configure CoverCrypt dimensions before setup.
-`--aes-bits` is accepted for encrypt/encrypt_buffer. `--ml-dsa` requires
-`--pqc` and setup/setup_buffer/encrypt/encrypt_buffer. Decryption detects parameters.
+`--aes-bits` is accepted for `encrypt` and `encrypt_buffer`. Use `--ml-dsa` with
+`--with-signing-keys` on setup or `--sign` on encryption, including the buffer
+variants. Decryption detects parameters.
 
 ## Python / WASM integration
 

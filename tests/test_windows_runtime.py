@@ -16,7 +16,7 @@ class WindowsRuntimeTests(unittest.TestCase):
     def test_runtime_is_published_for_library_and_cli_consumers(self):
         for relative in (
             "lib/libhybrid-pq-cp-abe.dll", "lib/libcpabe_tkn20.dll",
-            "build/artifacts/windows/main.exe",
+            "build/artifacts/windows/pq-cp-abe.exe",
             "build/artifacts/windows/libcpabe_tkn20.dll",
         ):
             with self.subTest(path=relative):

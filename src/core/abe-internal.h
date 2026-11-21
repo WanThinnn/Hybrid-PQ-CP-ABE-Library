@@ -26,6 +26,7 @@ int hybrid_cpabe_setupBuffer_with_scheme_impl(unsigned char **pkBuffer, size_t *
                                               size_t *mskLen, CPABEScheme scheme);
 
 int hybrid_cpabe_setup_with_pqc_scheme_impl(const char *path, CPABEScheme scheme);
+int setup_with_ml_dsa_files(const char *path, CPABEScheme scheme, int parameter, const char *key_label);
 
 int hybrid_cpabe_setup_with_pqc_impl(const char *path);
 

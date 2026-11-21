@@ -59,7 +59,7 @@ def require_file(path):
 
 def required_outputs(target):
     if target == "windows":
-        core = [f"{LIBRARY}.lib", f"{LIBRARY}.dll", f"{LIBRARY}_dll.lib", "main.exe"]
+        core = [f"{LIBRARY}.lib", f"{LIBRARY}.dll", f"{LIBRARY}_dll.lib", "pq-cp-abe.exe"]
         deps = ["cryptopp/libcryptopp.lib", "cryptopp/cryptopp.dll", "cryptopp/cryptopp.lib",
                 "liboqs/liboqs.lib", "liboqs/liboqs.dll", "liboqs/liboqs_import.lib",
                 "rabe/librabe_ffi.lib", "rabe/rabe_ffi.dll",
@@ -67,7 +67,7 @@ def required_outputs(target):
                 "covercrypt/libcovercrypt_ffi.lib"]
     else:
         extension = "dylib" if target == "macos" else "so"
-        core = [f"{LIBRARY}.a", f"{LIBRARY}.{extension}", "main"]
+        core = [f"{LIBRARY}.a", f"{LIBRARY}.{extension}", "pq-cp-abe"]
         deps = [f"{dep}/{name}.{ext}" for dep, name in (
             ("cryptopp", "libcryptopp"), ("liboqs", "liboqs"),
             ("rabe", "librabe_ffi"), ("tkn20", "libcpabe_tkn20"))
@@ -154,7 +154,7 @@ def stage_package(root, package, target):
     (package / "lib").mkdir()
     (package / "bin").mkdir()
     for name in core:
-        folder = "bin" if name in {"main", "main.exe"} else "lib"
+        folder = "bin" if name in {"pq-cp-abe", "pq-cp-abe.exe"} else "lib"
         shutil.copy2(build / name, package / folder / name)
     shutil.copytree(deps / "lib", package / "lib/deps", ignore=shutil.ignore_patterns(".*"))
     if target == "windows":
@@ -247,7 +247,7 @@ def verify_runtime(archive, target):
         with zipfile.ZipFile(archive) as zipped:
             zipped.extractall(directory)
         package = Path(directory) / archive.stem
-        executable = package / "bin" / ("main.exe" if target == "windows" else "main")
+        executable = package / "bin" / ("pq-cp-abe.exe" if target == "windows" else "pq-cp-abe")
         if target != "windows":
             executable.chmod(0o755)
         subprocess.run([str(executable.resolve()), "version"], cwd=package, check=True)
@@ -292,7 +292,7 @@ def prepare_shared_libraries(package, target):
 def verify_macos_deployment_target(package, arch, deployment_target):
     expected = tuple(int(part) for part in deployment_target.split("."))
     expected += (0,) * (3 - len(expected))
-    cli = package / "bin/main"
+    cli = package / "bin/pq-cp-abe"
     library = package / "lib" / f"{LIBRARY}.dylib"
     for binary in (cli, *sorted((package / "lib").rglob("*.dylib"))):
         slices = subprocess.check_output(["lipo", "-archs", str(binary)], text=True).split()

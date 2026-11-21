@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SYSTEM = platform.system()
 TARGET = {'Windows': 'windows', 'Darwin': 'macos'}.get(SYSTEM, 'linux')
-CLI = ROOT / 'build/artifacts' / TARGET / ('main.exe' if SYSTEM == 'Windows' else 'main')
+CLI = ROOT / 'build/artifacts' / TARGET / ('pq-cp-abe.exe' if SYSTEM == 'Windows' else 'pq-cp-abe')
 
 
 @unittest.skipUnless(CLI.is_file(), 'Build the CLI with make first')
@@ -21,8 +21,8 @@ class CovercryptDemoTests(unittest.TestCase):
     def test_help_documents_configuration_and_version_matches_source(self):
         help = self.call('--help')
         self.assertEqual(help.returncode, 0, help.stderr)
-        for text in ('HCPABE_COVERCRYPT_CONFIG', 'HCPABE_COVERCRYPT_MODE',
-                     'scripts/covercrypt-demo.json', '.env', 'CMD:', 'PowerShell:', 'Linux/macOS:'):
+        for text in ('Usage: pq-cp-abe <command>', 'HCPABE_COVERCRYPT_CONFIG', 'HCPABE_COVERCRYPT_MODE',
+                     'scripts/covercrypt-demo.json', '.env', '--aes-bits', '--ml-dsa'):
             self.assertIn(text, help.stdout)
         version = (ROOT / 'VERSION').read_text().strip()
         self.assertEqual(self.call('--version').stdout.strip(), f'Hybrid PQ-CP-ABE Library v{version}')
@@ -35,6 +35,18 @@ class CovercryptDemoTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('HCPABE_COVERCRYPT_CONFIG', result.stderr)
             self.assertIn('--help', result.stderr)
+            self.assertNotIn('setup successful', result.stdout)
+
+    def test_missing_master_key_does_not_report_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = self.call('--genkey', '--scheme', 'covercrypt',
+                               '--master-key', root / 'missing.key',
+                               '--attributes', 'Department::IT', '--user-key', root / 'user.key')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Operation failed', result.stderr)
+            self.assertNotIn('User key generated successfully', result.stdout)
+            self.assertFalse((root / 'user.key').exists())
 
     def test_demo_roundtrips_with_and_without_signatures(self):
         env = dict(os.environ, HCPABE_COVERCRYPT_CONFIG=str(ROOT / 'scripts/covercrypt-demo.json'),
@@ -46,18 +58,21 @@ class CovercryptDemoTests(unittest.TestCase):
                 prefix, user = root / 'demo', root / 'user.key'
                 plain, cipher, recovered = root / 'plain.txt', root / 'data.enc', root / 'recovered.txt'
                 plain.write_bytes(b'Covercrypt demo\x00roundtrip\xff')
-                flag = ['--pqc'] if signed else []
                 commands = [
-                    ['setup', '--scheme', 'covercrypt', *flag, prefix],
+                    ['setup', '--scheme', 'covercrypt', *(['--with-signing-keys'] if signed else []), prefix],
                     ['genkey', '--scheme', 'covercrypt', str(prefix) + '_msk.key', policy, user],
-                    ['encrypt', '--scheme', 'covercrypt', *flag, str(prefix) + '_pk.key',
-                     *([str(prefix) + '_pqc_sk.key'] if signed else []), plain, policy, cipher],
-                    ['decrypt', *flag, user,
-                     *([str(prefix) + '_pqc_pk.key'] if signed else []), cipher, recovered],
+                    ['encrypt', '--scheme', 'covercrypt', *(['--sign'] if signed else []), str(prefix) + '_pk.key',
+                     *([str(prefix) + '_ml-dsa_sk.key'] if signed else []), plain, policy, cipher],
+                    ['decrypt', *(['--verify'] if signed else []), user,
+                     *([str(prefix) + '_ml-dsa_pk.key'] if signed else []), cipher, recovered],
                 ]
                 for command in commands:
                     result = self.call(*command, env=env)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    if command[0] == 'setup':
+                        self.assertIn('CoverCrypt setup successful!', result.stdout)
+                    elif command[0] == 'genkey':
+                        self.assertIn(f'User key generated successfully: {user}', result.stdout)
                 self.assertEqual(recovered.read_bytes(), plain.read_bytes())
 
     def test_omitting_a_dimension_does_not_grant_its_attributes(self):
