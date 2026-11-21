@@ -62,7 +62,8 @@ class ReleaseScriptTests(unittest.TestCase):
             result = self.call(root, VERSION)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn('Release cancelled.', result.stdout)
-            self.assertIn(f'vault-plugin-abe_linux_x86_64_{TAG}.zip', result.stdout)
+            self.assertIn(f'libhybrid-pq-cp-abe_wasm_{TAG}.zip', result.stdout)
+            self.assertNotIn('vault-plugin-abe_', result.stdout)
             self.assertEqual(self.git(root, 'tag', '--list').stdout, '')
             self.assertEqual(self.git(root, 'status', '--porcelain').stdout, '')
 
