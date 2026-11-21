@@ -23,9 +23,7 @@ Benchmark environment:
 
 Native Buffer API median latency:
 
-<p align="center">
-  <img src="../assets/benchmarks/01_core_latency.png" alt="Native AC17, TKN20 and CoverCrypt core latency" width="900"/>
-</p>
+![Native AC17, TKN20 and CoverCrypt core latency](../assets/benchmarks/01_core_latency.png)
 
 | Scheme | Setup | KeyGen | Encrypt | Decrypt |
 | --- | ---: | ---: | ---: | ---: |
@@ -48,9 +46,7 @@ byte-for-byte equivalent:
 | **CoverCrypt** | 40.511 ms | **1.921 ms** | **18.991 ms** | 72.000 ms |
 | **Charm-Crypto AC17** | 85.063 ms | 204.176 ms | 142.135 ms | 293.191 ms |
 
-<p align="center">
-  <img src="../assets/benchmarks/00_abe_primitive_comparison.png" alt="ABE key-protection primitive comparison" width="900"/>
-</p>
+![ABE key-protection primitive comparison](../assets/benchmarks/00_abe_primitive_comparison.png)
 
 ### Post-Quantum Signature Cost
 
@@ -67,9 +63,7 @@ Those timings include the ABE and payload operations, so they should not be
 interpreted as isolated signature cost. See the snapshot report for per-scheme
 results and variability.
 
-<p align="center">
-  <img src="../assets/benchmarks/03_pqc_overhead.png" alt="ML-DSA-87 Sign-then-Encrypt overhead by scheme" width="900"/>
-</p>
+![ML-DSA-87 Sign-then-Encrypt overhead by scheme](../assets/benchmarks/03_pqc_overhead.png)
 
 ### Reproducibility
 
