@@ -403,3 +403,6 @@ test_api
 !/build/deps/windows/include/**
 demo*
 docs/plan
+
+# Separate documentation website repository kept in this checkout.
+/pq-cp-abe-web/
