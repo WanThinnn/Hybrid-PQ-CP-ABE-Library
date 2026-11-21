@@ -36,8 +36,8 @@ If a suitable prebuilt archive is not available for your OS or architecture, fol
 
 ## Example
 
-This example creates an AC17 authority, issues a key for `admin`, and
-encrypts a file under that policy using AES-192. Run it in a fresh working
+This example uses the v6.0.2 API to create an AC17 authority, issue a key for
+`admin`, and encrypt a file under that policy. Run it in a fresh working
 directory. Setup writes `authority_pk.key` and `authority_msk.key`.
 
 Save as `demo.c`.
@@ -60,8 +60,8 @@ int main(void)
     if (!succeeded(setup_with_scheme("authority", scheme), "setup") ||
         !succeeded(generateSecretKey_with_scheme("authority_msk.key", "admin",
                                                  "user.key", scheme), "keygen") ||
-        !succeeded(hybrid_cpabe_encrypt_with_params("authority_pk.key", "message.txt",
-                                                    "admin", "message.enc", scheme, 192), "encrypt") ||
+        !succeeded(hybrid_cpabe_encrypt_with_scheme("authority_pk.key", "message.txt",
+                                                    "admin", "message.enc", scheme), "encrypt") ||
         !succeeded(hybrid_cpabe_decrypt("user.key", "message.enc", "recovered.txt"), "decrypt"))
         return 1;
 
