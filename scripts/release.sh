@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tag a committed release for native, Linux Vault and WebAssembly packages.
+# Tag a committed release for native and WebAssembly packages.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,7 +10,7 @@ usage() {
     echo "Example: ./scripts/release.sh 6.0.1"
     echo "Retry an unpublished release: ./scripts/release.sh 6.0.1 --replace-tag"
     echo "--replace-tag removes existing local/origin tags after confirmation."
-    echo "GitHub Actions builds Windows, Linux, both macOS architectures, Linux Vault and WebAssembly."
+    echo "GitHub Actions builds Windows, Linux, both macOS architectures, and WebAssembly."
 }
 
 VERSION=""
@@ -49,7 +49,6 @@ echo "Release assets (after every CI build and test passes):"
 for platform in win_x86_64 linux_x86_64 macos_x86_64 macos_arm64; do
     echo "  - libhybrid-pq-cp-abe_${platform}_${TAG}.zip"
 done
-echo "  - vault-plugin-abe_linux_x86_64_${TAG}.zip"
 echo "  - libhybrid-pq-cp-abe_wasm_${TAG}.zip"
 echo "  - SHA256SUMS.txt"
 echo
@@ -128,4 +127,4 @@ fi
 git tag -a "$TAG" -m "Release $TAG"
 git push origin "refs/tags/$TAG"
 echo "Tag $TAG pushed. Follow the Release Library workflow in GitHub Actions."
-echo "The release assets will be attached after all native, Linux Vault and WebAssembly checks succeed."
+echo "The release assets will be attached after all native and WebAssembly checks succeed."

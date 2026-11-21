@@ -14,13 +14,13 @@ Choose the package for your platform. These links point directly to the archive,
 
 <div class="pq-download-grid" markdown>
 
-[:lucide-download: **Windows x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download/v6.0.2/libhybrid-pq-cp-abe_win_x86_64_v6.0.2.zip){ .md-button .pq-download-button data-platform="windows" data-arch="x86_64" }
+[:lucide-download: **Windows x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="windows" data-arch="x86_64" }
 
-[:lucide-download: **Linux x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download/v6.0.2/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2.zip){ .md-button .pq-download-button data-platform="linux" data-arch="x86_64" }
+[:lucide-download: **Linux x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="linux" data-arch="x86_64" }
 
-[:lucide-download: **macOS Apple Silicon**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download/v6.0.2/libhybrid-pq-cp-abe_macos12_arm64_v6.0.2.zip){ .md-button .pq-download-button data-platform="macos" data-arch="arm64" }
+[:lucide-download: **macOS 12+ · Apple Silicon**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="arm64" }
 
-[:lucide-download: **macOS Intel**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download/v6.0.2/libhybrid-pq-cp-abe_macos12_x86_64_v6.0.2.zip){ .md-button .pq-download-button data-platform="macos" data-arch="x86_64" }
+[:lucide-download: **macOS 12+ · Intel**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="x86_64" }
 
 </div>
 
@@ -29,14 +29,14 @@ Choose the package for your platform. These links point directly to the archive,
 Extract the archive and use its `include/` directory for headers and `lib/` directory for linking. Keep the headers and native libraries from the **same release**.
 
 !!! note
-    These direct links target the release, `v6.0.2`. When a new release is published, the asset URLs must be updated because the version is part of each archive filename.
+    The download buttons resolve the latest stable GitHub Release at page load and link to its real versioned archive, for example `libhybrid-pq-cp-abe_linux_x86_64_v6.1.0.zip`. If JavaScript is unavailable, the buttons fall back to the latest Release page. The macOS builds target macOS 12.0 or later.
 
 If a suitable prebuilt archive is not available for your OS or architecture, follow the [build-from-source guide](../native/build.md).
 
 
 ## Example
 
-This example uses the v6.0.2 API to create an AC17 authority, issue a key for
+This example uses the current native API to create an AC17 authority, issue a key for
 `admin`, and encrypt a file under that policy. Run it in a fresh working
 directory. Setup writes `authority_pk.key` and `authority_msk.key`.
 
@@ -76,7 +76,7 @@ Choose the folder that contains both `include/` and `lib/`. For example, after
 extracting the Linux archive into your Downloads folder, the layout is:
 
 ```text
-/home/alex/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2/
+/home/alex/Downloads/libhybrid-pq-cp-abe_linux_x86_64_vX.Y.Z/
 ├── include/
 │   └── hybrid_pq_cp_abe/
 │       └── hybrid-pq-cp-abe.h
@@ -89,7 +89,7 @@ directory, such as `/home/alex`. Adjust the folder name and version to match
 the archive you actually extracted:
 
 ```sh
-SDK="$HOME/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2"
+SDK="$HOME/Downloads/libhybrid-pq-cp-abe_linux_x86_64_vX.Y.Z"
 ```
 
 Create a separate folder for the example, then save the C code above as
