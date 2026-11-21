@@ -16,52 +16,42 @@ CLI = ROOT / 'build/artifacts' / TARGET / ('pq-cp-abe.exe' if SYSTEM == 'Windows
 @unittest.skipUnless(CLI.is_file(), 'Build the CLI first')
 class CovercryptGrowthTests(unittest.TestCase):
     def test_public_buffer_growth_in_all_modes(self):
-        import ctypes as c
         import sys
-        sys.path.insert(0, str(ROOT / 'benchmark'))
-        from benchmark_full import COVERCRYPT, Native, find_lib
-
-        native = Native(find_lib(ROOT, None))
-        out = [c.POINTER(native.P8), c.POINTER(c.c_size_t)] * 2
-        dimension = native.lib.hybrid_cpabe_covercrypt_add_dimensionBuffer
-        attribute = native.lib.hybrid_cpabe_covercrypt_add_attributeBuffer
-        dimension.argtypes = [native.P8, c.c_size_t, c.c_char_p, *out]
-        attribute.argtypes = [native.P8, c.c_size_t, c.c_char_p, c.c_char_p, c.c_char_p, *out]
-        dimension.restype = attribute.restype = c.c_int
-
-        def grow(function, master, *args):
-            pk, msk = native.P8(), native.P8()
-            pkl, mskl = c.c_size_t(), c.c_size_t()
-            status = function(native.arr(master), len(master), *args,
-                              c.byref(pk), c.byref(pkl), c.byref(msk), c.byref(mskl))
-            public, secret = native.take(pk, pkl.value), native.take(msk, mskl.value)
-            native.check(status, 'grow authority buffer')
-            return public, secret
+        sys.path.insert(0, str(ROOT / 'bindings' / 'python'))
+        import pq_cp_abe as pq
 
         names = ('HCPABE_COVERCRYPT_CONFIG', 'HCPABE_COVERCRYPT_MODE')
         original = {name: os.environ.get(name) for name in names}
         try:
             with tempfile.TemporaryDirectory() as directory:
                 config = Path(directory) / 'config.json'
-                config.write_text('{"dimensions":[{"name":"A","attributes":["present"]}]}')
+                config_data = {'dimensions': [{'name': 'A', 'attributes': ['present']}]}
+                config.write_text(json.dumps(config_data))
                 os.environ[names[0]] = str(config)
-                for mode in ('classic', 'post_quantum', 'hybridized'):
-                    with self.subTest(mode=mode):
-                        os.environ[names[1]] = mode
-                        pk, msk = native.setup_buffer(COVERCRYPT)
-                        user = native.genkey_buffer(msk, 'A::present', COVERCRYPT)
-                        before = native.encrypt_buffer(pk, b'old data', 'A::present', COVERCRYPT)
-                        pk, msk = grow(dimension, msk, b'{"name":"E","attributes":["present"]}')
-                        pk, msk = grow(attribute, msk, b'E', b'added', None)
-                        after = native.encrypt_buffer(pk, b'new data', 'A::present && E::added', COVERCRYPT)
-                        with self.assertRaisesRegex(RuntimeError, r'\(-3\)'):
-                            native.decrypt_buffer(user, after)
-                        updated = native.genkey_buffer(msk, 'A::present && E::added', COVERCRYPT)
-                        self.assertEqual(native.decrypt_buffer(updated, after), b'new data')
-                        self.assertEqual(native.decrypt_buffer(updated, before), b'old data')
-                        self.assertEqual(native.decrypt_buffer(user, before), b'old data')
-                        old_policy = native.encrypt_buffer(pk, b'same rights', 'A::present', COVERCRYPT)
-                        self.assertEqual(native.decrypt_buffer(user, old_policy), b'same rights')
+                for mode, env_mode in (
+                    (pq.KemMode.CLASSIC, 'classic'),
+                    (pq.KemMode.POST_QUANTUM, 'post_quantum'),
+                    (pq.KemMode.HYBRIDIZED, 'hybridized'),
+                ):
+                    with self.subTest(mode=env_mode):
+                        os.environ[names[1]] = env_mode
+                        backend = pq.CoverCryptABE(config=config_data, mode=mode)
+                        pk, msk = backend.setup()
+                        user = backend.keygen(msk, 'A::present')
+                        before = backend.encrypt(pk, b'old data', 'A::present')
+                        pk, msk = backend.add_dimension(
+                            msk, json.dumps({'name': 'E', 'attributes': ['present']})
+                        )
+                        pk, msk = backend.add_attribute(msk, 'E', 'added')
+                        after = backend.encrypt(pk, b'new data', 'A::present && E::added')
+                        with self.assertRaisesRegex(RuntimeError, r'code: -3'):
+                            backend.decrypt(user, after)
+                        updated = backend.keygen(msk, 'A::present && E::added')
+                        self.assertEqual(backend.decrypt(updated, after), b'new data')
+                        self.assertEqual(backend.decrypt(updated, before), b'old data')
+                        self.assertEqual(backend.decrypt(user, before), b'old data')
+                        old_policy = backend.encrypt(pk, b'same rights', 'A::present')
+                        self.assertEqual(backend.decrypt(user, old_policy), b'same rights')
         finally:
             for name, value in original.items():
                 if value is None:
