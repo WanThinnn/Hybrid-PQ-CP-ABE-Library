@@ -1,4 +1,8 @@
-# Native runtime parameters (6.1 API)
+---
+icon: lucide/sliders-horizontal
+---
+
+# Native runtime parameters
 
 This is an additive C ABI. Existing entry points retain their signatures and
 defaults, including V2 encryption, AES-256 and ML-DSA-87 signing. New decryptors

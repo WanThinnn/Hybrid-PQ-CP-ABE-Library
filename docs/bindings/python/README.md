@@ -1,4 +1,8 @@
-# Python SDK — guide
+---
+icon: lucide/file-code-2
+---
+
+# Guide
 
 The `pq-cp-abe` Python package exposes the project's native C ABI using `ctypes`. It **does not run WebAssembly**. On supported operating systems, a compatible platform wheel includes the native runtime.
 

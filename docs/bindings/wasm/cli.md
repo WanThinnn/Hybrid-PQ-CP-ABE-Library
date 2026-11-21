@@ -1,4 +1,8 @@
-# WebAssembly/npm — CLI, builds and publishing
+---
+icon: lucide/terminal
+---
+
+# CLI, builds and publishing
 
 The npm package exposes a Node.js CLI backed by WASM. It uses **real host paths** by copying files into the module's virtual filesystem before invoking native functions, then writing results back to disk.
 

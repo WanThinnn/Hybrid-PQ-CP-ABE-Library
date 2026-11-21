@@ -1,4 +1,8 @@
-# HashiCorp Vault integration
+---
+icon: lucide/key-round
+---
+
+# HashiCorp Vault
 
 The Linux ABE secrets engine runs the native library inside Vault. Each
 mount stores one authority and keeps its master secret in Vault storage.

@@ -1,18 +1,21 @@
+---
+icon: lucide/hammer
+---
+
 # Build from source
 
 ## Building (Multi-OS)
-> [!IMPORTANT]
-> This library integrates the following cryptographic primitives and dependencies:
-- [CryptoPP Library](https://github.com/weidai11/cryptopp)
-- [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
-- [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2019/966) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
-- [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - used for optional ML-DSA-87 signatures)
-- [HashiCorp Vault Secrets Engine](../../plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
-- [Cosmian CoverCrypt](https://eprint.iacr.org/2025/544) via [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (native ABE integration with Classic, PostQuantum and Hybridized modes; see `vendor/cover_crypt/`)
+!!! important
+    This library integrates the following cryptographic primitives and dependencies:
+    - [CryptoPP Library](https://github.com/weidai11/cryptopp)
+    - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
+    - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2019/966) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
+    - [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - used for optional ML-DSA-87 signatures)
+    - [HashiCorp Vault Secrets Engine](../../plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
+    - [Cosmian CoverCrypt](https://eprint.iacr.org/2025/544) via [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (native ABE integration with Classic, PostQuantum and Hybridized modes; see `vendor/cover_crypt/`)
 
-> [!NOTE]
->
-> **Dependency source of truth:** third-party source is vendored under `vendor/`. Built dependency headers and libraries are normalized under `build/deps/<platform>/`; the top level of that directory contains only `include/` and `lib/` after a successful dependency build.
+!!! note
+    **Dependency source of truth:** third-party source is vendored under `vendor/`. Built dependency headers and libraries are normalized under `build/deps/<platform>/`; the top level of that directory contains only `include/` and `lib/` after a successful dependency build.
 
 For maintainer-only upstream Git histories and update commands, see
 [vendor/README.md](../../vendor/README.md). Source stays vendored; ordinary clones do

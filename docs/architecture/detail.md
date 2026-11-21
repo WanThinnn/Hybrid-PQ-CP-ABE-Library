@@ -1,4 +1,8 @@
-# CP-ABE and CoverCrypt Cryptographic Workflow
+---
+icon: lucide/git-branch
+---
+
+# Cryptographic Workflow
 
 The classical CP-ABE section explains how an authority issues keys and how
 an access policy controls decryption. The post-quantum ABE section follows

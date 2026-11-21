@@ -1,4 +1,8 @@
-# Release maintenance
+---
+icon: lucide/tags
+---
+
+# Release
 
 Pushing a `v*` tag or publishing a GitHub Release builds and tests Windows x64
 (MSVC), Linux x86_64, macOS Intel, and macOS Apple Silicon on native runners.

@@ -1,3 +1,7 @@
+---
+icon: lucide/file-cog
+---
+
 # Generate Python class/function documentation
 
 The SDK already exposes type annotations, a `py.typed` marker and some docstrings. API documentation generators can list its modules, public classes, methods and signatures automatically. **They cannot invent missing parameter semantics or security guarantees:** improve the docstrings and keep the curated [API reference](api.md) for behavior and caveats.

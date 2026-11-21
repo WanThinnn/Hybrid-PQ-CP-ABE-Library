@@ -1,4 +1,8 @@
-# JavaScript / TypeScript WebAssembly SDK
+---
+icon: lucide/cpu
+---
+
+# WebAssembly SDK
 
 The `@wanthinnn/pq-cp-abe` npm package executes the project's cryptographic code through **WebAssembly**, not a native Node.js `.node` addon. It supports Node.js and modern browsers. C++/Rust/Crypto++/liboqs run in an Emscripten module, while CIRCL/TKN20 uses a separate Go `js/wasm` runtime.
 

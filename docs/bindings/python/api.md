@@ -1,4 +1,8 @@
-# Python SDK — API reference
+---
+icon: lucide/braces
+---
+
+# API reference
 
 This is a curated reference to the **implemented v6.1-style API**, not automatically generated from docstrings. For the original implementation see [`bindings/python/pq_cp_abe/`](../../../bindings/python/pq_cp_abe/) and [Python type annotations](../../../bindings/python/pq_cp_abe/api/functional.py).
 

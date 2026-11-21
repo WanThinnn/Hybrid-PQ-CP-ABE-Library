@@ -1,3 +1,7 @@
+---
+icon: lucide/boxes
+---
+
 # Language bindings
 
 The repository provides two primary developer SDKs. The native library and command-line tool have their own [build guide](../native/build.md) and [CLI reference](../native/cli.md).

@@ -1,3 +1,7 @@
+---
+icon: lucide/code-xml
+---
+
 # Native C and C++ API
 
 Use the native API when your application links the SDK directly. C and C++

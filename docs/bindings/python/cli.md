@@ -1,4 +1,8 @@
-# Python SDK — CLI and file workflows
+---
+icon: lucide/terminal
+---
+
+# CLI and file workflows
 
 The Python wheel installs a `pq-cp-abe` console script. When both the native CLI and Python wheel are installed, invoke `python -m pq_cp_abe` to **explicitly choose the Python implementation**.
 

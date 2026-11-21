@@ -1,3 +1,7 @@
+---
+icon: lucide/terminal
+---
+
 # Command-line usage
 
 ## Command reference

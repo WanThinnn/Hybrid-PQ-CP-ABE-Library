@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none" role="img" aria-label="PQ-CP-ABE shield">
+  <rect width="40" height="40" rx="11" fill="#3F51B5"/>
+  <path d="M20 8.2c3.15 2.75 6.15 4.1 9 4.1v7.1c0 6.2-4.05 10.05-9 12.1-4.95-2.05-9-5.9-9-12.1v-7.1c2.85 0 5.85-1.35 9-4.1Z" stroke="#fff" stroke-width="2.3" stroke-linejoin="round"/>
+  <path d="m15.8 20.1 2.7 2.7 5.7-5.9" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

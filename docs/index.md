@@ -1,3 +1,7 @@
+---
+icon: lucide/house
+---
+
 <div class="pq-hero" markdown>
 
 <span class="pq-eyebrow">:lucide-shield-check: Post-quantum access control SDK</span>
@@ -87,6 +91,12 @@ CoverCrypt adds ML-KEM based post-quantum key encapsulation, while optional ML-D
 
 - :lucide-fingerprint:{ .lg .middle } **SHA3-256**  
   Cryptographic hashing for data integrity verification and secure fingerprinting.
+
+- :lucide-key-round:{ .lg .middle } **Curve25519**  
+  Classical elliptic-curve key agreement used by CoverCrypt in hybridized mode.
+
+- :lucide-layers-3:{ .lg .middle } **CoverCrypt**  
+  Policy-based key encapsulation with classic, post-quantum, and hybridized modes.
   
 </div>
 

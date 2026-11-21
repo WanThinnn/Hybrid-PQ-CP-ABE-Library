@@ -1,3 +1,7 @@
+---
+icon: lucide/chart-bar
+---
+
 # Benchmarks
 
 ### Published Benchmark Snapshot
@@ -20,7 +24,7 @@ Benchmark environment:
 Native Buffer API median latency:
 
 <p align="center">
-  <img src="../benchmark/published/2026-11-01_i5-12450HX_standard/charts/01_core_latency.png" alt="Native AC17, TKN20 and CoverCrypt core latency" width="900"/>
+  <img src="../assets/benchmarks/01_core_latency.png" alt="Native AC17, TKN20 and CoverCrypt core latency" width="900"/>
 </p>
 
 | Scheme | Setup | KeyGen | Encrypt | Decrypt |
@@ -45,7 +49,7 @@ byte-for-byte equivalent:
 | **Charm-Crypto AC17** | 85.063 ms | 204.176 ms | 142.135 ms | 293.191 ms |
 
 <p align="center">
-  <img src="../benchmark/published/2026-11-01_i5-12450HX_standard/charts/00_abe_primitive_comparison.png" alt="ABE key-protection primitive comparison" width="900"/>
+  <img src="../assets/benchmarks/00_abe_primitive_comparison.png" alt="ABE key-protection primitive comparison" width="900"/>
 </p>
 
 ### Post-Quantum Signature Cost
@@ -64,7 +68,7 @@ interpreted as isolated signature cost. See the snapshot report for per-scheme
 results and variability.
 
 <p align="center">
-  <img src="../benchmark/published/2026-11-01_i5-12450HX_standard/charts/03_pqc_overhead.png" alt="ML-DSA-87 Sign-then-Encrypt overhead by scheme" width="900"/>
+  <img src="../assets/benchmarks/03_pqc_overhead.png" alt="ML-DSA-87 Sign-then-Encrypt overhead by scheme" width="900"/>
 </p>
 
 ### Reproducibility
@@ -78,14 +82,14 @@ The published snapshot includes:
 - [`charts/`](../../benchmark/published/2026-11-01_i5-12450HX_standard/charts/) — generated benchmark figures.
 - [`benchmark/`](../../benchmark/) — scripts and instructions required to reproduce the tests.
 
-> [!IMPORTANT]
-> **Benchmark comparison scope:** native AC17/TKN20 use the in-memory Buffer
-> API and byte-oriented hybrid pipeline. CoverCrypt uses its shared KEM secret
-> with AES-GCM to wrap key material. Charm-Crypto AC17 operates on a GT group
-> element, so it is a reference rather than a strict equivalent. Results are
-> specific to this machine and workload, not universal speedup claims.
+!!! important
+    **Benchmark comparison scope:** native AC17/TKN20 use the in-memory Buffer
+    API and byte-oriented hybrid pipeline. CoverCrypt uses its shared KEM secret
+    with AES-GCM to wrap key material. Charm-Crypto AC17 operates on a GT group
+    element, so it is a reference rather than a strict equivalent. Results are
+    specific to this machine and workload, not universal speedup claims.
 
-> [!NOTE]
-> This library provides native C/C++ integrations for **AC17**, **TKN20**, and
-> **CoverCrypt**. For projects that need a broader research-oriented collection
-> of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.
+!!! note
+    This library provides native C/C++ integrations for **AC17**, **TKN20**, and
+    **CoverCrypt**. For projects that need a broader research-oriented collection
+    of cryptographic schemes such as KP-ABE or IBE, [Charm-Crypto](https://github.com/JHUISI/charm) remains a broader framework.

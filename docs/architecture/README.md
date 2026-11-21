@@ -1,18 +1,22 @@
+---
+icon: lucide/network
+---
+
 # Architecture and schemes
 
-> [!NOTE]
-> This library provides two distinct PQC capabilities: optional **ML-DSA-87**
-> signatures in the Sign-then-Encrypt flow through `liboqs`, and native
-> **CoverCrypt** key encapsulation with **ML-KEM-768** in `hybridized` or
-> `post_quantum` mode. ML-DSA-87 signatures alone do not make AC17 or TKN20
-> quantum-resistant.
+!!! note
+    This library provides two distinct PQC capabilities: optional **ML-DSA-87**
+    signatures in the Sign-then-Encrypt flow through `liboqs`, and native
+    **CoverCrypt** key encapsulation with **ML-KEM-768** in `hybridized` or
+    `post_quantum` mode. ML-DSA-87 signatures alone do not make AC17 or TKN20
+    quantum-resistant.
 
-> [!IMPORTANT]
-> AC17 and TKN20 remain classical pairing-based ABE. CoverCrypt uses
-> Curve25519 + ML-KEM-768 by default (`hybridized` mode), or can be configured
-> for `post_quantum` or `classic` mode. ML-DSA-87 signing is optional and
-> independent of the CoverCrypt mode. Historical v5.2 benchmark results below
-> describe AC17/TKN20 only.
+!!! important
+    AC17 and TKN20 remain classical pairing-based ABE. CoverCrypt uses
+    Curve25519 + ML-KEM-768 by default (`hybridized` mode), or can be configured
+    for `post_quantum` or `classic` mode. ML-DSA-87 signing is optional and
+    independent of the CoverCrypt mode. Historical v5.2 benchmark results below
+    describe AC17/TKN20 only.
 
 ## Native interface and source layout
 

@@ -19,16 +19,32 @@
   backdrop-filter: blur(12px);
 }
 
-/* Home already exposes the top-level navigation tabs. Remove the otherwise
-   redundant left navigation rail only on the landing page so its content can
-   use the full documentation width. */
+/* Brand mark: compact cryptography lock with an emerald tile. */
+.md-header .md-logo img,
+.md-header .md-logo svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.md-nav__title .md-logo img,
+.md-nav__title .md-logo svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Home is a landing page: top-level tabs already provide navigation, and the
+   page does not need an "On this page" rail. Remove both desktop sidebars so
+   the hero and cards can use the full documentation canvas. */
 @media screen and (min-width: 76.25em) {
-  .md-main__inner:has(.pq-hero) > .md-sidebar--primary {
+  .md-main__inner:has(.pq-hero) > .md-sidebar--primary,
+  .md-main__inner:has(.pq-hero) > .md-sidebar--secondary {
     display: none;
   }
 
   .md-main__inner:has(.pq-hero) > .md-content {
     margin-left: 0;
+    margin-right: 0;
+    max-width: none;
   }
 }
 
@@ -93,10 +109,14 @@
 }
 
 .md-typeset .pq-actions {
+  margin-top: 0.8rem;
+}
+
+.md-typeset .pq-actions > p {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  margin-top: 0.8rem;
+  margin: 0;
 }
 
 .md-typeset .pq-actions .md-button {
@@ -171,12 +191,17 @@
     border-radius: 14px;
   }
 
-  .md-typeset .pq-actions {
+  .md-typeset .pq-actions > p {
     display: grid;
+    row-gap: 0.65rem;
+    margin: 0;
   }
 
   .md-typeset .pq-actions .md-button {
+    display: block;
     width: 100%;
+    margin: 0 !important;
+    box-sizing: border-box;
     text-align: center;
   }
 }

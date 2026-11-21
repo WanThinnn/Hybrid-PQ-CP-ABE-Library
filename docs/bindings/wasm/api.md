@@ -1,4 +1,8 @@
-# JavaScript / TypeScript WebAssembly SDK — API reference
+---
+icon: lucide/braces
+---
+
+# API reference
 
 This page describes the implemented public API in [`bindings/wasm/loader.d.mts`](../../../bindings/wasm/loader.d.mts), [`api/functional.mjs`](../../../bindings/wasm/api/functional.mjs), [`abe/`](../../../bindings/wasm/abe/) and [`primitives/`](../../../bindings/wasm/primitives/). Use the declaration file for fully typed field definitions.
 
