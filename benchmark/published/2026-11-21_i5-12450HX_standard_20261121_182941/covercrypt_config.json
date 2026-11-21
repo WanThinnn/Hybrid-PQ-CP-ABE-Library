@@ -1,0 +1,36 @@
+{
+  "dimensions": [
+    {
+      "name": "BENCH_D1",
+      "attributes": [
+        "V1",
+        "V2",
+        "V3"
+      ]
+    },
+    {
+      "name": "BENCH_D2",
+      "attributes": [
+        "V1",
+        "V2",
+        "V3"
+      ]
+    },
+    {
+      "name": "BENCH_D3",
+      "attributes": [
+        "V1",
+        "V2",
+        "V3"
+      ]
+    },
+    {
+      "name": "BENCH_D4",
+      "attributes": [
+        "V1",
+        "V2",
+        "V3"
+      ]
+    }
+  ]
+}

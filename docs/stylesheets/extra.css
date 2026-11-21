@@ -251,11 +251,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  overflow: visible;
 }
 
 .md-path.pq-page-context-row .md-path__list {
   flex: 1 1 auto;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.md-path.pq-page-context-row .md-path__list::-webkit-scrollbar {
+  display: none;
 }
 
 .pq-page-tools {
@@ -273,19 +281,30 @@
   width: 1.95rem;
   height: 1.95rem;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 44%, transparent);
   border-radius: 0.5rem;
-  background: var(--md-default-bg-color);
-  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 11%, var(--md-default-bg-color));
+  color: var(--md-primary-fg-color);
   cursor: pointer;
-  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+  transform: scale(1);
+  transform-origin: center;
+  transition:
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 160ms ease;
 }
 
-.pq-page-tools__trigger:hover,
+.pq-page-tools__trigger:hover {
+  transform: scale(1.06);
+  border-color: color-mix(in srgb, var(--md-primary-fg-color) 58%, transparent);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 14%, var(--md-default-bg-color));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--md-primary-fg-color) 14%, transparent);
+}
+
 .pq-page-tools--open .pq-page-tools__trigger {
-  border-color: color-mix(in srgb, var(--md-primary-fg-color) 38%, transparent);
-  background: var(--pq-soft-surface);
-  color: var(--md-primary-fg-color);
+  border-color: color-mix(in srgb, var(--md-primary-fg-color) 58%, transparent);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 14%, var(--md-default-bg-color));
 }
 
 .pq-page-tools__trigger svg {
@@ -360,6 +379,64 @@
 
 .md-nav__link--active {
   font-weight: 650;
+}
+
+/* The theme uses a floating TOC below 60em; keep that mobile UI intact. */
+.pq-toc-header {
+  display: none;
+}
+
+@media screen and (min-width: 60em) {
+  .pq-toc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+    /* Match the breadcrumb/page-actions row's vertical inset. */
+    padding-top: 0.5rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--pq-card-border);
+  }
+
+  .pq-toc-header__title {
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .pq-toc-toggle:focus-visible {
+    outline: 2px solid var(--md-accent-fg-color);
+    outline-offset: 2px;
+  }
+
+  .pq-toc-ready .md-nav--secondary > .md-nav__title {
+    display: none;
+  }
+
+  .md-sidebar--secondary.pq-toc-collapsed {
+    width: 2.4rem;
+    max-width: 2.4rem;
+    flex-basis: 2.4rem;
+  }
+
+  .pq-toc-collapsed .md-sidebar__scrollwrap,
+  .pq-toc-collapsed .md-sidebar__inner {
+    width: 100%;
+  }
+
+  .pq-toc-collapsed .pq-toc-header {
+    justify-content: center;
+    border-bottom: 0;
+  }
+
+  .pq-toc-collapsed .pq-toc-toggle svg {
+    transform: rotate(180deg);
+  }
+
+  .pq-toc-collapsed .pq-toc-header__title,
+  .pq-toc-collapsed .md-nav--secondary {
+    display: none;
+  }
 }
 
 .pq-section-nav-icon {

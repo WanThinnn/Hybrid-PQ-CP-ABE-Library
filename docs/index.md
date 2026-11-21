@@ -111,5 +111,5 @@ CoverCrypt adds ML-KEM based post-quantum key encapsulation, while optional ML-D
 
 [Parameters and ciphertext format](native/parameters.md) ·
 [Build from source](native/build.md) ·
-[Benchmarks](project/benchmarks.md) ·
+[Benchmarks](architecture/benchmarks.md) ·
 [Release notes](project/releases.md)

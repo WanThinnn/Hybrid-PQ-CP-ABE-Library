@@ -14,4 +14,4 @@ the standalone shared C ABI under `build/deps/<platform>/lib/covercrypt/`.
 
 Results go into `build/reports/covercrypt/`. No key material is written to the
 reports. These are local diagnostic measurements, not publication benchmarks.
-For the full benchmark suite, use `benchmark/benchmark_full.py`.
+For the full benchmark suite, use `benchmark/main.py`.
