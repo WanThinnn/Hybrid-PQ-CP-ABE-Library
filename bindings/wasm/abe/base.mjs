@@ -20,7 +20,7 @@ export class BaseCPABE {
   encrypt() { throw new TypeError('Implement encrypt'); }
   decrypt() { throw new TypeError('Implement decrypt'); }
   generateSecretKey(options) { return this.keygen(options); }
-  setupWithSigning() { return this.api.setupWithSigning({ scheme: this.scheme }); }
+  setupWithSigning(options) { return this.api.setupWithSigning({ ...options, scheme: this.scheme }); }
   encryptAndSign(options) { return this.api.encryptAndSign({ ...options, scheme: this.scheme }); }
   decryptAndVerify(options) { return this.api.decryptAndVerify(options); }
 }

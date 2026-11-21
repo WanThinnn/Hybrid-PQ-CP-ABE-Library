@@ -9,6 +9,7 @@ export class MlKem extends NativePrimitive {
   }
   get parameterSet() { return this.#parameter; }
   generateKeypair() { return this.api.mlKemGenerateKeypair({ parameterSet: this.parameterSet }); }
+  getSizes() { return this.api.mlKemGetSizes({ parameterSet: this.parameterSet }); }
   encapsulate(options) { return this.api.mlKemEncapsulate({ ...options, parameterSet: this.parameterSet }); }
   decapsulate(options) { return this.api.mlKemDecapsulate({ ...options, parameterSet: this.parameterSet }); }
 }

@@ -23,11 +23,12 @@ __all__ = [
     "aes_gcm_generate_key", "aes_gcm_encrypt", "aes_gcm_decrypt",
     "ml_dsa_generate_keypair", "ml_dsa_sign", "ml_dsa_verify",
     "ml_kem_generate_keypair", "ml_kem_encapsulate", "ml_kem_decapsulate",
-    "KemMode", "covercrypt_setup",
+    "KemMode", "covercrypt_setup", "covercrypt_ml_kem_parameter_set",
+    "covercrypt_add_dimension_with_mode", "ml_dsa_get_sizes", "ml_kem_get_sizes",
 ]
 
 
-def _outputs(name, *arguments, count=1, scheme=None):
+def _outputs(name, *arguments, count=1, scheme=None, parameters=()):
     outputs = [(c_ubyte_p(), ctypes.c_size_t()) for _ in range(count)]
     args = list(arguments)
     for pointer, size in outputs:
@@ -35,7 +36,7 @@ def _outputs(name, *arguments, count=1, scheme=None):
     if scheme is not None:
         args.append(int(Scheme(scheme)))
     try:
-        _check(get_function(name)(*args), name)
+        _check(get_function(name)(*args, *parameters), name)
         values = tuple(ctypes.string_at(pointer, size.value) if size.value else b""
                        for pointer, size in outputs)
         return values[0] if count == 1 else values
@@ -64,9 +65,45 @@ def covercrypt_setup(config_json: str, *, mode: KemMode = KemMode.HYBRIDIZED) ->
                                    _str(config_json), int(KemMode(mode)), count=2))
 
 
-def setup_with_signing(*, scheme: Scheme = Scheme.COVERCRYPT) -> AuthoritySigningKeys:
+def covercrypt_ml_kem_parameter_set() -> MlKemParameterSet:
+    return MlKemParameterSet(get_function("hybrid_cpabe_covercrypt_ml_kem_parameter_set")())
+
+
+def covercrypt_add_dimension_with_mode(master_secret_key: bytes, dimension_json: str, *,
+                                       mode: KemMode = KemMode.HYBRIDIZED) -> AuthorityKeys:
+    return AuthorityKeys(*_outputs("hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode",
+                                   *_buffer(master_secret_key), _str(dimension_json), int(KemMode(mode)), count=2))
+
+
+def _sizes(name, parameter, count):
+    lengths = [ctypes.c_size_t() for _ in range(count)]
+    _check(get_function(name)(int(parameter), *(ctypes.byref(length) for length in lengths)), name)
+    return tuple(length.value for length in lengths)
+
+
+def ml_dsa_get_sizes(parameter_set: MlDsaParameterSet = MlDsaParameterSet.ML_DSA_87) -> tuple[int, int, int]:
+    """Return public key, secret key and signature sizes in bytes."""
+    return _sizes("ml_dsa_get_sizes", MlDsaParameterSet(parameter_set), 3)
+
+
+def ml_kem_get_sizes(parameter_set: MlKemParameterSet = MlKemParameterSet.ML_KEM_768) -> tuple[int, int, int, int]:
+    """Return public key, secret key, ciphertext and shared secret sizes in bytes."""
+    return _sizes("ml_kem_get_sizes", MlKemParameterSet(parameter_set), 4)
+
+
+def setup_with_signing(*, scheme: Scheme = Scheme.COVERCRYPT,
+                       ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> AuthoritySigningKeys:
     """Create an authority and ML-DSA signing keys for encrypt_and_sign."""
-    return AuthoritySigningKeys(*_outputs("hybrid_cpabe_setupBuffer_with_pqc_scheme", count=4, scheme=scheme))
+    if ml_dsa_parameter_set is None:
+        return AuthoritySigningKeys(*_outputs("hybrid_cpabe_setupBuffer_with_pqc_scheme", count=4, scheme=scheme))
+    return AuthoritySigningKeys(*_outputs("hybrid_cpabe_setupBuffer_with_ml_dsa", count=4, scheme=scheme,
+                                         parameters=(MlDsaParameterSet(ml_dsa_parameter_set),)))
+
+
+def _aes_bits(value):
+    if value not in (128, 192, 256):
+        raise ValueError("AES key size must be 128, 192 or 256 bits")
+    return value
 
 
 def generate_secret_key(master_secret_key: bytes, attributes: str, *,
@@ -76,9 +113,12 @@ def generate_secret_key(master_secret_key: bytes, attributes: str, *,
 
 
 def encrypt(public_key: bytes, plaintext: bytes, policy: str, *,
-            scheme: Scheme = Scheme.COVERCRYPT) -> bytes:
-    return _outputs("hybrid_cpabe_encryptBuffer_with_scheme",
-                    *_buffer(public_key), *_buffer(plaintext), _str(policy), scheme=scheme)
+            scheme: Scheme = Scheme.COVERCRYPT, aes_key_bits: int | None = None) -> bytes:
+    arguments = (*_buffer(public_key), *_buffer(plaintext), _str(policy))
+    if aes_key_bits is None:
+        return _outputs("hybrid_cpabe_encryptBuffer_with_scheme", *arguments, scheme=scheme)
+    return _outputs("hybrid_cpabe_encryptBuffer_with_params", *arguments, scheme=scheme,
+                    parameters=(_aes_bits(aes_key_bits),))
 
 
 def decrypt(secret_key: bytes, ciphertext: bytes) -> bytes:
@@ -87,10 +127,15 @@ def decrypt(secret_key: bytes, ciphertext: bytes) -> bytes:
 
 
 def encrypt_and_sign(public_key: bytes, signing_key: bytes, plaintext: bytes,
-                     policy: str, *, scheme: Scheme = Scheme.COVERCRYPT) -> bytes:
-    return _outputs("hybrid_cpabe_encryptBuffer_and_sign_with_scheme",
-                    *_buffer(public_key), *_buffer(signing_key), *_buffer(plaintext),
-                    _str(policy), scheme=scheme)
+                     policy: str, *, scheme: Scheme = Scheme.COVERCRYPT,
+                     aes_key_bits: int | None = None,
+                     ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> bytes:
+    arguments = (*_buffer(public_key), *_buffer(signing_key), *_buffer(plaintext), _str(policy))
+    if aes_key_bits is None and ml_dsa_parameter_set is None:
+        return _outputs("hybrid_cpabe_encryptBuffer_and_sign_with_scheme", *arguments, scheme=scheme)
+    return _outputs("hybrid_cpabe_encryptBuffer_and_sign_with_params", *arguments, scheme=scheme,
+                    parameters=(_aes_bits(256 if aes_key_bits is None else aes_key_bits),
+                                MlDsaParameterSet(87 if ml_dsa_parameter_set is None else ml_dsa_parameter_set)))
 
 
 def decrypt_and_verify(secret_key: bytes, verification_key: bytes, ciphertext: bytes) -> bytes:
@@ -104,9 +149,16 @@ def setup_files(output_path: str | PathLike[str], *, scheme: Scheme = Scheme.COV
 
 
 def setup_files_with_signing(output_path: str | PathLike[str], *,
-                             scheme: Scheme = Scheme.COVERCRYPT) -> None:
-    _check(abe_lib.hybrid_cpabe_setup_with_pqc_scheme(_path(output_path), int(Scheme(scheme))),
-           "setup_files_with_signing")
+                             scheme: Scheme = Scheme.COVERCRYPT,
+                             ml_dsa_parameter_set: MlDsaParameterSet | None = None,
+                             legacy_key_names: bool = True) -> None:
+    arguments = (_path(output_path), int(Scheme(scheme)))
+    if legacy_key_names and ml_dsa_parameter_set is None:
+        _check(abe_lib.hybrid_cpabe_setup_with_pqc_scheme(*arguments), "setup_files_with_signing")
+        return
+    native = "hybrid_cpabe_setup_with_ml_dsa" if legacy_key_names else "hybrid_cpabe_setup_with_signing_keys"
+    parameter = MlDsaParameterSet(87 if ml_dsa_parameter_set is None else ml_dsa_parameter_set)
+    _check(get_function(native)(*arguments, parameter), "setup_files_with_signing")
 
 
 def generate_secret_key_file(master_secret_key_path: str | PathLike[str], attributes: str,
@@ -118,9 +170,12 @@ def generate_secret_key_file(master_secret_key_path: str | PathLike[str], attrib
 
 def encrypt_file(public_key_path: str | PathLike[str], plaintext_path: str | PathLike[str],
                  policy: str, output_path: str | PathLike[str], *,
-                 scheme: Scheme = Scheme.COVERCRYPT) -> None:
-    _check(abe_lib.hybrid_cpabe_encrypt_with_scheme(_path(public_key_path), _path(plaintext_path),
-            _str(policy), _path(output_path), int(Scheme(scheme))), "encrypt_file")
+                 scheme: Scheme = Scheme.COVERCRYPT, aes_key_bits: int | None = None) -> None:
+    arguments = (_path(public_key_path), _path(plaintext_path), _str(policy), _path(output_path), int(Scheme(scheme)))
+    if aes_key_bits is None:
+        _check(abe_lib.hybrid_cpabe_encrypt_with_scheme(*arguments), "encrypt_file")
+    else:
+        _check(get_function("hybrid_cpabe_encrypt_with_params")(*arguments, _aes_bits(aes_key_bits)), "encrypt_file")
 
 
 def decrypt_file(secret_key_path: str | PathLike[str], ciphertext_path: str | PathLike[str],
@@ -132,10 +187,16 @@ def decrypt_file(secret_key_path: str | PathLike[str], ciphertext_path: str | Pa
 def encrypt_and_sign_file(public_key_path: str | PathLike[str], signing_key_path: str | PathLike[str],
                           plaintext_path: str | PathLike[str], policy: str,
                           output_path: str | PathLike[str], *,
-                          scheme: Scheme = Scheme.COVERCRYPT) -> None:
-    _check(abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme(_path(public_key_path),
-            _path(signing_key_path), _path(plaintext_path), _str(policy), _path(output_path),
-            int(Scheme(scheme))), "encrypt_and_sign_file")
+                          scheme: Scheme = Scheme.COVERCRYPT, aes_key_bits: int | None = None,
+                          ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> None:
+    arguments = (_path(public_key_path), _path(signing_key_path), _path(plaintext_path), _str(policy),
+                 _path(output_path), int(Scheme(scheme)))
+    if aes_key_bits is None and ml_dsa_parameter_set is None:
+        _check(abe_lib.hybrid_cpabe_encrypt_and_sign_with_scheme(*arguments), "encrypt_and_sign_file")
+    else:
+        _check(get_function("hybrid_cpabe_encrypt_and_sign_with_params")(
+            *arguments, _aes_bits(256 if aes_key_bits is None else aes_key_bits),
+            MlDsaParameterSet(87 if ml_dsa_parameter_set is None else ml_dsa_parameter_set)), "encrypt_and_sign_file")
 
 
 def decrypt_and_verify_file(secret_key_path: str | PathLike[str], verification_key_path: str | PathLike[str],
@@ -145,8 +206,7 @@ def decrypt_and_verify_file(secret_key_path: str | PathLike[str], verification_k
 
 
 def aes_gcm_generate_key(key_size_bits: int = 256) -> bytes:
-    if key_size_bits not in (128, 192, 256):
-        raise ValueError("AES key size must be 128, 192 or 256 bits")
+    _aes_bits(key_size_bits)
     if not hasattr(abe_lib, "aes_gcm_generate_key"):
         from secrets import token_bytes
         return token_bytes(key_size_bits // 8)

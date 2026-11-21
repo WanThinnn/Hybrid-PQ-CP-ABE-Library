@@ -14,7 +14,7 @@
 #include <map>
 #include <sstream>
 
-#include "core/abe-internal.h"
+#include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
 
 namespace
 {
@@ -240,10 +240,10 @@ void printUsage()
     printCovercryptHelp();
     std::cout << "\nCoverCrypt example\n"
                  "  Set HCPABE_COVERCRYPT_CONFIG to scripts/covercrypt-demo.json and create data.txt.\n"
-                 "  pq-cp-abe --setup --scheme covercrypt --file demo\n"
-                 "  pq-cp-abe --genkey --scheme covercrypt --master-key demo_msk.key --attributes \"Department::IT && Level::ADMIN\" --user-key user.key\n"
-                 "  pq-cp-abe --encrypt --scheme covercrypt --public-key demo_pk.key --file data.txt --policy \"Department::IT && Level::ADMIN\" --ciphertext data.enc\n"
-                 "  pq-cp-abe --decrypt --user-key user.key --ciphertext data.enc --output recovered.txt\n";
+                 "  pq-cp-abe setup --scheme covercrypt --file demo\n"
+                 "  pq-cp-abe genkey --scheme covercrypt --master-key demo_msk.key --attributes \"Department::IT && Level::ADMIN\" --user-key user.key\n"
+                 "  pq-cp-abe encrypt --scheme covercrypt --public-key demo_pk.key --file data.txt --policy \"Department::IT && Level::ADMIN\" --ciphertext data.enc\n"
+                 "  pq-cp-abe decrypt --user-key user.key --ciphertext data.enc --output recovered.txt\n";
 }
 }
 
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
             }
             if (signingOption == "--with-signing-keys")
             {
-                result = setup_with_ml_dsa_files(args[2].c_str(), scheme, ml_dsa, "ml-dsa");
+                result = hybrid_cpabe_setup_with_signing_keys(args[2].c_str(), scheme, ml_dsa);
             }
             else if (useSignature)
             {

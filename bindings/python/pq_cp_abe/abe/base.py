@@ -1,7 +1,7 @@
 """Common CP-ABE contract. Scheme objects own configuration, not keys."""
 from abc import ABC, abstractmethod
 from ..api import functional as api
-from ..models import AuthorityKeys, AuthoritySigningKeys, Scheme
+from ..models import AuthorityKeys, AuthoritySigningKeys, MlDsaParameterSet, Scheme
 
 
 class BaseCPABE(ABC):
@@ -19,7 +19,8 @@ class BaseCPABE(ABC):
         """Issue a user secret key (stateless, like the functional buffer API)."""
 
     @abstractmethod
-    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str) -> bytes:
+    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str, *,
+                aes_key_bits: int | None = None) -> bytes:
         """Encrypt arbitrary bytes under a policy."""
 
     @abstractmethod
@@ -29,11 +30,14 @@ class BaseCPABE(ABC):
     def generate_secret_key(self, master_secret_key: bytes, attributes: str) -> bytes:
         return self.keygen(master_secret_key, attributes)
 
-    def setup_with_signing(self) -> AuthoritySigningKeys:
-        return api.setup_with_signing(scheme=self.scheme)
+    def setup_with_signing(self, *, ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> AuthoritySigningKeys:
+        return api.setup_with_signing(scheme=self.scheme, ml_dsa_parameter_set=ml_dsa_parameter_set)
 
-    def encrypt_and_sign(self, public_key: bytes, signing_key: bytes, plaintext: bytes, policy: str) -> bytes:
-        return api.encrypt_and_sign(public_key, signing_key, plaintext, policy, scheme=self.scheme)
+    def encrypt_and_sign(self, public_key: bytes, signing_key: bytes, plaintext: bytes, policy: str, *,
+                         aes_key_bits: int | None = None,
+                         ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> bytes:
+        return api.encrypt_and_sign(public_key, signing_key, plaintext, policy, scheme=self.scheme,
+                                    aes_key_bits=aes_key_bits, ml_dsa_parameter_set=ml_dsa_parameter_set)
 
     def decrypt_and_verify(self, secret_key: bytes, verification_key: bytes, ciphertext: bytes) -> bytes:
         return api.decrypt_and_verify(secret_key, verification_key, ciphertext)
@@ -53,8 +57,9 @@ class _FunctionalCPABE(BaseCPABE):
     def keygen(self, master_secret_key: bytes, attributes: str) -> bytes:
         return api.generate_secret_key(master_secret_key, attributes, scheme=self.scheme)
 
-    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str) -> bytes:
-        return api.encrypt(public_key, plaintext, policy, scheme=self.scheme)
+    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str, *,
+                aes_key_bits: int | None = None) -> bytes:
+        return api.encrypt(public_key, plaintext, policy, scheme=self.scheme, aes_key_bits=aes_key_bits)
 
     def decrypt(self, secret_key: bytes, ciphertext: bytes) -> bytes:
         return api.decrypt(secret_key, ciphertext)

@@ -73,6 +73,17 @@ class ObjectApiTests(unittest.TestCase):
             with self.assertRaises(FrozenInstanceError):
                 cipher.key_size_bits = 128
 
+    def test_covercrypt_growth_and_parameterized_signing(self):
+        authority = abe.CoverCryptABE(config=CONFIG, mode=abe.KemMode.POST_QUANTUM)
+        keys = authority.setup_with_signing(ml_dsa_parameter_set=65)
+        grown = authority.add_dimension(keys.master_secret_key, '{"name":"zone","attributes":["eu"]}')
+        updated = authority.add_attribute(grown.master_secret_key, "zone", "us")
+        user = authority.keygen(updated.master_secret_key, "zone::us")
+        ciphertext = authority.encrypt_and_sign(updated.public_key, keys.signing_key, b"regional",
+                                               "zone::us", aes_key_bits=128, ml_dsa_parameter_set=65)
+        self.assertEqual(ciphertext[:4], bytes((3, 2, 16, 65)))
+        self.assertEqual(authority.decrypt_and_verify(user, keys.verification_key, ciphertext), b"regional")
+
     def test_ml_dsa_all_parameters_and_mismatched_keys(self):
         for parameter in abe.MlDsaParameterSet:
             if parameter != abe.MlDsaParameterSet.ML_DSA_87 and not hasattr(abe.native, "ml_dsa_generate_keypair"):

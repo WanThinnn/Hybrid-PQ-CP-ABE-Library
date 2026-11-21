@@ -1,4 +1,99 @@
 # PQ-CP-ABE JavaScript SDK
+A Native Post-Quantum Ciphertext-Policy Attribute-Based Encryption SDK for WebAssembly. It combines
+AC17, TKN20, or CoverCrypt with AES-GCM and optional ML-DSA signatures. CoverCrypt
+supports ML-KEM-768 for key encapsulation. AC17 and TKN20 use classical ABE.
+
+
+## Quick start
+
+Use Node.js 18 or newer. Install from npm after the package is published, or
+run `npm install ./path/to/downloaded-package.tgz` with the npm tarball.
+
+```sh
+npm install @wanthinnn/pq-cp-abe
+```
+
+Save this as `version.mjs` and run `node version.mjs` to check the loaded
+library version.
+
+```js
+import { PqCpAbe } from '@wanthinnn/pq-cp-abe';
+
+const { api } = await PqCpAbe.create();
+console.log(api.getVersion());
+```
+
+
+
+## Functional JavaScript and TypeScript API
+
+Access the functional methods through `instance.api` after
+`await PqCpAbe.create()`. This API provides automatic buffer management and
+TypeScript declarations. The standalone exports `createPqCpAbe` and
+`createHybridCpAbe` remain available for existing imports.
+
+```js
+import { PqCpAbe, KemMode } from '@wanthinnn/pq-cp-abe';
+
+const configJson = JSON.stringify({ dimensions: [
+  { name: 'role', attributes: ['admin', 'analyst'] },
+  { name: 'department', attributes: ['finance', 'engineering'] },
+] });
+const { api } = await PqCpAbe.create();
+const keys = api.covercryptSetup({ configJson, mode: KemMode.HYBRIDIZED });
+const secretKey = api.generateSecretKey({
+  masterSecretKey: keys.masterSecretKey,
+  attributes: 'role::admin department::finance',
+});
+const ciphertext = api.encrypt({
+  publicKey: keys.publicKey,
+  plaintext: new TextEncoder().encode('Hello'),
+  policy: 'role::admin && department::finance',
+});
+console.log(new TextDecoder().decode(api.decrypt({ secretKey, ciphertext })));
+```
+
+Only factory initialization is asynchronous; crypto methods are synchronous
+and can block the calling thread. Use a worker if needed. Pass the same
+`scheme: Scheme.AC17` or `Scheme.TKN20` to setup, key generation and encryption
+to choose a different scheme; decryption detects the ciphertext scheme.
+Scheme-specific attribute/policy syntax is unchanged.
+
+| In-memory API | File API |
+| --- | --- |
+| `setup()` | `setupFiles({ outputPath })` |
+| `setupWithSigning()` | `setupFilesWithSigning({ outputPath })` |
+| `generateSecretKey(...)` | `generateSecretKeyFile(...)` |
+| `encrypt(...)` / `decrypt(...)` | `encryptFile(...)` / `decryptFile(...)` |
+| `encryptAndSign(...)` | `encryptAndSignFile(...)` |
+| `decryptAndVerify(...)` | `decryptAndVerifyFile(...)` |
+
+Binary inputs/outputs are `Uint8Array`. Output arrays are copied before native
+buffers are freed, including cleanup after errors. `setup()` returns
+`{ publicKey, masterSecretKey }`; `setupWithSigning()` additionally returns
+`verificationKey` and `signingKey` as native Base64-encoded bytes for the
+combined signing operations (not raw standalone ML-DSA keys).
+File methods return `undefined`; their paths refer to the **WASM virtual
+filesystem**, accessed through `api.native.FS`.
+Setup retains native path/prefix naming. Native file operations may emit logs.
+
+Native failures throw `AbeError` with `code` and `operation`; -3 and -9 map to
+`PolicyMismatchError` and `SignatureInvalidError`. Generic cryptographic
+failures (-4) remain `AbeError`. Input errors use `TypeError`/`RangeError`.
+Low-level operations are available through `api.native`.
+
+Both functional and object APIs bind to a WASM instance and hold no keys.
+Applications can share that instance through the OOP constructors.
+
+Encrypt data under a policy such as `role::admin && department::finance`.
+Only a user whose key satisfies that policy can decrypt it. This is
+**ciphertext-policy attribute-based encryption (CP-ABE)**.
+
+**CoverCrypt** provides post-quantum protection for ABE key encapsulation.
+In its default `hybridized` mode, Curve25519 and ML-KEM-768 each contribute
+a shared secret to the same encapsulation. AES-GCM encrypts the payload.
+Optional ML-DSA signatures can authenticate the signed data. AC17 and
+TKN20 use classical ABE key protection.
 
 ## Object API
 
@@ -43,111 +138,20 @@ decryption and use a fresh nonce with each encryption under a given key.
 encapsulation returns `{ ciphertext, sharedSecret }` and decapsulation returns
 the secret bytes. ML-KEM decapsulation alone does not authenticate ciphertexts.
 
-The combined ABE signing flow retains AES-256 / ML-DSA-87. Standalone
-primitive variants require matching exports in the compiled WASM; older
-runtimes still support AES key sizes and fixed ML-DSA-87, but reject unavailable
-ML-KEM or ML-DSA parameter sets. Constructors do not load new crypto algorithms.
-CoverCrypt accepts an instance-local `config` snapshot and `KemMode` value;
-this build uses ML-KEM-768 inside CoverCrypt and rejects other parameter sets.
-No vendor code or vendor key formats are changed.
+`encrypt` and `encryptAndSign` accept `aesKeyBits` (128, 192, or 256).
+For signed encryption, pass the same `mlDsaParameterSet` (44, 65, or 87) to
+`setupWithSigning` and `encryptAndSign`. Omitting both parameters uses
+AES-256 and ML-DSA-87 with the legacy ciphertext format.
+
+CoverCrypt snapshots its configuration and uses the selected `KemMode`.
+Its post-quantum component uses ML-KEM-768. The standalone `MlKem` class
+supports ML-KEM-512, ML-KEM-768, and ML-KEM-1024. Use `getSizes()` on
+`MlDsa` or `MlKem` to query sizes for the selected parameter set.
 
 Source layout separates `api/legacy.mjs` (raw module entry),
 `api/functional.mjs` (modern operations), `abe/`, `primitives/`, `models/`,
 `utils/` and internal `runtime/`. `loader.mjs` remains the public entry;
 its default export retains the raw Emscripten factory.
-
-## Modern JavaScript / TypeScript API (additive)
-
-Use the named `createHybridCpAbe` factory for camelCase methods and automatic
-buffer management. The existing default `createHybridCPABE` export continues
-to return the raw Emscripten module; its `ccall`, heap and filesystem APIs
-are unchanged. TypeScript declarations are included.
-
-```js
-import { createHybridCpAbe } from '@wanthinnn/pq-cp-abe';
-
-const config = JSON.stringify({ dimensions: [
-  { name: 'role', attributes: ['admin', 'analyst'] },
-  { name: 'department', attributes: ['finance', 'engineering'] },
-] });
-const abe = await createHybridCpAbe({ preRun: [module => {
-  module.FS.writeFile('/attributes.json', config);
-  module.ENV.HCPABE_COVERCRYPT_CONFIG = '/attributes.json';
-  module.ENV.HCPABE_COVERCRYPT_MODE = 'hybridized';
-}] });
-const keys = abe.setup(); // Default: Scheme.COVERCRYPT
-const secretKey = abe.generateSecretKey({
-  masterSecretKey: keys.masterSecretKey,
-  attributes: 'role::admin department::finance',
-});
-const ciphertext = abe.encrypt({
-  publicKey: keys.publicKey,
-  plaintext: new TextEncoder().encode('Hello'),
-  policy: 'role::admin && department::finance',
-});
-console.log(new TextDecoder().decode(abe.decrypt({ secretKey, ciphertext })));
-```
-
-Only factory initialization is asynchronous; crypto methods are synchronous
-and can block the calling thread. Use a worker if needed. Pass the same
-`scheme: Scheme.AC17` or `Scheme.TKN20` to setup, key generation and encryption
-to choose a different scheme; decryption detects the ciphertext scheme.
-Scheme-specific attribute/policy syntax is unchanged.
-
-| In-memory API | File API |
-| --- | --- |
-| `setup()` | `setupFiles({ outputPath })` |
-| `setupWithSigning()` | `setupFilesWithSigning({ outputPath })` |
-| `generateSecretKey(...)` | `generateSecretKeyFile(...)` |
-| `encrypt(...)` / `decrypt(...)` | `encryptFile(...)` / `decryptFile(...)` |
-| `encryptAndSign(...)` | `encryptAndSignFile(...)` |
-| `decryptAndVerify(...)` | `decryptAndVerifyFile(...)` |
-
-Binary inputs/outputs are `Uint8Array`. Output arrays are copied before native
-buffers are freed, including cleanup after errors. `setup()` returns
-`{ publicKey, masterSecretKey }`; `setupWithSigning()` additionally returns
-`verificationKey` and `signingKey` as native Base64-encoded bytes for the
-combined signing operations (not raw standalone ML-DSA keys).
-File methods return `undefined`; their paths refer to the **WASM virtual
-filesystem**, accessed through `abe.native.FS`, rather than host paths.
-Setup retains native path/prefix naming. Native file operations may emit logs.
-
-Native failures throw `AbeError` with `code` and `operation`; -3 and -9 map to
-`PolicyMismatchError` and `SignatureInvalidError`. Generic cryptographic
-failures (-4) remain `AbeError`. Input errors use `TypeError`/`RangeError`.
-Existing low-level operations remain accessible through `abe.native`.
-
-Both functional and object APIs bind to a WASM instance and hold no keys.
-Applications can share that instance through the OOP constructors.
-
-Encrypt data under a policy such as `role::admin && department::finance`.
-Only a user whose key satisfies that policy can decrypt it. This is
-**ciphertext-policy attribute-based encryption (CP-ABE)**.
-
-**CoverCrypt** provides post-quantum protection for ABE key encapsulation.
-In its default `hybridized` mode, Curve25519 and ML-KEM-768 each contribute
-a shared secret to the same encapsulation. AES-256-GCM encrypts the payload.
-Optional ML-DSA-87 signatures can authenticate the signed data. AC17 and
-TKN20 use classical ABE key protection.
-
-## Quick start
-
-Use Node.js 18 or newer. Install from npm after the package is published, or
-run `npm install ./path/to/downloaded-package.tgz` with the npm tarball.
-
-```sh
-npm install @wanthinnn/pq-cp-abe
-```
-
-Save this as `version.mjs` and run `node version.mjs` to check the loaded
-library version.
-
-```js
-import createHybridCPABE from '@wanthinnn/pq-cp-abe';
-
-const abe = await createHybridCPABE();
-console.log(abe.ccall('getVersion', 'string', [], []));
-```
 
 ### CLI and self-test
 
@@ -179,10 +183,10 @@ The CLI uses CoverCrypt by default. In a new working directory, save this as
 ```sh
 mkdir keys
 node -e "require('node:fs').writeFileSync('message.txt', 'Hello from PQ-CP-ABE')"
-npx @wanthinnn/pq-cp-abe --config attributes-dimensions.json setup keys
-npx @wanthinnn/pq-cp-abe genkey keys/cpabe_msk.key "role::admin department::finance" keys/finance.key
-npx @wanthinnn/pq-cp-abe encrypt keys/cpabe_pk.key message.txt "role::admin && department::finance" message.enc
-npx @wanthinnn/pq-cp-abe decrypt keys/finance.key message.enc recovered.txt
+npx @wanthinnn/pq-cp-abe --setup --scheme covercrypt --config attributes-dimensions.json --file keys
+npx @wanthinnn/pq-cp-abe --genkey --scheme covercrypt --master-key keys/cpabe_msk.key --attributes "role::admin department::finance" --user-key keys/finance.key
+npx @wanthinnn/pq-cp-abe --encrypt --scheme covercrypt --public-key keys/cpabe_pk.key --file message.txt --policy "role::admin && department::finance" --ciphertext message.enc
+npx @wanthinnn/pq-cp-abe --decrypt --user-key keys/finance.key --ciphertext message.enc --output recovered.txt
 node -e "console.log(require('node:fs').readFileSync('recovered.txt', 'utf8'))"
 ```
 
@@ -191,114 +195,71 @@ output filenames. CoverCrypt `genkey` updates the master key with its tracing
 records. Use `--scheme ac17` or `--scheme tkn20` with setup, key generation,
 and encryption to work with classical keys. Decryption detects the scheme.
 
-Use `setup-pqc`, `encrypt-pqc`, and `decrypt-pqc` to add ML-DSA-87 signatures
-and verification. Keep the signing key with the party authorized to sign.
+The signed flow below uses AES-192 and ML-DSA-65. Omitting the parameter flags
+uses AES-256 and ML-DSA-87. Existing scripts can continue using the positional
+syntax or the `setup-pqc`, `encrypt-pqc`, and `decrypt-pqc` commands.
 
 ```sh
-mkdir signed-keys
-npx @wanthinnn/pq-cp-abe --config attributes-dimensions.json setup-pqc signed-keys
-npx @wanthinnn/pq-cp-abe genkey signed-keys/cpabe_msk.key "role::admin department::finance" signed-keys/finance.key
-npx @wanthinnn/pq-cp-abe encrypt-pqc signed-keys/cpabe_pk.key signed-keys/pqc_sk.key message.txt "role::admin && department::finance" signed.enc
-npx @wanthinnn/pq-cp-abe decrypt-pqc signed-keys/finance.key signed-keys/pqc_pk.key signed.enc verified.txt
+npx @wanthinnn/pq-cp-abe --setup --scheme covercrypt --config attributes-dimensions.json --file signed --with-signing-keys --ml-dsa 65
+npx @wanthinnn/pq-cp-abe --genkey --scheme covercrypt --master-key signed_msk.key --attributes "role::admin department::finance" --user-key user.key
+npx @wanthinnn/pq-cp-abe --encrypt --scheme covercrypt --sign --public-key signed_pk.key --signing-key signed_ml-dsa_sk.key --file message.txt --policy "role::admin && department::finance" --ciphertext signed.enc --aes-bits 192 --ml-dsa 65
+npx @wanthinnn/pq-cp-abe --decrypt --verify --user-key user.key --verification-key signed_ml-dsa_pk.key --ciphertext signed.enc --output verified.txt
 ```
 
-### Run a post-quantum ABE example in Node.js
+For the functional API and CP-ABE classes, use `aesKeyBits` during encryption
+and `mlDsaParameterSet` during signed setup and encryption. Decryption detects
+the ciphertext format and parameters. Pass `legacyKeyNames: false` to
+`setupFilesWithSigning` to get the new ML-DSA filenames in the WASM filesystem.
+`CoverCryptABE.addDimension` uses the instance mode. `addAttribute` uses
+`native.ENV.HCPABE_COVERCRYPT_MODE`. Save both keys from either operation.
 
-Save this as `demo.mjs` and run `node demo.mjs`. It creates a CoverCrypt
-authority and issues a key for an admin in the finance department. It verifies
-that this key decrypts the message and that an engineering admin is denied.
-Each step reports `OK` or `FAILED`.
+### Sign and encrypt with CoverCryptABE
+
+Save this as `demo.mjs` and run `node demo.mjs`. It verifies the signature and
+checks that a key with the wrong department is denied.
 
 ```js
-import createHybridCPABE from '@wanthinnn/pq-cp-abe';
+import { CoverCryptABE, KemMode, MlDsaParameterSet, PolicyMismatchError }
+  from '@wanthinnn/pq-cp-abe';
 
-const scheme = 2; // CoverCrypt
-const mode = 'hybridized';
-const policy = 'role::admin && department::finance';
+const authority = await CoverCryptABE.create({
+  config: { dimensions: [
+    { name: 'role', attributes: ['admin', 'analyst'] },
+    { name: 'department', attributes: ['finance', 'engineering'] },
+  ] },
+  mode: KemMode.HYBRIDIZED,
+});
+const mlDsaParameterSet = MlDsaParameterSet.ML_DSA_65;
+const { publicKey, masterSecretKey, signingKey, verificationKey } =
+  authority.setupWithSigning({ mlDsaParameterSet });
+const secretKey = authority.keygen({
+  masterSecretKey, attributes: 'role::admin department::finance',
+});
 const message = 'Hello from PQ-CP-ABE';
-const dimensions = [
-  { name: 'role', attributes: ['admin', 'analyst'] },
-  { name: 'department', attributes: ['finance', 'engineering'] },
-];
+const ciphertext = authority.encryptAndSign({
+  publicKey, signingKey, plaintext: new TextEncoder().encode(message),
+  policy: 'role::admin && department::finance', aesKeyBits: 192, mlDsaParameterSet,
+});
+const recovered = authority.decryptAndVerify({ secretKey, verificationKey, ciphertext });
+if (new TextDecoder().decode(recovered) !== message) throw new Error('Unexpected plaintext');
 
-let stepNumber = 0;
-async function step(label, action) {
-  const prefix = `[${++stepNumber}] ${label}`;
-  try {
-    const result = await action();
-    console.log(`${prefix}: OK`);
-    return result;
-  } catch (error) {
-    throw new Error(`${prefix}: FAILED (${error.message})`);
-  }
-}
-
+const otherKey = authority.keygen({
+  masterSecretKey, attributes: 'role::admin department::engineering',
+});
 try {
-  const abe = await step('Initialize CoverCrypt', () => createHybridCPABE({
-    preRun: [module => {
-      const config = '/attributes-dimensions.json';
-      module.FS.writeFile(config, JSON.stringify({ dimensions }));
-      module.ENV.HCPABE_COVERCRYPT_CONFIG = config;
-      module.ENV.HCPABE_COVERCRYPT_MODE = mode;
-    }],
-  }));
-
-  function call(name, ...args) {
-    const types = args.map(value => typeof value === 'number' ? 'number' : 'string');
-    return abe.ccall(name, 'number', types, args);
-  }
-  function describeError(code) {
-    return abe.ccall('getErrorMessage', 'string', ['number'], [code]);
-  }
-  function checked(name, ...args) {
-    const code = call(name, ...args);
-    if (code !== 0) throw new Error(`${name}: ${describeError(code)} (${code})`);
-  }
-
-  await step('Create authority keys', () => {
-    checked('setup_with_scheme', '/authority', scheme);
-  });
-  await step('Issue the finance admin key', () => {
-    checked('generateSecretKey_with_scheme', '/authority_msk.key',
-      'role::admin department::finance', '/finance.key', scheme);
-  });
-  await step('Encrypt under the policy', () => {
-    abe.FS.writeFile('/message.txt', message);
-    checked('hybrid_cpabe_encrypt_with_scheme', '/authority_pk.key',
-      '/message.txt', policy, '/message.enc', scheme);
-  });
-  await step('Decrypt and compare the recovered message', () => {
-    checked('hybrid_cpabe_decrypt', '/finance.key', '/message.enc', '/recovered.txt');
-    const recovered = abe.FS.readFile('/recovered.txt', { encoding: 'utf8' });
-    if (recovered !== message) throw new Error('The recovered message differs');
-    console.log(`    Recovered: ${recovered}`);
-  });
-  await step('Check that an engineering admin is denied', () => {
-    checked('generateSecretKey_with_scheme', '/authority_msk.key',
-      'role::admin department::engineering', '/engineering.key', scheme);
-    const code = call('hybrid_cpabe_decrypt', '/engineering.key', '/message.enc', '/denied.txt');
-    if (code !== -3) {
-      throw new Error(`Expected a policy mismatch, got ${describeError(code)} (${code})`);
-    }
-  });
+  authority.decryptAndVerify({ secretKey: otherKey, verificationKey, ciphertext });
+  throw new Error('An engineering key decrypted the finance message');
 } catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
+  if (!(error instanceof PolicyMismatchError)) throw error;
+  console.log('Engineering access denied');
 }
 ```
-
-The authority keeps the master secret key and uses it to issue user keys.
-Encryptors use the public key. File paths in this example refer to the
-WASM filesystem. Use Node's `node:fs/promises` to load host files and pass
-their bytes to `abe.FS.writeFile()`. Use `abe.FS.readFile()` to get bytes to
-save back to disk.
 
 ### Choose hybrid or PQC-only key encapsulation
 
-Set `HCPABE_COVERCRYPT_MODE` on the WASM module before creating authority keys.
-In the demo, change the `mode` constant and rerun it to create a new authority.
-For the CLI, use `--mode post_quantum` with `setup` or `setup-pqc`. The CLI also
-accepts `HCPABE_COVERCRYPT_CONFIG` and `HCPABE_COVERCRYPT_MODE` from the shell.
+In the class example, pass `mode: KemMode.POST_QUANTUM` to
+`CoverCryptABE.create` before generating new keys. For the CLI, pass
+`--mode post_quantum` to `--setup`, or set `HCPABE_COVERCRYPT_MODE` in your shell.
 
 | Mode | CoverCrypt key encapsulation |
 | --- | --- |
@@ -312,14 +273,10 @@ See the [C++ mode selector](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Librar
 and [CoverCrypt encapsulation implementation](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/vendor/cover_crypt/src/abe/core/primitives.rs)
 for implementation details.
 
-### Public WASM API
+### Native WASM reference
 
-The factory exposes `ccall`, `FS`, and `callMain`. Pass scheme `0` for AC17,
-`1` for TKN20, or `2` for CoverCrypt to setup, key generation and encryption.
-Decryption reads the scheme from the ciphertext. When using C buffer APIs,
-release library-allocated output with `freeBuffer`. See the
-[public C signatures](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h)
-and [WASM guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/wasm).
+The functional API exposes the initialized module through `api.native` for
+direct C ABI access. Its file methods use the Emscripten filesystem. [Public C signatures](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h) · [WASM guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/wasm)
 
 ## Build and test the npm tarball
 

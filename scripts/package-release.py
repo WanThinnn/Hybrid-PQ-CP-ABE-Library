@@ -137,6 +137,14 @@ def collect_notices(root, package, include_vault=False):
         json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
 
 
+def copy_project_files(root, package, names):
+    for name in names:
+        source = root / name
+        if name == "NOTICE" and not source.is_file():
+            source = root / "NOTICE.md"
+        shutil.copy2(require_file(source), package / name)
+
+
 def stage_package(root, package, target):
     require_file(root / 'include/hybrid_pq_cp_abe/version.h')
     core, dependencies = required_outputs(target)
@@ -160,8 +168,7 @@ def stage_package(root, package, target):
     if target == "windows":
         for folder in ("lib", "bin"):
             shutil.copy2(deps / "lib/tkn20/libcpabe_tkn20.dll", package / folder)
-    for name in ("LICENSE", "NOTICE", "README.md", "VERSION"):
-        shutil.copy2(require_file(root / name), package / name)
+    copy_project_files(root, package, ("LICENSE", "NOTICE", "README.md", "VERSION"))
     (package / "PACKAGE.md").write_text(
         "# Native library package\n\n"
         "Public and dependency headers are in include/. Add include/liboqs to your include paths when using oqs headers.\n"
@@ -178,8 +185,7 @@ def stage_vault_package(root, package):
     package.mkdir(parents=True)
     for source in files:
         shutil.copy2(source, package / source.name)
-    for name in ("LICENSE", "NOTICE", "VERSION"):
-        shutil.copy2(require_file(root / name), package / name)
+    copy_project_files(root, package, ("LICENSE", "NOTICE", "VERSION"))
     for name in ("README.md", "TESTING.md", "AUTHORITY.md"):
         shutil.copy2(require_file(root / "plugins/vault" / name), package / name)
     (package / "config").mkdir()
@@ -205,8 +211,7 @@ def stage_wasm_package(root, package):
     headers = package / "include/hybrid_pq_cp_abe"
     require_file(root / "include/hybrid_pq_cp_abe/version.h")
     shutil.copytree(root / "include/hybrid_pq_cp_abe", headers)
-    for name in ("LICENSE", "NOTICE", "VERSION"):
-        shutil.copy2(require_file(root / name), package / name)
+    copy_project_files(root, package, ("LICENSE", "NOTICE", "VERSION"))
     shutil.copy2(require_file(root / "bindings/wasm/README.md"), package / "README.md")
     goroot = subprocess.check_output(["go", "env", "GOROOT"], cwd=root / "bindings/tkn20",
                                      text=True, encoding="utf-8").strip()

@@ -14,6 +14,9 @@ class MlKem:
     def generate_keypair(self) -> KeyPair:
         return api.ml_kem_generate_keypair(parameter_set=self.parameter_set)
 
+    def get_sizes(self) -> tuple[int, int, int, int]:
+        return api.ml_kem_get_sizes(self.parameter_set)
+
     def encapsulate(self, public_key: bytes) -> KemEncapsulation:
         return api.ml_kem_encapsulate(public_key, parameter_set=self.parameter_set)
 

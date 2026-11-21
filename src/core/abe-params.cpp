@@ -349,6 +349,11 @@ extern "C"
     {
         return setup_with_ml_dsa_files(path, scheme, parameter, "pqc");
     }
+
+    int hybrid_cpabe_setup_with_signing_keys(const char *path, CPABEScheme scheme, int parameter)
+    {
+        return setup_with_ml_dsa_files(path, scheme, parameter, "ml-dsa");
+    }
 }
 
 int setup_with_ml_dsa_files(const char *path, CPABEScheme scheme, int parameter, const char *key_label)

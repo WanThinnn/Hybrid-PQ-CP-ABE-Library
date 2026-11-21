@@ -4,12 +4,14 @@ import { pathToFileURL } from 'node:url';
 const sdk = await import(process.argv[2] ? pathToFileURL(process.argv[2]).href : '../../lib/wasm/loader.mjs');
 const { PqCpAbe, BaseCPABE, AC17CPABE, TKN20CPABE, CoverCryptABE, Scheme,
   KemMode, AesGcm, MlDsa, MlKem, AbeError } = sdk;
+assert.equal(sdk.createPqCpAbe, sdk.createHybridCpAbe);
 const config = { dimensions: [
   { name: 'role', attributes: ['admin', 'analyst'] },
   { name: 'department', attributes: ['finance', 'engineering'] },
 ] };
 const first = await PqCpAbe.create({ scheme: Scheme.AC17 });
 const native = first.native;
+assert.equal(first.api.covercryptMlKemParameterSet(), 768);
 assert.throws(() => new BaseCPABE(native), TypeError);
 assert.ok(first.backend instanceof AC17CPABE);
 for (const backend of [first, new TKN20CPABE(native),
@@ -34,6 +36,30 @@ for (const backend of [first, new TKN20CPABE(native),
     assert.throws(() => backend.decrypt({ secretKey: denied, ciphertext }), AbeError);
   }
 }
+for (const parameterSet of [44, 65, 87]) {
+  const authority = first.setupWithSigning({ mlDsaParameterSet: parameterSet });
+  const secretKey = first.keygen({ ...authority, attributes: 'admin' });
+  const signer = new MlDsa(native, { parameterSet });
+  assert.equal(signer.generateKeypair().publicKey.length, signer.getSizes().publicKey);
+  for (const aesKeyBits of [128, 192, 256]) {
+    const plaintext = Uint8Array.of(0, 255);
+    const ciphertext = first.encryptAndSign({ ...authority, plaintext, policy: 'admin',
+      aesKeyBits, mlDsaParameterSet: parameterSet });
+    assert.deepEqual(ciphertext.slice(0, 4), Uint8Array.of(3, 0, aesKeyBits / 8, parameterSet));
+    assert.deepEqual(first.decryptAndVerify({ ...authority, secretKey, ciphertext }), plaintext);
+    const unsigned = first.encrypt({ ...authority, plaintext, policy: 'admin', aesKeyBits });
+    assert.deepEqual(unsigned.slice(0, 4), Uint8Array.of(3, 0, aesKeyBits / 8, 0));
+    assert.deepEqual(first.decrypt({ secretKey, ciphertext: unsigned }), plaintext);
+  }
+}
+const authority = new CoverCryptABE(native, { config });
+const grown = authority.addDimension({ ...authority.setup(),
+  dimensionJson: '{"name":"zone","attributes":["eu"]}' });
+const updated = authority.addAttribute({ ...grown, dimension: 'zone', attribute: 'us' });
+const user = authority.keygen({ ...updated, attributes: 'zone::us' });
+const messageByZone = Uint8Array.of(42);
+const protectedByZone = authority.encrypt({ ...updated, plaintext: messageByZone, policy: 'zone::us' });
+assert.deepEqual(authority.decrypt({ secretKey: user, ciphertext: protectedByZone }), messageByZone);
 const snapshot = structuredClone(config);
 const configured = new PqCpAbe(native, { config: snapshot });
 snapshot.dimensions.length = 0;
@@ -64,6 +90,7 @@ if (typeof native._ml_kem_generate_keypair === 'function') {
   for (const parameterSet of [512, 768, 1024]) {
     const kem = new MlKem(native, { parameterSet });
     const keys = kem.generateKeypair();
+    assert.equal(keys.publicKey.length, kem.getSizes().publicKey);
     const { ciphertext, sharedSecret } = kem.encapsulate({ publicKey: keys.publicKey });
     assert.deepEqual(kem.decapsulate({ secretKey: keys.secretKey, ciphertext }), sharedSecret);
   }

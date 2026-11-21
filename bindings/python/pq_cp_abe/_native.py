@@ -200,7 +200,20 @@ def get_function(name):
     return function
 
 _parameterized_exports = {
+    "hybrid_cpabe_setup_with_ml_dsa": [c_char_p, ctypes.c_int, ctypes.c_int],
+    "hybrid_cpabe_setup_with_signing_keys": [c_char_p, ctypes.c_int, ctypes.c_int],
+    "hybrid_cpabe_setupBuffer_with_ml_dsa": [_out_buf, _out_len] * 4 + [ctypes.c_int, ctypes.c_int],
+    "hybrid_cpabe_encryptBuffer_with_params": [c_ubyte_p, c_size_t, c_ubyte_p, c_size_t,
+                                                c_char_p, _out_buf, _out_len, ctypes.c_int, ctypes.c_int],
+    "hybrid_cpabe_encryptBuffer_and_sign_with_params": [
+        c_ubyte_p, c_size_t, c_ubyte_p, c_size_t, c_ubyte_p, c_size_t,
+        c_char_p, _out_buf, _out_len, ctypes.c_int, ctypes.c_int, ctypes.c_int],
+    "hybrid_cpabe_encrypt_with_params": [c_char_p] * 4 + [ctypes.c_int] * 2,
+    "hybrid_cpabe_encrypt_and_sign_with_params": [c_char_p] * 5 + [ctypes.c_int] * 3,
+    "hybrid_cpabe_covercrypt_ml_kem_parameter_set": [],
     "hybrid_cpabe_covercrypt_setupBuffer_from_json": [c_char_p, ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],
+    "hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode": [
+        c_ubyte_p, c_size_t, c_char_p, ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],
     "aes_gcm_generate_key": [ctypes.c_int, _out_buf, _out_len],
     "ml_dsa_get_sizes": [ctypes.c_int, _out_len, _out_len, _out_len],
     "ml_dsa_generate_keypair": [ctypes.c_int, _out_buf, _out_len, _out_buf, _out_len],

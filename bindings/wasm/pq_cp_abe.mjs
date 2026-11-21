@@ -21,7 +21,7 @@ export class PqCpAbe extends BaseCPABE {
   get backend() { return this.#backend; }
   get scheme() { return this.backend.scheme; }
   setup() { return this.backend.setup(); }
-  setupWithSigning() { return this.backend.setupWithSigning(); }
+  setupWithSigning(options) { return this.backend.setupWithSigning(options); }
   keygen(options) { return this.backend.keygen(options); }
   encrypt(options) { return this.backend.encrypt(options); }
   decrypt(options) { return this.backend.decrypt(options); }

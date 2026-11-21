@@ -77,8 +77,8 @@ class CliParameterTests(unittest.TestCase):
         self.assertIn("CoverCrypt example", overview)
         commands = [shlex.split(line) for line in overview.splitlines()
                     if line.startswith("  pq-cp-abe ")]
-        self.assertEqual([command[1] for command in commands],
-                         ["--setup", "--genkey", "--encrypt", "--decrypt"])
+        self.assertEqual([command[1].removeprefix("--") for command in commands],
+                         ["setup", "genkey", "encrypt", "decrypt"])
         for command in commands:
             self.run_cli(*command[1:])
         self.assertEqual((self.folder / "recovered.txt").read_bytes(), plaintext)

@@ -8,7 +8,7 @@ export function createInvoker(native) {
     const ErrorType = code === -3 ? PolicyMismatchError : code === -9 ? SignatureInvalidError : AbeError;
     throw new ErrorType(code, operation, native.ccall('getErrorMessage', 'string', ['number'], [code]));
   };
-  const invoke = (name, values, count = 0, scheme) => {
+  const invoke = (name, values, count = 0, scheme, parameters = [], sizeOnly = false) => {
     if (typeof native._getVersion === 'function' && typeof native[`_${name}`] !== 'function') {
       throw new Error(`Native runtime does not export ${name}; rebuild or install a matching release`);
     }
@@ -31,6 +31,8 @@ export function createInvoker(native) {
           if (buffer.length) native.HEAPU8.set(buffer, pointer);
           add(pointer);
           if (value instanceof Uint8Array) add(buffer.length);
+        } else if (value === null) {
+          add(0);
         } else if (typeof value === 'number' && Number.isSafeInteger(value)) {
           add(value);
         } else {
@@ -38,15 +40,17 @@ export function createInvoker(native) {
         }
       }
       for (let i = 0; i < count; i++) {
-        const slot = allocate(8);
-        native.HEAPU8.fill(0, slot, slot + 8);
+        const slot = allocate(sizeOnly ? 4 : 8);
+        native.HEAPU8.fill(0, slot, slot + (sizeOnly ? 4 : 8));
         outputs.push(slot);
         add(slot);
-        add(slot + 4);
+        if (!sizeOnly) add(slot + 4);
       }
       if (scheme !== undefined) add(schemeValue(scheme));
+      for (const parameter of parameters) add(parameter);
       check(native.ccall(name, 'number', types, args), name);
       const view = new DataView(native.HEAPU8.buffer);
+      if (sizeOnly) return outputs.map(slot => view.getUint32(slot, true));
       const result = outputs.map(slot => {
         const pointer = view.getUint32(slot, true);
         const length = view.getUint32(slot + 4, true);
@@ -54,7 +58,7 @@ export function createInvoker(native) {
       });
       return count === 1 ? result[0] : count ? result : undefined;
     } finally {
-      for (const slot of outputs) {
+      for (const slot of sizeOnly ? [] : outputs) {
         const pointer = new DataView(native.HEAPU8.buffer).getUint32(slot, true);
         if (pointer) native._freeBuffer(pointer);
       }

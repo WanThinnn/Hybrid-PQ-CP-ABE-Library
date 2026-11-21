@@ -1,93 +1,35 @@
 # PQ-CP-ABE Python SDK
 
-## Object API
+A Native Post-Quantum Ciphertext-Policy Attribute-Based Encryption SDK for Python. It combines
+AC17, TKN20, or CoverCrypt with AES-GCM and optional ML-DSA signatures. CoverCrypt
+supports ML-KEM-768 for key encapsulation. AC17 and TKN20 use classical ABE.
 
-`PqCpAbe` delegates to `AC17CPABE`, `TKN20CPABE`, or `CoverCryptABE` through
-the `BaseCPABE` interface. Objects keep configuration rather than secret keys.
-The OOP API operates on bytes; existing file operations remain in the functional API.
+[Latest release](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest) · [Release notes](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/release_notes)
 
-```python
-from pq_cp_abe import PqCpAbe, KemMode
+## Quick start
 
-abe = PqCpAbe(config={"dimensions": [
-    {"name": "role", "attributes": ["admin", "analyst"]},
-    {"name": "department", "attributes": ["finance", "engineering"]},
-]}, mode=KemMode.HYBRIDIZED)
-keys = abe.setup()
-secret_key = abe.keygen(keys.master_secret_key, "role::admin department::finance")
-ciphertext = abe.encrypt(keys.public_key, b"Hello", "role::admin && department::finance")
-assert abe.decrypt(secret_key, ciphertext) == b"Hello"
+Install the package on Python 3.10 or later once the wheel is published to PyPI.
+You can also install the wheel for your platform directly from GitHub Releases
+with `python -m pip install <downloaded-wheel.whl>`.
+
+```sh
+python -m pip install pq-cp-abe
 ```
 
-Use `PqCpAbe(scheme=Scheme.AC17)`, `AC17CPABE()`, or `TKN20CPABE()` for the
-classical backends. `keygen` and `generate_secret_key` are equivalent. All
-objects also offer `setup_with_signing`, `encrypt_and_sign`, and
-`decrypt_and_verify`; the combined signing flow retains ML-DSA-87 and AES-256
-to preserve native formats. Standalone primitives select their own parameters:
+## Native API
+
+Use the functions directly for in-memory operations or file-based workflows.
+This example configures CoverCrypt with JSON.
 
 ```python
-from pq_cp_abe import AesGcm, MlDsa, MlKem, MlDsaParameterSet, MlKemParameterSet
-
-aes = AesGcm(key_size_bits=192)
-key, nonce = aes.generate_key(), aes.generate_nonce()
-ciphertext = aes.encrypt(key, nonce, b"payload", aad=b"context")
-assert aes.decrypt(key, nonce, ciphertext, aad=b"context") == b"payload"
-
-signer = MlDsa(parameter_set=MlDsaParameterSet.ML_DSA_65)
-signing_keys = signer.generate_keypair()
-signature = signer.sign(b"payload", signing_keys.secret_key)
-assert signer.verify(b"payload", signature, signing_keys.public_key)
-
-kem = MlKem(parameter_set=MlKemParameterSet.ML_KEM_1024)
-kem_keys = kem.generate_keypair()
-sealed = kem.encapsulate(kem_keys.public_key)
-assert kem.decapsulate(kem_keys.secret_key, sealed.ciphertext) == sealed.shared_secret
-```
-
-Use a new nonce for each AES-GCM encryption with a given key. ML-KEM implicit
-rejection can yield a different secret for a modified ciphertext without an
-error; authenticate encrypted payloads. Primitive objects keep their selected
-key size/parameter set fixed. ML-DSA verification returns `False` for an invalid
-signature; operational errors raise exceptions.
-
-CoverCrypt snapshots its configuration on construction (including the config
-file from `HCPABE_COVERCRYPT_CONFIG` when no explicit config is given). Its
-mode is instance-local: `CLASSIC`, `POST_QUANTUM`, or `HYBRIDIZED`. This build's
-CoverCrypt provider uses ML-KEM-768, independently of the standalone `MlKem`
-class. It rejects other CoverCrypt parameter sets rather than changing vendor
-formats. New primitive exports and explicit CoverCrypt setup require a rebuilt
-native runtime; older binaries retain fixed ML-DSA-87 support. AES key generation
-uses the OS CSPRNG when the newer native key-generation helper is absent.
-
-Canonical module layout:
-
-| Module | Responsibility |
-| --- | --- |
-| `_native.py` | C ABI declarations and shared-library loading |
-| `api/legacy.py` | Historical `call_*` and helper behavior |
-| `api/functional.py` | Modern functions, native buffer ownership and error handling |
-| `abe/`, `pq_cp_abe.py` | Scheme objects and `PqCpAbe` facade |
-| `primitives/` | `AesGcm`, `MlDsa`, `MlKem` objects |
-| `models/`, `utils/` | Shared results, enums, validation and errors |
-
-The old `extended_api.py` and `modern_api.py` modules were removed. Import
-modern functions from `pq_cp_abe` or `pq_cp_abe.api.functional`; compatibility
-functions live in `pq_cp_abe.api.legacy` and remain exported at package root.
-
-## Modern Python API (additive)
-
-New integrations can use `setup`, `generate_secret_key`, `encrypt`, and
-`decrypt` directly. Existing `call_*`, buffer helpers, constants, and `native`
-remain available with their original signatures, return values and errors.
-There are no deprecation warnings or automatic migrations.
-
-With the CoverCrypt configuration described below already set through
-`HCPABE_COVERCRYPT_CONFIG`:
-
-```python
+import json
 import pq_cp_abe as abe
 
-keys = abe.setup()  # Default: Scheme.COVERCRYPT
+config = json.dumps({"dimensions": [
+    {"name": "role", "attributes": ["admin", "analyst"]},
+    {"name": "department", "attributes": ["finance", "engineering"]},
+]})
+keys = abe.covercrypt_setup(config, mode=abe.KemMode.HYBRIDIZED)
 secret_key = abe.generate_secret_key(
     master_secret_key=keys.master_secret_key,
     attributes="role::admin department::finance",
@@ -118,7 +60,7 @@ output buffers even on failure. `setup()` returns `AuthorityKeys` with
 `public_key` and `master_secret_key` fields (also tuple-unpackable).
 `setup_with_signing()` adds `verification_key` and `signing_key`, in the native
 Base64-encoded byte format expected by the combined signing operations.
-These differ from the raw key bytes used by standalone `ml_dsa_87_*` helpers.
+The standalone `MlDsa` class uses raw key bytes.
 File operations accept `str` or `PathLike[str]` and return `None` on success;
 setup retains native directory/prefix naming. The new wrappers add no console
 output, although native file functions may still write logs.
@@ -139,31 +81,100 @@ decrypt it. This is
 
 The default scheme, **CoverCrypt**, brings **post-quantum protection to ABE
 key encapsulation**. Its default `hybridized` mode combines Curve25519 and
-ML-KEM-768 to protect the secret used for AES-256-GCM payload encryption.
-Optional ML-DSA-87 signatures authenticate the sender and signed data.
+ML-KEM-768 to protect the secret used for AES-GCM payload encryption.
+Optional ML-DSA signatures authenticate the signed data.
 AC17 and TKN20 use classical ABE key protection, including when signing
 is enabled.
 
 - PyPI distribution: `pq-cp-abe`
 - Import: `import pq_cp_abe`
 - The repository root `VERSION` is the sole build version; installed packages read the embedded distribution metadata.
-- All 33 public C exports have declared `ctypes` signatures and can be accessed as `pq_cp_abe.native.<C_symbol>`; low-level native buffers require `native.freeBuffer`. Python-friendly wrappers are provided for the additional AES-GCM, ML-DSA-87, setup/genkey buffer and CoverCrypt authority operations.
-- Run `python bindings/python/hybrid_pq_cp_abe.py --test` or `python -m pq_cp_abe --test` for an end-to-end, disposable Python-only self-test. It invokes all 33 native symbols, verifies roundtrips across AC17/TKN20/CoverCrypt, AES-GCM, ML-DSA and CoverCrypt authority updates. It does not build C++ or modify application keys; the temporary test files are removed automatically. Exit code 0 means PASS; a nonzero code means FAIL.
+- Version 6.1 declares `ctypes` signatures for all 52 public C exports.
+- Run `python -m pq_cp_abe --test` for the bundled compatibility self-test.
+  The repository suite covers the 6.1 parameters, classes, CLI, and public exports.
 
-## Quick start
 
-Install the package on Python 3.10 or later once the wheel is published to PyPI.
-You can also install the wheel for your platform directly from GitHub Releases
-with `python -m pip install <downloaded-wheel.whl>`.
+## Object API
 
-```sh
-python -m pip install pq-cp-abe
+`PqCpAbe` delegates to `AC17CPABE`, `TKN20CPABE`, or `CoverCryptABE` through
+the `BaseCPABE` interface. Objects keep configuration rather than secret keys.
+The OOP API operates on bytes; existing file operations remain in the functional API.
+
+```python
+from pq_cp_abe import PqCpAbe, KemMode
+
+abe = PqCpAbe(config={"dimensions": [
+    {"name": "role", "attributes": ["admin", "analyst"]},
+    {"name": "department", "attributes": ["finance", "engineering"]},
+]}, mode=KemMode.HYBRIDIZED)
+keys = abe.setup()
+secret_key = abe.keygen(keys.master_secret_key, "role::admin department::finance")
+ciphertext = abe.encrypt(keys.public_key, b"Hello", "role::admin && department::finance")
+assert abe.decrypt(secret_key, ciphertext) == b"Hello"
 ```
 
-### Post-quantum ABE from the CLI
+Use `PqCpAbe(scheme=Scheme.AC17)`, `AC17CPABE()`, or `TKN20CPABE()` for the
+classical backends. `keygen` and `generate_secret_key` are equivalent. All
+objects also offer `setup_with_signing`, `encrypt_and_sign`, and
+`decrypt_and_verify`. Set `aes_key_bits` to 128, 192, or 256 when encrypting.
+For signed encryption, pass the same `ml_dsa_parameter_set` (44, 65, or 87)
+to setup and encryption. Omitting both parameters uses AES-256 and ML-DSA-87
+with the legacy ciphertext format.
 
-Run `python -m pq_cp_abe` to list commands and `python -m pq_cp_abe --test`
-to run the full self-test. The demo uses CoverCrypt in its default
+Standalone primitives select their own parameters.
+
+```python
+from pq_cp_abe import AesGcm, MlDsa, MlKem, MlDsaParameterSet, MlKemParameterSet
+
+aes = AesGcm(key_size_bits=192)
+key, nonce = aes.generate_key(), aes.generate_nonce()
+ciphertext = aes.encrypt(key, nonce, b"payload", aad=b"context")
+assert aes.decrypt(key, nonce, ciphertext, aad=b"context") == b"payload"
+
+signer = MlDsa(parameter_set=MlDsaParameterSet.ML_DSA_65)
+signing_keys = signer.generate_keypair()
+signature = signer.sign(b"payload", signing_keys.secret_key)
+assert signer.verify(b"payload", signature, signing_keys.public_key)
+
+kem = MlKem(parameter_set=MlKemParameterSet.ML_KEM_1024)
+kem_keys = kem.generate_keypair()
+sealed = kem.encapsulate(kem_keys.public_key)
+assert kem.decapsulate(kem_keys.secret_key, sealed.ciphertext) == sealed.shared_secret
+```
+
+Use a new nonce for each AES-GCM encryption with a given key. ML-KEM implicit
+rejection can yield a different secret for a modified ciphertext without an
+error. Authenticate encrypted payloads. Use `get_sizes()` on `MlDsa` or
+`MlKem` to query sizes for the selected parameter set. ML-DSA verification
+returns `False` for an invalid signature. Operational errors raise exceptions.
+
+CoverCrypt snapshots its configuration on construction (including the config
+file from `HCPABE_COVERCRYPT_CONFIG` when no explicit config is given). Its
+mode is instance-local: `CLASSIC`, `POST_QUANTUM`, or `HYBRIDIZED`. This build's
+CoverCrypt provider uses ML-KEM-768, independently of the standalone `MlKem`
+class, which supports ML-KEM-512, ML-KEM-768, and ML-KEM-1024.
+
+Canonical module layout:
+
+| Module | Responsibility |
+| --- | --- |
+| `_native.py` | C ABI declarations and shared-library loading |
+| `api/legacy.py` | Historical `call_*` and helper behavior |
+| `api/functional.py` | Modern functions, native buffer ownership and error handling |
+| `abe/`, `pq_cp_abe.py` | Scheme objects and `PqCpAbe` facade |
+| `primitives/` | `AesGcm`, `MlDsa`, `MlKem` objects |
+| `models/`, `utils/` | Shared results, enums, validation and errors |
+
+Import classes and functions from `pq_cp_abe`. Historical `call_*` functions
+and buffer helpers remain available through their original imports and
+`pq_cp_abe.api.legacy` for compatibility.
+
+
+### Python CLI
+
+Run `pq-cp-abe --help` after installing the wheel. Use
+`python -m pq_cp_abe --help` to select the Python CLI explicitly when several
+installations provide `pq-cp-abe`. The demo uses CoverCrypt in its default
 `hybridized` mode. Here, **hybrid means Curve25519 and ML-KEM-768 each
 contribute a shared secret to the same key encapsulation**. CoverCrypt uses
 both components to recover the protected secret, while AES-256-GCM encrypts
@@ -192,10 +203,10 @@ another mode.
 ```sh
 mkdir keys
 python -c "from pathlib import Path; Path('message.txt').write_text('Hello from PQ-CP-ABE', encoding='utf-8')"
-python -m pq_cp_abe setup keys
-python -m pq_cp_abe genkey keys/cpabe_msk.key "role::admin department::finance" keys/user.key
-python -m pq_cp_abe encrypt keys/cpabe_pk.key message.txt "role::admin && department::finance" message.enc
-python -m pq_cp_abe decrypt keys/user.key message.enc recovered.txt
+pq-cp-abe --setup --scheme covercrypt --file keys
+pq-cp-abe --genkey --scheme covercrypt --master-key keys/cpabe_msk.key --attributes "role::admin department::finance" --user-key keys/user.key
+pq-cp-abe --encrypt --scheme covercrypt --public-key keys/cpabe_pk.key --file message.txt --policy "role::admin && department::finance" --ciphertext message.enc
+pq-cp-abe --decrypt --user-key keys/user.key --ciphertext message.enc --output recovered.txt
 python -c "from pathlib import Path; print(Path('recovered.txt').read_text(encoding='utf-8'))"
 ```
 
@@ -205,108 +216,63 @@ in the encryption policy. Setup creates the authority's master
 secret key (`cpabe_msk.key`) and public key (`cpabe_pk.key`). Use the master
 secret key to issue user keys, and share the public key with encryptors.
 
-To add ML-DSA-87 signing and verification to the same post-quantum ABE flow,
-use a separate key directory and the same `message.txt`.
+To add ML-DSA signing and verification, use a separate key prefix and the
+same `message.txt`.
 
 ```sh
-mkdir signed-keys
-python -m pq_cp_abe setup-pqc signed-keys
-python -m pq_cp_abe genkey signed-keys/cpabe_msk.key "role::admin department::finance" signed-keys/user.key
-python -m pq_cp_abe encrypt-pqc signed-keys/cpabe_pk.key signed-keys/pqc_sk.key message.txt "role::admin && department::finance" signed.enc
-python -m pq_cp_abe decrypt-pqc signed-keys/user.key signed-keys/pqc_pk.key signed.enc verified.txt
+pq-cp-abe --setup --scheme covercrypt --file signed --with-signing-keys --ml-dsa 65
+pq-cp-abe --genkey --scheme covercrypt --master-key signed_msk.key --attributes "role::admin department::finance" --user-key user.key
+pq-cp-abe --encrypt --scheme covercrypt --sign --public-key signed_pk.key --signing-key signed_ml-dsa_sk.key --file message.txt --policy "role::admin && department::finance" --ciphertext signed.enc --aes-bits 192 --ml-dsa 65
+pq-cp-abe --decrypt --verify --user-key user.key --verification-key signed_ml-dsa_pk.key --ciphertext signed.enc --output verified.txt
 ```
 
-### Run a post-quantum ABE example in Python
+The signed example uses AES-192 and ML-DSA-65. Omitting the parameter flags
+uses AES-256 and ML-DSA-87. The original `*-pqc` commands support existing scripts.
 
-Copy this into `demo.py` and run `python demo.py`. It creates an authority,
-issues a user key with `role::admin` and `department::finance`, and encrypts
-and decrypts a message in memory using CoverCrypt in hybridized mode.
-It also checks that a user key from the engineering department cannot
-decrypt the same ciphertext.
-Each step reports `OK` or `FAILED`. A failure prints the error and exits with
-status 1.
+For the functional API and CP-ABE classes, use `aes_key_bits` with `encrypt`
+or `encrypt_and_sign`, and `ml_dsa_parameter_set` with `setup_with_signing`
+and `encrypt_and_sign`. File operations accept the same keyword arguments.
+Pass `legacy_key_names=False` to `setup_files_with_signing` for the
+`ml-dsa_sk.key` and `ml-dsa_pk.key` names. Decryption detects the ciphertext
+format and parameters. `CoverCryptABE.add_dimension` uses the instance's mode.
+`add_attribute` uses the native CoverCrypt mode from the environment. Retain
+both keys returned by either operation.
+
+### Sign and encrypt with CoverCryptABE
+
+Save this as `demo.py` and run `python demo.py`. It verifies the signature and
+checks that a key with the wrong department is denied.
 
 ```python
-import json
-import os
-import sys
-from contextlib import contextmanager
-from pathlib import Path
-from tempfile import TemporaryDirectory
+from pq_cp_abe import CoverCryptABE, KemMode, MlDsaParameterSet, PolicyMismatchError
 
-import pq_cp_abe as abe
+authority = CoverCryptABE(
+    config={"dimensions": [
+        {"name": "role", "attributes": ["admin", "analyst"]},
+        {"name": "department", "attributes": ["finance", "engineering"]},
+    ]},
+    mode=KemMode.HYBRIDIZED,
+)
+parameter = MlDsaParameterSet.ML_DSA_65
+keys = authority.setup_with_signing(ml_dsa_parameter_set=parameter)
+user_key = authority.keygen(keys.master_secret_key, "role::admin department::finance")
+message = b"Hello from PQ-CP-ABE"
+ciphertext = authority.encrypt_and_sign(
+    keys.public_key, keys.signing_key, message,
+    "role::admin && department::finance",
+    aes_key_bits=192, ml_dsa_parameter_set=parameter,
+)
+recovered = authority.decrypt_and_verify(user_key, keys.verification_key, ciphertext)
+assert recovered == message
 
-
-@contextmanager
-def step(number, label):
-    prefix = f"[{number}/7] {label}"
-    print(f"{prefix} ...", flush=True)
-    try:
-        yield
-    except Exception as error:
-        print(f"{prefix}: FAILED ({error})", file=sys.stderr, flush=True)
-        raise SystemExit(1) from None
-    print(f"{prefix}: OK", flush=True)
-
-
-def main():
-    mode = "hybridized"
-    attributes = "role::admin department::finance"
-    policy = "role::admin && department::finance"
-    message = b"Hello from PQ-CP-ABE"
-
-    print(f"Native library version: {abe.get_version()}")
-    print(f"Scheme: CoverCrypt ({mode})")
-
-    with TemporaryDirectory() as directory:
-        with step(1, "Write the CoverCrypt configuration"):
-            config = Path(directory) / "attributes-dimensions.json"
-            config.write_text(json.dumps({"dimensions": [
-                {"name": "role", "attributes": ["admin", "analyst"]},
-                {"name": "department", "attributes": ["finance", "engineering"]},
-            ]}), encoding="utf-8")
-            os.environ["HCPABE_COVERCRYPT_CONFIG"] = str(config)
-            os.environ["HCPABE_COVERCRYPT_MODE"] = mode
-
-        with step(2, "Create authority keys"):
-            public_key, master_key = abe.setup_buffer()
-
-        with step(3, f"Issue a user key for {attributes}"):
-            user_key = abe.genkey_buffer(master_key, attributes)
-
-        with step(4, f"Encrypt under policy {policy}"):
-            ciphertext = abe.call_hybrid_cpabe_encryptBuffer(public_key, message, policy)
-            print(f"    Ciphertext size: {len(ciphertext)} bytes")
-
-        with step(5, "Decrypt with the user key"):
-            recovered = abe.call_hybrid_cpabe_decryptBuffer(user_key, ciphertext)
-
-        with step(6, "Compare the recovered message with the original"):
-            if recovered != message:
-                raise ValueError("The decrypted message does not match the original")
-            print(f"    Recovered message: {recovered.decode('utf-8')}")
-
-        with step(7, "Check that a user from engineering is denied"):
-            other_attributes = "role::admin department::engineering"
-            other_key = abe.genkey_buffer(master_key, other_attributes)
-            try:
-                abe.call_hybrid_cpabe_decryptBuffer(other_key, ciphertext)
-            except RuntimeError as error:
-                if "Attributes do not satisfy policy" not in str(error):
-                    raise
-                print(f"    Access denied as expected for {other_attributes}")
-            else:
-                raise RuntimeError("The engineering user unexpectedly decrypted the message")
-
-
-if __name__ == "__main__":
-    main()
+other_key = authority.keygen(keys.master_secret_key, "role::admin department::engineering")
+try:
+    authority.decrypt_and_verify(other_key, keys.verification_key, ciphertext)
+except PolicyMismatchError:
+    print("Engineering access denied")
+else:
+    raise AssertionError("An engineering key decrypted the finance message")
 ```
-
-For existing AC17 or TKN20 keys, pass `scheme=abe.CPABE_SCHEME_AC17` or
-`scheme=abe.CPABE_SCHEME_TKN20` to setup, key generation and encryption.
-Decryption detects the scheme from the ciphertext.
-See the [scheme guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/architecture.md#native-pqc-with-covercrypt).
 
 ### Choose hybrid or PQC-only key encapsulation
 
@@ -327,21 +293,19 @@ from the CLI example above.
 - PowerShell: `$env:HCPABE_COVERCRYPT_MODE = 'post_quantum'`
 - CMD: `set "HCPABE_COVERCRYPT_MODE=post_quantum"`
 
-In `demo.py`, change the mode to `"post_quantum"` before calling
-`abe.setup_buffer()`. Setup applies the selected mode to the configured
-attributes. Encryption uses the mode encoded in the public key for the
-selected rights. To switch modes for an existing demo, generate a new authority
-and issue new user keys. Changing the environment variable alone leaves
-existing keys and ciphertext unchanged.
+In `demo.py`, pass `mode=KemMode.POST_QUANTUM` to `CoverCryptABE` before
+creating the authority. Encryption uses the mode encoded in the public key
+for the selected rights. To switch modes for the demo, generate a new
+authority and issue new user keys.
 
-All three modes use AES-256-GCM for payload encryption. ML-DSA-87 is a
-separate, optional signature layer. See the
+All three modes support AES-GCM payload encryption. The optional ML-DSA
+signature layer has its own parameter set. See the
 [C++ mode selector](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/src/schemes/covercrypt.cpp) and the
 [CoverCrypt encapsulation implementation](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/vendor/cover_crypt/src/abe/core/primitives.rs).
 
 ## Layout
 
-`pq_cp_abe/_native.py` handles `ctypes` loading and the C ABI, `api.py` exposes the existing Python API, `__main__.py` implements the CLI, and `_libs/` holds the bundled native runtimes.
+`pq_cp_abe/_native.py` loads the C ABI with `ctypes`. `api/` contains the functional API and legacy wrappers, `__main__.py` implements the CLI, and `_libs/` holds the bundled native runtimes.
 
 ## Native GitHub Release as the binary source
 
@@ -377,17 +341,6 @@ The verifier installs the wheel outside the source checkout, checks its internal
 
 ## Publishing
 
-To prepare the Monterey SDKs and wheels for `6.0.2`, run **Build Python Wheels**
-with `macos12_backfill=true` and `publish=false`. The workflow builds from tag
-`v6.0.2` with deployment target `12.0` and produces a native ZIP and a wheel for
-each architecture.
-
-On matching Intel and Apple Silicon systems running macOS 12, extract each
-native ZIP and run `bin/pq-cp-abe version`, then install its wheel and run
-`python -m pq_cp_abe --test`. With `publish=true`, the same mode adds
-`libhybrid-pq-cp-abe_macos12_<arch>_v6.0.2.zip` and `SHA256SUMS-macos12.txt`
-to the GitHub Release and publishes the two `macosx_12_0` wheels to PyPI.
-
 From GitHub Actions, run **Build Python Wheels** with the `publish` input set to `false` to build/test/download the wheel artifacts only.
 
 Once all four jobs pass, configure a PyPI *Trusted Publisher* for this GitHub repository, workflow `publish-pypi.yml`, and environment `pypi`. Then manually dispatch the workflow with `publish=true`. This is opt-in: no deployment occurs on ordinary pushes or releases.
@@ -396,4 +349,5 @@ The existing native `release.yml` is unchanged and Python publishing is independ
 
 For local source development, the SDK can still fall back to the repository's `lib/` binaries when available. This is separate from GitHub Release staging for wheels.
 
-Compatibility entrypoints `bindings/python/hybrid_pq_cp_abe.py` and `bindings/python/test_api.py` remain, while new callers should use `pq_cp_abe`.
+The `macos12_backfill` workflow input rebuilds the Monterey artifacts for
+version 6.0.2. [Version 6.0.2 release notes](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/release_notes/v6.0.2.md)

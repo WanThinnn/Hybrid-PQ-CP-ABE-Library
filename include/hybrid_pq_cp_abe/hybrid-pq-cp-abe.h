@@ -255,6 +255,8 @@ extern "C"
         unsigned char **verification_key, size_t *verification_key_len,
         unsigned char **signing_key, size_t *signing_key_len, CPABEScheme scheme, int ml_dsa_parameter_set);
     LIB_API int hybrid_cpabe_setup_with_ml_dsa(const char *path, CPABEScheme scheme, int ml_dsa_parameter_set);
+    // Writes ml-dsa_sk.key and ml-dsa_pk.key using the setup path/prefix convention.
+    LIB_API int hybrid_cpabe_setup_with_signing_keys(const char *path, CPABEScheme scheme, int ml_dsa_parameter_set);
     LIB_API int hybrid_cpabe_covercrypt_ml_kem_parameter_set(void);
 
     // ========================================================================

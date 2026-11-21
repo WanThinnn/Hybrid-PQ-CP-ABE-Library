@@ -41,6 +41,9 @@ def verify(wheel_path: Path):
             raise RuntimeError(f"Missing wheel license files: {sorted(missing_notices)}")
         if "pq_cp_abe/__init__.py" not in names:
             raise RuntimeError("Python SDK files missing")
+        entry_points = next((name for name in names if name.endswith(".dist-info/entry_points.txt")), None)
+        if not entry_points or b"pq-cp-abe = pq_cp_abe.__main__:main" not in archive.read(entry_points):
+            raise RuntimeError("Missing pq-cp-abe console entry point")
         if "py3-none-any" in wheel_path.name:
             raise RuntimeError("Native wheels cannot be platform-independent")
         if any("__pycache__" in item or item.endswith(".pyc") for item in names):
@@ -113,10 +116,12 @@ def verify(wheel_path: Path):
                         str(private), str(cipher), str(recovered)
                     ) == abe.HCPABE_SUCCESS, name
                     assert recovered.read_bytes() == message.read_bytes(), name
-                    keys = abe.setup_with_signing(scheme=abe.Scheme(scheme))
+                    keys = abe.setup_with_signing(scheme=abe.Scheme(scheme), ml_dsa_parameter_set=65)
                     user = abe.generate_secret_key(keys.master_secret_key, "admin it", scheme=abe.Scheme(scheme))
                     signed = abe.encrypt_and_sign(keys.public_key, keys.signing_key,
-                                                  b"modern wheel", "admin and it", scheme=abe.Scheme(scheme))
+                                                  b"modern wheel", "admin and it", scheme=abe.Scheme(scheme),
+                                                  aes_key_bits=192, ml_dsa_parameter_set=65)
+                    assert signed[:4] == bytes((3, scheme, 24, 65))
                     assert abe.decrypt_and_verify(user, keys.verification_key, signed) == b"modern wheel"
                     print("PASS:", name)
             # Validate extended API from the installed wheel, not the source tree.
@@ -150,6 +155,14 @@ def verify(wheel_path: Path):
             [sys.executable, "-s", "-m", "pq_cp_abe", "--test"],
             cwd=folder, env=env, check=True,
         )
+        command = "pq-cp-abe.exe" if os.name == "nt" else "pq-cp-abe"
+        cli = next((target / name / command for name in ("bin", "Scripts")
+                    if (target / name / command).is_file()), None)
+        if cli is None:
+            raise RuntimeError("pip did not install the pq-cp-abe console script")
+        subprocess.run([str(cli), "--setup", "--scheme", "ac17", "--with-signing-keys",
+                        "--ml-dsa", "44", "--file", "wheel"], cwd=folder, env=env, check=True)
+        assert (Path(folder) / "wheel_ml-dsa_sk.key").is_file()
     print(f"Verified: {wheel_path.name}")
 
 

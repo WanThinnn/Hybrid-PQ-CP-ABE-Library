@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 from collections.abc import Mapping
 from .base import _FunctionalCPABE
-from ..api import functional as api
-from ..models import AuthorityKeys, AuthoritySigningKeys, KemMode, MlKemParameterSet, Scheme
+from ..api import functional as api, legacy
+from ..models import AuthorityKeys, AuthoritySigningKeys, KemMode, MlDsaParameterSet, MlKemParameterSet, Scheme
 
 
 class CoverCryptABE(_FunctionalCPABE):
@@ -47,9 +47,16 @@ class CoverCryptABE(_FunctionalCPABE):
             raise ValueError("Provide CoverCrypt config, or set HCPABE_COVERCRYPT_CONFIG before constructing the object")
         return api.covercrypt_setup(self._config_json, mode=self.mode)
 
-    def setup_with_signing(self) -> AuthoritySigningKeys:
+    def setup_with_signing(self, *, ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> AuthoritySigningKeys:
         keys = self.setup()
-        # Combined native signing operations consume Base64 key bytes. The
-        # fixed legacy primitive also works with older native builds.
-        verification_key, signing_key = api.ml_dsa_generate_keypair()
+        parameter = MlDsaParameterSet.ML_DSA_87 if ml_dsa_parameter_set is None else ml_dsa_parameter_set
+        verification_key, signing_key = api.ml_dsa_generate_keypair(parameter_set=parameter)
         return AuthoritySigningKeys(*keys, base64.b64encode(verification_key), base64.b64encode(signing_key))
+
+    def add_dimension(self, master_secret_key: bytes, dimension_json: str) -> AuthorityKeys:
+        return api.covercrypt_add_dimension_with_mode(master_secret_key, dimension_json, mode=self.mode)
+
+    def add_attribute(self, master_secret_key: bytes, dimension: str, attribute: str,
+                      *, after: str | None = None) -> AuthorityKeys:
+        """Grow an existing dimension using the native attribute mode."""
+        return AuthorityKeys(*legacy.covercrypt_add_attribute_buffer(master_secret_key, dimension, attribute, after))

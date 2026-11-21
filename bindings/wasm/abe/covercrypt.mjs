@@ -26,9 +26,11 @@ export class CoverCryptABE extends FunctionalCPABE {
     if (this.#configJson === undefined) throw new TypeError('Provide CoverCrypt config before setup');
     return this.api.covercryptSetup({ configJson: this.#configJson, mode: this.mode });
   }
-  setupWithSigning() {
+  setupWithSigning({ mlDsaParameterSet } = {}) {
     const keys = this.setup();
-    const { publicKey, secretKey } = this.api.mlDsaGenerateKeypair();
+    const { publicKey, secretKey } = this.api.mlDsaGenerateKeypair({ parameterSet: mlDsaParameterSet });
     return { ...keys, verificationKey: base64Bytes(publicKey), signingKey: base64Bytes(secretKey) };
   }
+  addDimension(options) { return this.api.covercryptAddDimension({ ...options, mode: this.mode }); }
+  addAttribute(options) { return this.api.covercryptAddAttribute(options); }
 }

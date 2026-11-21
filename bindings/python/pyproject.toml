@@ -52,6 +52,9 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 
+[project.scripts]
+pq-cp-abe = "pq_cp_abe.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library"
 Documentation = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library#readme"

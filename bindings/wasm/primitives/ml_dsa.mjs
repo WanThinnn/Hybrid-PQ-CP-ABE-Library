@@ -9,6 +9,7 @@ export class MlDsa extends NativePrimitive {
   }
   get parameterSet() { return this.#parameter; }
   generateKeypair() { return this.api.mlDsaGenerateKeypair({ parameterSet: this.parameterSet }); }
+  getSizes() { return this.api.mlDsaGetSizes({ parameterSet: this.parameterSet }); }
   sign(options) { return this.api.mlDsaSign({ ...options, parameterSet: this.parameterSet }); }
   verify(options) { return this.api.mlDsaVerify({ ...options, parameterSet: this.parameterSet }); }
 }

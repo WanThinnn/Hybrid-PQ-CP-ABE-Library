@@ -32,6 +32,8 @@ continues to declare all exports so existing consumers and WASM extraction work.
 
 - `hybrid_cpabe_setupBuffer_with_ml_dsa(..., scheme, ml_dsa_parameter_set)`
 - `hybrid_cpabe_setup_with_ml_dsa(path, scheme, ml_dsa_parameter_set)`
+- `hybrid_cpabe_setup_with_signing_keys(path, scheme, ml_dsa_parameter_set)`
+  writes the signing and verification files with the `ml-dsa` label.
 - `hybrid_cpabe_encryptBuffer_with_params(..., scheme, aes_key_bits)`
 - `hybrid_cpabe_encrypt_with_params(..., scheme, aes_key_bits)`
 - `hybrid_cpabe_encryptBuffer_and_sign_with_params(..., scheme, aes_key_bits, ml_dsa_parameter_set)`
@@ -96,13 +98,14 @@ variants. Decryption detects parameters.
 
 ## Python / WASM integration
 
-The native additions are exported through public `LIB_API` declarations; the
-WASM export generator includes them automatically. Python must declare their
-ctypes argument/result types, and JavaScript wrappers must marshal integer
-parameters and copy/free native buffers. Neither should change legacy wrappers
-to call V3 implicitly. New OOP APIs may opt into V3 when configured accordingly.
-One native library contains all standalone ML-KEM/ML-DSA variants. CoverCrypt
-continues to use a single fixed-768 Rust backend, not extra 512/768 modules.
+Python uses `aes_key_bits` and `ml_dsa_parameter_set`. JavaScript uses
+`aesKeyBits` and `mlDsaParameterSet`. These options work on the functional
+and object APIs. An explicit encryption parameter selects V3. Calls without
+either parameter use the legacy format. [Python SDK](../bindings/python/README.md#object-api) ·
+[JavaScript SDK](../bindings/npm/README.md#object-api)
+
+One native library contains the standalone ML-KEM and ML-DSA variants.
+CoverCrypt uses ML-KEM-768 for its post-quantum encapsulation component.
 
 `make test` includes `tests/cpp/params_test.cpp`: the matrix covers all three ABE
 schemes, all AES/ML-DSA combinations, binary/empty messages, file operations,

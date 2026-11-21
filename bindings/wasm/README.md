@@ -1,15 +1,11 @@
 # WebAssembly build on Linux, macOS, and Windows
 
-The default `createHybridCPABE` loader export preserves the raw Emscripten API.
-The named `createHybridCpAbe` export adds the modern camelCase API; see the
-[JavaScript SDK guide](../npm/README.md#modern-javascript--typescript-api-additive).
-Keep `api.mjs` and `loader.d.mts` alongside the loader and runtime binaries.
-Run `node tests/wasm/modern-api.mjs` after `make -f Makefile.wasm publish` to
-exercise the modern API, buffer cleanup and legacy loader compatibility.
+Initialize `PqCpAbe` or a scheme class with its asynchronous `.create()` method.
+Use `instance.api` for functional methods, including file operations in WASM.
+The default Emscripten factory is available for compatibility. [JavaScript SDK guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm#functional-javascript-and-typescript-api)
 
-Builds the complete public C API: AC17, TKN20, CoverCrypt (including ML-KEM-768),
-AES-GCM, ML-DSA-87, file/buffer operations, and the CLI entry point. Native DLL/SO
-targets retain their existing toolchains and output paths.
+The build includes AC17, TKN20, CoverCrypt, parameterized AES-GCM, ML-DSA and
+standalone ML-KEM, and the CLI entry point.
 
 Install CMake, GNU Make, Python 3, Node.js 18+, Go satisfying
 `bindings/tkn20/go.mod`, and Emscripten SDK 7.0.0 or newer. Activate the SDK in the
@@ -64,8 +60,9 @@ self-test directly:
 node bindings/wasm/cli.mjs --test
 ```
 
-This uses the same suite as `make wasm-test`. The suite exercises the public
-C exports and uses WASM's in-memory filesystem for its test files.
+The bundled command runs the compatibility self-test in WASM's in-memory
+filesystem. `make wasm-test` also checks all public export names, the functional
+and object APIs, and the 6.1 CLI.
 
 Run `node bindings/wasm/cli.mjs --help` for file-based commands including setup,
 key generation, encryption, and decryption. The
@@ -108,29 +105,24 @@ Each build copies its deployment package to `lib/wasm`:
 | `wasm_exec.js` | Runtime support matching the Go compiler |
 | `libhybrid-pq-cp-abe.a` | Merged archive for Emscripten C/C++ consumers |
 
-Deploy the five runtime files together; the archive is for linking consumers.
-See the [npm package guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm)
-to package and test those runtime files for npm.
-Import `loader.mjs` in Node.js or a browser
-served over HTTP(S):
+Deploy the JavaScript modules and WASM files together, keeping the `lib/wasm`
+subdirectories from the build. The static archive serves C/C++ linking.
+Import `loader.mjs` from Node.js or a browser served over HTTP(S). [npm package guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm)
 
 ```js
-import createHybridCPABE from './lib/wasm/loader.mjs';
-const abe = await createHybridCPABE();
-console.log(abe.ccall('getVersion', 'string', [], []));
-abe.FS.mkdir('/keys');
-const status = abe.ccall('setup_with_scheme', 'number',
-  ['string', 'number'], ['/keys/demo', 1]); // 0=AC17, 1=TKN20, 2=CoverCrypt
-if (status !== 0) throw new Error(`setup failed: ${status}`);
+import { PqCpAbe, Scheme } from './lib/wasm/loader.mjs';
+
+const { api } = await PqCpAbe.create();
+console.log(api.getVersion());
+api.native.FS.mkdir('/keys');
+api.setupFiles({ outputPath: '/keys/demo', scheme: Scheme.TKN20 });
 ```
 
-File APIs use Emscripten's in-memory filesystem. Transfer data using
-`FS.writeFile`/`FS.readFile`; host paths are not mounted automatically. For
-CoverCrypt, write the JSON configuration into that filesystem and set
-`module.ENV.HCPABE_COVERCRYPT_CONFIG` in a `preRun` callback, or use the public
-JSON buffer setup API. Release returned C buffers using `freeBuffer`.
-Pointers and `size_t` are 32-bit. Run the CLI through
-`abe.callMain(['version'])` after initialization.
+File APIs use Emscripten's in-memory filesystem. Transfer data with
+`api.native.FS.writeFile` and `api.native.FS.readFile`. For CoverCrypt in memory,
+pass `config` to `CoverCryptABE.create` or call `api.covercryptSetup` with JSON.
+For CoverCrypt file setup, write the JSON to the WASM filesystem and set
+`module.ENV.HCPABE_COVERCRYPT_CONFIG` in a `preRun` callback.
 
 TKN20 uses Go js/wasm instead of a native CGO archive. Its callback copies data
 between Go and Emscripten memory. All schemes remain enabled. The static archive

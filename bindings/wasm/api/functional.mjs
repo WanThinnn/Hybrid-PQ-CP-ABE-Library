@@ -17,10 +17,14 @@ export function wrapModule(native) {
     }
     return [key, iv];
   };
+  const aesBits = value => {
+    if (![128, 192, 256].includes(value)) throw new RangeError('Invalid AES key size');
+    return value;
+  };
   return Object.freeze({
     native,
     aesGcmGenerateKey({ keySizeBits = 256 } = {}) {
-      if (![128, 192, 256].includes(keySizeBits)) throw new RangeError('Invalid AES key size');
+      aesBits(keySizeBits);
       if (typeof native._aes_gcm_generate_key !== 'function') {
         return globalThis.crypto.getRandomValues(new Uint8Array(keySizeBits / 8));
       }
@@ -38,6 +42,11 @@ export function wrapModule(native) {
       const [publicKey, secretKey] = legacy ? invoke('ml_dsa_87_generate_keypair', [], 2)
         : invoke('ml_dsa_generate_keypair', [parameterSet], 2);
       return { publicKey, secretKey };
+    },
+    mlDsaGetSizes({ parameterSet = MlDsaParameterSet.ML_DSA_87 } = {}) {
+      const [publicKey, secretKey, signature] =
+        invoke('ml_dsa_get_sizes', [parameterValue(parameterSet, MlDsaParameterSet)], 3, undefined, [], true);
+      return { publicKey, secretKey, signature };
     },
     mlDsaSign({ message, secretKey, parameterSet = MlDsaParameterSet.ML_DSA_87 }) {
       parameterValue(parameterSet, MlDsaParameterSet);
@@ -67,6 +76,11 @@ export function wrapModule(native) {
       const [publicKey, secretKey] = invoke('ml_kem_generate_keypair', [parameterValue(parameterSet, MlKemParameterSet)], 2);
       return { publicKey, secretKey };
     },
+    mlKemGetSizes({ parameterSet = MlKemParameterSet.ML_KEM_768 } = {}) {
+      const [publicKey, secretKey, ciphertext, sharedSecret] =
+        invoke('ml_kem_get_sizes', [parameterValue(parameterSet, MlKemParameterSet)], 4, undefined, [], true);
+      return { publicKey, secretKey, ciphertext, sharedSecret };
+    },
     mlKemEncapsulate({ publicKey, parameterSet = MlKemParameterSet.ML_KEM_768 }) {
       const [ciphertext, sharedSecret] = invoke('ml_kem_encapsulate', [parameterValue(parameterSet, MlKemParameterSet), bytes(publicKey)], 2);
       return { ciphertext, sharedSecret };
@@ -83,23 +97,55 @@ export function wrapModule(native) {
         [text(configJson), parameterValue(mode, KemMode)], 2);
       return { publicKey, masterSecretKey };
     },
-    setupWithSigning({ scheme = Scheme.COVERCRYPT } = {}) {
-      const [publicKey, masterSecretKey, verificationKey, signingKey] =
-        invoke('hybrid_cpabe_setupBuffer_with_pqc_scheme', [], 4, scheme);
+    covercryptMlKemParameterSet() {
+      return native.ccall('hybrid_cpabe_covercrypt_ml_kem_parameter_set', 'number', [], []);
+    },
+    covercryptAddDimension({ masterSecretKey, dimensionJson, mode }) {
+      const args = [bytes(masterSecretKey), text(dimensionJson)];
+      const [publicKey, updatedMasterKey] = mode === undefined
+        ? invoke('hybrid_cpabe_covercrypt_add_dimensionBuffer', args, 2)
+        : invoke('hybrid_cpabe_covercrypt_add_dimensionBuffer_with_mode', [...args, parameterValue(mode, KemMode)], 2);
+      return { publicKey, masterSecretKey: updatedMasterKey };
+    },
+    covercryptAddAttribute({ masterSecretKey, dimension, attribute, after = null }) {
+      const [publicKey, updatedMasterKey] = invoke('hybrid_cpabe_covercrypt_add_attributeBuffer',
+        [bytes(masterSecretKey), text(dimension), text(attribute), after === null ? null : text(after)], 2);
+      return { publicKey, masterSecretKey: updatedMasterKey };
+    },
+    covercryptAddDimensionFile({ masterSecretKeyPath, dimensionJson, outputPath }) {
+      invoke('hybrid_cpabe_covercrypt_add_dimension', [text(masterSecretKeyPath), text(dimensionJson), text(outputPath)]);
+    },
+    covercryptAddAttributeFile({ masterSecretKeyPath, dimension, attribute, after = null, outputPath }) {
+      invoke('hybrid_cpabe_covercrypt_add_attribute',
+        [text(masterSecretKeyPath), text(dimension), text(attribute), after === null ? null : text(after), text(outputPath)]);
+    },
+    setupWithSigning({ scheme = Scheme.COVERCRYPT, mlDsaParameterSet } = {}) {
+      const keys = mlDsaParameterSet === undefined
+        ? invoke('hybrid_cpabe_setupBuffer_with_pqc_scheme', [], 4, scheme)
+        : invoke('hybrid_cpabe_setupBuffer_with_ml_dsa', [], 4, scheme,
+          [parameterValue(mlDsaParameterSet, MlDsaParameterSet)]);
+      const [publicKey, masterSecretKey, verificationKey, signingKey] = keys;
       return { publicKey, masterSecretKey, verificationKey, signingKey };
     },
     generateSecretKey({ masterSecretKey, attributes, scheme = Scheme.COVERCRYPT }) {
       return invoke('hybrid_cpabe_genkeyBuffer_with_scheme', [bytes(masterSecretKey), text(attributes)], 1, scheme);
     },
-    encrypt({ publicKey, plaintext, policy, scheme = Scheme.COVERCRYPT }) {
-      return invoke('hybrid_cpabe_encryptBuffer_with_scheme', [bytes(publicKey), bytes(plaintext), text(policy)], 1, scheme);
+    encrypt({ publicKey, plaintext, policy, scheme = Scheme.COVERCRYPT, aesKeyBits }) {
+      const args = [bytes(publicKey), bytes(plaintext), text(policy)];
+      return aesKeyBits === undefined
+        ? invoke('hybrid_cpabe_encryptBuffer_with_scheme', args, 1, scheme)
+        : invoke('hybrid_cpabe_encryptBuffer_with_params', args, 1, scheme, [aesBits(aesKeyBits)]);
     },
     decrypt({ secretKey, ciphertext }) {
       return invoke('hybrid_cpabe_decryptBuffer', [bytes(secretKey), bytes(ciphertext)], 1);
     },
-    encryptAndSign({ publicKey, signingKey, plaintext, policy, scheme = Scheme.COVERCRYPT }) {
-      return invoke('hybrid_cpabe_encryptBuffer_and_sign_with_scheme',
-        [bytes(publicKey), bytes(signingKey), bytes(plaintext), text(policy)], 1, scheme);
+    encryptAndSign({ publicKey, signingKey, plaintext, policy, scheme = Scheme.COVERCRYPT,
+      aesKeyBits, mlDsaParameterSet }) {
+      const args = [bytes(publicKey), bytes(signingKey), bytes(plaintext), text(policy)];
+      return aesKeyBits === undefined && mlDsaParameterSet === undefined
+        ? invoke('hybrid_cpabe_encryptBuffer_and_sign_with_scheme', args, 1, scheme)
+        : invoke('hybrid_cpabe_encryptBuffer_and_sign_with_params', args, 1, scheme,
+          [aesBits(aesKeyBits ?? 256), parameterValue(mlDsaParameterSet ?? 87, MlDsaParameterSet)]);
     },
     decryptAndVerify({ secretKey, verificationKey, ciphertext }) {
       return invoke('hybrid_cpabe_decryptBuffer_and_verify',
@@ -108,22 +154,33 @@ export function wrapModule(native) {
     setupFiles({ outputPath, scheme = Scheme.COVERCRYPT }) {
       return invoke('setup_with_scheme', [text(outputPath)], 0, scheme);
     },
-    setupFilesWithSigning({ outputPath, scheme = Scheme.COVERCRYPT }) {
-      return invoke('hybrid_cpabe_setup_with_pqc_scheme', [text(outputPath)], 0, scheme);
+    setupFilesWithSigning({ outputPath, scheme = Scheme.COVERCRYPT, mlDsaParameterSet, legacyKeyNames = true }) {
+      const args = [text(outputPath)];
+      if (legacyKeyNames && mlDsaParameterSet === undefined) {
+        return invoke('hybrid_cpabe_setup_with_pqc_scheme', args, 0, scheme);
+      }
+      const symbol = legacyKeyNames ? 'hybrid_cpabe_setup_with_ml_dsa' : 'hybrid_cpabe_setup_with_signing_keys';
+      return invoke(symbol, args, 0, scheme, [parameterValue(mlDsaParameterSet ?? 87, MlDsaParameterSet)]);
     },
     generateSecretKeyFile({ masterSecretKeyPath, attributes, outputPath, scheme = Scheme.COVERCRYPT }) {
       return invoke('generateSecretKey_with_scheme', [text(masterSecretKeyPath), text(attributes), text(outputPath)], 0, scheme);
     },
-    encryptFile({ publicKeyPath, plaintextPath, policy, outputPath, scheme = Scheme.COVERCRYPT }) {
-      return invoke('hybrid_cpabe_encrypt_with_scheme',
-        [text(publicKeyPath), text(plaintextPath), text(policy), text(outputPath)], 0, scheme);
+    encryptFile({ publicKeyPath, plaintextPath, policy, outputPath, scheme = Scheme.COVERCRYPT, aesKeyBits }) {
+      const args = [text(publicKeyPath), text(plaintextPath), text(policy), text(outputPath)];
+      return aesKeyBits === undefined
+        ? invoke('hybrid_cpabe_encrypt_with_scheme', args, 0, scheme)
+        : invoke('hybrid_cpabe_encrypt_with_params', args, 0, scheme, [aesBits(aesKeyBits)]);
     },
     decryptFile({ secretKeyPath, ciphertextPath, outputPath }) {
       return invoke('hybrid_cpabe_decrypt', [text(secretKeyPath), text(ciphertextPath), text(outputPath)]);
     },
-    encryptAndSignFile({ publicKeyPath, signingKeyPath, plaintextPath, policy, outputPath, scheme = Scheme.COVERCRYPT }) {
-      return invoke('hybrid_cpabe_encrypt_and_sign_with_scheme',
-        [text(publicKeyPath), text(signingKeyPath), text(plaintextPath), text(policy), text(outputPath)], 0, scheme);
+    encryptAndSignFile({ publicKeyPath, signingKeyPath, plaintextPath, policy, outputPath,
+      scheme = Scheme.COVERCRYPT, aesKeyBits, mlDsaParameterSet }) {
+      const args = [text(publicKeyPath), text(signingKeyPath), text(plaintextPath), text(policy), text(outputPath)];
+      return aesKeyBits === undefined && mlDsaParameterSet === undefined
+        ? invoke('hybrid_cpabe_encrypt_and_sign_with_scheme', args, 0, scheme)
+        : invoke('hybrid_cpabe_encrypt_and_sign_with_params', args, 0, scheme,
+          [aesBits(aesKeyBits ?? 256), parameterValue(mlDsaParameterSet ?? 87, MlDsaParameterSet)]);
     },
     decryptAndVerifyFile({ secretKeyPath, verificationKeyPath, ciphertextPath, outputPath }) {
       return invoke('hybrid_cpabe_decrypt_and_verify',

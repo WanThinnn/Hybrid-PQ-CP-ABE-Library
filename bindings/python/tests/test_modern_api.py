@@ -15,6 +15,28 @@ from pq_cp_abe.selftest import _covercrypt_settings
 
 
 class ModernApiTests(unittest.TestCase):
+    def test_cpabe_parameters_and_sizes(self):
+        backend = abe.PqCpAbe(scheme=abe.Scheme.AC17)
+        data = b"\0\xff"
+        for parameter in abe.MlDsaParameterSet:
+            keys = backend.setup_with_signing(ml_dsa_parameter_set=parameter)
+            user = backend.keygen(keys.master_secret_key, "admin")
+            sizes = abe.MlDsa(parameter).get_sizes()
+            self.assertEqual(len(abe.MlDsa(parameter).generate_keypair().public_key), sizes[0])
+            for bits in (128, 192, 256):
+                with self.subTest(parameter=parameter, bits=bits):
+                    cipher = backend.encrypt_and_sign(keys.public_key, keys.signing_key, data, "admin",
+                                                      aes_key_bits=bits, ml_dsa_parameter_set=parameter)
+                    self.assertEqual(cipher[:4], bytes((3, 0, bits // 8, parameter)))
+                    self.assertEqual(backend.decrypt_and_verify(user, keys.verification_key, cipher), data)
+                    cipher = backend.encrypt(keys.public_key, data, "admin", aes_key_bits=bits)
+                    self.assertEqual(cipher[:4], bytes((3, 0, bits // 8, 0)))
+                    self.assertEqual(backend.decrypt(user, cipher), data)
+        self.assertEqual(abe.covercrypt_ml_kem_parameter_set(), 768)
+        for parameter in abe.MlKemParameterSet:
+            kem = abe.MlKem(parameter)
+            self.assertEqual(len(kem.generate_keypair().public_key), kem.get_sizes()[0])
+
     def test_roundtrip_signed_and_files_all_schemes(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

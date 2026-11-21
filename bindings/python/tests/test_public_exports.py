@@ -1,5 +1,6 @@
 """Exercise each native export through the packaged Python self-test."""
 import sys
+import re
 from pathlib import Path
 import unittest
 
@@ -9,6 +10,15 @@ if str(PYTHON_ROOT) not in sys.path:
 
 
 class NativeExportsTests(unittest.TestCase):
+    def test_every_public_c_function_has_a_ctypes_signature(self):
+        from pq_cp_abe import native
+        header = PYTHON_ROOT.parents[1] / "include/hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
+        names = re.findall(r"^\s*LIB_API\s+[^\n(]*?\b(\w+)\s*\(", header.read_text(encoding="utf-8"), re.M)
+        self.assertGreater(len(names), 33)
+        for name in names:
+            with self.subTest(symbol=name):
+                self.assertIsNotNone(getattr(native, name).argtypes)
+
     def test_all_33_exports_are_exercised(self):
         from pq_cp_abe.selftest import CompleteNativeSelfTest, EXPORTS
         self.assertEqual(len(EXPORTS), 33)

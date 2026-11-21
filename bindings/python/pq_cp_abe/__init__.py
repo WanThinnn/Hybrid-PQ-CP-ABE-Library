@@ -13,7 +13,7 @@ else:
     except PackageNotFoundError as exc:
         raise RuntimeError("Cannot resolve pq-cp-abe version: no installed metadata or root VERSION") from exc
 
-from ._native import abe_lib as native  # Complete low-level C ABI (33 exported DLL symbols)
+from ._native import abe_lib as native  # Low-level C ABI
 
 from .api.legacy import (
     setup_buffer,

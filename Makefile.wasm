@@ -72,6 +72,7 @@ test: all
 	node tests/wasm/smoke.mjs
 	node tests/wasm/modern-api.mjs
 	node tests/wasm/oop.mjs
+	node tests/wasm/cli.mjs
 
 clean:
 	rm -rf $(BUILD_DIR) $(LIB_DIR)

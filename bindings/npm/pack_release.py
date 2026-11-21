@@ -100,7 +100,7 @@ def main():
     if args.checksums:
         verify_checksum(archive, args.checksums)
 
-    npm = shutil.which("npm.cmd") or shutil.which("npm")
+    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if npm is None:
         parser.error("Install Node.js and npm to pack the WASM runtime")
     out = ROOT / "build/release/npm"
@@ -121,11 +121,12 @@ def main():
         entry = consumer / "package-entry.mjs"
         entry.write_text(
             f'import createHybridCPABE from {json.dumps(name)};\n'
-            f'import {{ createHybridCpAbe, PqCpAbe, Scheme }} from {json.dumps(name)};\n'
+            f'import {{ createPqCpAbe, createHybridCpAbe, PqCpAbe, Scheme }} from {json.dumps(name)};\n'
             'import assert from "node:assert/strict";\n'
             'const abe = await createHybridCPABE();\n'
             'assert.equal(abe.ccall("getVersion", "string", [], []), process.argv[2]);\n'
-            'const modern = await createHybridCpAbe();\n'
+            'assert.equal(createPqCpAbe, createHybridCpAbe);\n'
+            'const modern = await createPqCpAbe();\n'
             'const scheme = Scheme.AC17;\n'
             'const keys = modern.setup({ scheme });\n'
             'const secretKey = modern.generateSecretKey({ masterSecretKey: keys.masterSecretKey, attributes: "admin", scheme });\n'
@@ -140,6 +141,8 @@ def main():
         command = "pq-cp-abe.cmd" if os.name == "nt" else "pq-cp-abe"
         executable = consumer / "node_modules" / ".bin" / command
         subprocess.run([str(executable), "--test"], cwd=consumer, check=True)
+        cli = consumer / "node_modules" / name / "bindings/wasm/cli.mjs"
+        subprocess.run(["node", str(ROOT / "tests/wasm/cli.mjs"), str(cli)], cwd=consumer, check=True)
         destination = out / tarball.name
         tarball.replace(destination)
     print(f"Verified npm tarball: {destination}")

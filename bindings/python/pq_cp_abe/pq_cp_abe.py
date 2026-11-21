@@ -1,6 +1,6 @@
 """Convenient facade over the selected CP-ABE implementation."""
 from .abe import BaseCPABE, AC17CPABE, TKN20CPABE, CoverCryptABE
-from .models import AuthorityKeys, AuthoritySigningKeys, Scheme, KemMode, MlKemParameterSet
+from .models import AuthorityKeys, AuthoritySigningKeys, Scheme, KemMode, MlDsaParameterSet, MlKemParameterSet
 
 
 class PqCpAbe(BaseCPABE):
@@ -27,14 +27,15 @@ class PqCpAbe(BaseCPABE):
     def setup(self) -> AuthorityKeys:
         return self.backend.setup()
 
-    def setup_with_signing(self) -> AuthoritySigningKeys:
-        return self.backend.setup_with_signing()
+    def setup_with_signing(self, *, ml_dsa_parameter_set: MlDsaParameterSet | None = None) -> AuthoritySigningKeys:
+        return self.backend.setup_with_signing(ml_dsa_parameter_set=ml_dsa_parameter_set)
 
     def keygen(self, master_secret_key: bytes, attributes: str) -> bytes:
         return self.backend.keygen(master_secret_key, attributes)
 
-    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str) -> bytes:
-        return self.backend.encrypt(public_key, plaintext, policy)
+    def encrypt(self, public_key: bytes, plaintext: bytes, policy: str, *,
+                aes_key_bits: int | None = None) -> bytes:
+        return self.backend.encrypt(public_key, plaintext, policy, aes_key_bits=aes_key_bits)
 
     def decrypt(self, secret_key: bytes, ciphertext: bytes) -> bytes:
         return self.backend.decrypt(secret_key, ciphertext)

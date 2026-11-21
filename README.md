@@ -1,8 +1,8 @@
 # Hybrid PQ-CP-ABE Library
 
 A ciphertext-policy attribute-based encryption SDK for C/C++, Python, and
-WebAssembly. It combines AC17, TKN20, or CoverCrypt with AES-256-GCM and
-optional ML-DSA-87 signatures. CoverCrypt can use ML-KEM-768 for key
+WebAssembly. It combines AC17, TKN20, or CoverCrypt with AES-GCM and
+optional ML-DSA signatures. CoverCrypt can use ML-KEM-768 for key
 encapsulation. AC17 and TKN20 use classical ABE.
 
 [Latest release](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest) · [Release notes](release_notes/)
@@ -20,8 +20,8 @@ python -m pq_cp_abe --test
 ```
 
 The import name is `pq_cp_abe`. Wheels bundle the native runtime for Windows
-x64, Linux x64, and macOS Intel and Apple Silicon. The self-test exercises all
-33 native exports. For local wheel installation and API examples, see the
+x64, Linux x64, and macOS Intel and Apple Silicon. For local wheel installation
+and examples using the classes and functional API, see the
 [Python bindings guide](bindings/python/README.md).
 
 ### Native SDK and CLI
@@ -56,10 +56,10 @@ npm install @wanthinnn/pq-cp-abe
 Save this example as `demo.mjs` and run `node demo.mjs` to check the version.
 
 ```js
-import createHybridCPABE from '@wanthinnn/pq-cp-abe';
+import { PqCpAbe } from '@wanthinnn/pq-cp-abe';
 
-const abe = await createHybridCPABE();
-console.log(abe.ccall('getVersion', 'string', [], []));
+const { api } = await PqCpAbe.create();
+console.log(api.getVersion());
 ```
 
 Run the bundled self-test with `npx @wanthinnn/pq-cp-abe --test`.
@@ -77,6 +77,7 @@ after setting up the platform toolchain.
 make deps -j8
 make -j8
 make test -j8
+make install
 ```
 
 See the [native build guide](docs/build.md) for toolchain setup on Windows,

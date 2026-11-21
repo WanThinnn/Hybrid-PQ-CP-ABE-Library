@@ -25,6 +25,15 @@ export interface AuthoritySigningKeys extends AuthorityKeys {
   signingKey: Uint8Array;
 }
 export interface SchemeOptions { scheme?: SchemeValue }
+export type AesKeyBits = 128 | 192 | 256;
+export interface DsaOptions { mlDsaParameterSet?: MlDsaParameterValue }
+export interface EncryptionOptions { aesKeyBits?: AesKeyBits }
+export interface MlDsaSizes { publicKey: number; secretKey: number; signature: number }
+export interface MlKemSizes { publicKey: number; secretKey: number; ciphertext: number; sharedSecret: number }
+export interface DimensionOptions { masterSecretKey: Uint8Array; dimensionJson: string }
+export interface AttributeOptions {
+  masterSecretKey: Uint8Array; dimension: string; attribute: string; after?: string | null;
+}
 export interface NativeModule {
   ccall(name: string, returnType: string | null, argumentTypes: string[], arguments_: unknown[]): any;
   HEAPU8: Uint8Array;
@@ -48,36 +57,47 @@ export interface ModuleOptions {
 export interface HybridCpAbe {
   readonly native: NativeModule;
   covercryptSetup(options: { configJson: string; mode?: KemModeValue }): AuthorityKeys;
+  covercryptMlKemParameterSet(): 768;
+  covercryptAddDimension(options: DimensionOptions & { mode?: KemModeValue }): AuthorityKeys;
+  covercryptAddAttribute(options: AttributeOptions): AuthorityKeys;
+  covercryptAddDimensionFile(options: Omit<DimensionOptions, 'masterSecretKey'> & {
+    masterSecretKeyPath: string; outputPath: string;
+  }): void;
+  covercryptAddAttributeFile(options: Omit<AttributeOptions, 'masterSecretKey'> & {
+    masterSecretKeyPath: string; outputPath: string;
+  }): void;
   aesGcmGenerateKey(options?: { keySizeBits?: 128 | 192 | 256 }): Uint8Array;
   aesGcmEncrypt(options: { key: Uint8Array; iv: Uint8Array; plaintext: Uint8Array; aad?: Uint8Array }): Uint8Array;
   aesGcmDecrypt(options: { key: Uint8Array; iv: Uint8Array; ciphertext: Uint8Array; aad?: Uint8Array }): Uint8Array;
   mlDsaGenerateKeypair(options?: { parameterSet?: MlDsaParameterValue }): KeyPair;
+  mlDsaGetSizes(options?: { parameterSet?: MlDsaParameterValue }): MlDsaSizes;
   mlDsaSign(options: { message: Uint8Array; secretKey: Uint8Array; parameterSet?: MlDsaParameterValue }): Uint8Array;
   mlDsaVerify(options: { message: Uint8Array; signature: Uint8Array; publicKey: Uint8Array; parameterSet?: MlDsaParameterValue }): boolean;
   mlKemGenerateKeypair(options?: { parameterSet?: MlKemParameterValue }): KeyPair;
+  mlKemGetSizes(options?: { parameterSet?: MlKemParameterValue }): MlKemSizes;
   mlKemEncapsulate(options: { publicKey: Uint8Array; parameterSet?: MlKemParameterValue }): KemEncapsulation;
   mlKemDecapsulate(options: { secretKey: Uint8Array; ciphertext: Uint8Array; parameterSet?: MlKemParameterValue }): Uint8Array;
   setup(options?: SchemeOptions): AuthorityKeys;
-  setupWithSigning(options?: SchemeOptions): AuthoritySigningKeys;
+  setupWithSigning(options?: SchemeOptions & DsaOptions): AuthoritySigningKeys;
   generateSecretKey(options: SchemeOptions & { masterSecretKey: Uint8Array; attributes: string }): Uint8Array;
-  encrypt(options: SchemeOptions & { publicKey: Uint8Array; plaintext: Uint8Array; policy: string }): Uint8Array;
+  encrypt(options: SchemeOptions & EncryptOptions): Uint8Array;
   decrypt(options: { secretKey: Uint8Array; ciphertext: Uint8Array }): Uint8Array;
-  encryptAndSign(options: SchemeOptions & {
-    publicKey: Uint8Array; signingKey: Uint8Array; plaintext: Uint8Array; policy: string;
+  encryptAndSign(options: SchemeOptions & EncryptOptions & DsaOptions & {
+    signingKey: Uint8Array;
   }): Uint8Array;
   decryptAndVerify(options: {
     secretKey: Uint8Array; verificationKey: Uint8Array; ciphertext: Uint8Array;
   }): Uint8Array;
   setupFiles(options: SchemeOptions & { outputPath: string }): void;
-  setupFilesWithSigning(options: SchemeOptions & { outputPath: string }): void;
+  setupFilesWithSigning(options: SchemeOptions & DsaOptions & { outputPath: string; legacyKeyNames?: boolean }): void;
   generateSecretKeyFile(options: SchemeOptions & {
     masterSecretKeyPath: string; attributes: string; outputPath: string;
   }): void;
-  encryptFile(options: SchemeOptions & {
+  encryptFile(options: SchemeOptions & EncryptionOptions & {
     publicKeyPath: string; plaintextPath: string; policy: string; outputPath: string;
   }): void;
   decryptFile(options: { secretKeyPath: string; ciphertextPath: string; outputPath: string }): void;
-  encryptAndSignFile(options: SchemeOptions & {
+  encryptAndSignFile(options: SchemeOptions & EncryptionOptions & DsaOptions & {
     publicKeyPath: string; signingKeyPath: string; plaintextPath: string; policy: string; outputPath: string;
   }): void;
   decryptAndVerifyFile(options: {
@@ -89,6 +109,8 @@ export interface HybridCpAbe {
 export default function createHybridCPABE(options?: ModuleOptions): Promise<NativeModule>;
 /** Modern facade with camelCase names, copied buffers and typed native errors. */
 export function createHybridCpAbe(options?: ModuleOptions): Promise<HybridCpAbe>;
+export type PqCpAbeApi = HybridCpAbe;
+export function createPqCpAbe(options?: ModuleOptions): Promise<PqCpAbeApi>;
 
 export interface ModuleCreationOptions { moduleOptions?: ModuleOptions }
 export interface CoverCryptOptions {
@@ -99,7 +121,7 @@ export interface CoverCryptOptions {
 }
 export interface PqCpAbeOptions extends CoverCryptOptions { scheme?: SchemeValue }
 export type KeygenOptions = { masterSecretKey: Uint8Array; attributes: string };
-export type EncryptOptions = { publicKey: Uint8Array; plaintext: Uint8Array; policy: string };
+export type EncryptOptions = EncryptionOptions & { publicKey: Uint8Array; plaintext: Uint8Array; policy: string };
 export type DecryptOptions = { secretKey: Uint8Array; ciphertext: Uint8Array };
 export abstract class BaseCPABE {
   constructor(native: NativeModule);
@@ -111,8 +133,8 @@ export abstract class BaseCPABE {
   abstract encrypt(options: EncryptOptions): Uint8Array;
   abstract decrypt(options: DecryptOptions): Uint8Array;
   generateSecretKey(options: KeygenOptions): Uint8Array;
-  setupWithSigning(): AuthoritySigningKeys;
-  encryptAndSign(options: EncryptOptions & { signingKey: Uint8Array }): Uint8Array;
+  setupWithSigning(options?: DsaOptions): AuthoritySigningKeys;
+  encryptAndSign(options: EncryptOptions & DsaOptions & { signingKey: Uint8Array }): Uint8Array;
   decryptAndVerify(options: DecryptOptions & { verificationKey: Uint8Array }): Uint8Array;
 }
 declare class ConcreteCPABE extends BaseCPABE {
@@ -135,6 +157,8 @@ export class CoverCryptABE extends ConcreteCPABE {
   static create(options?: CoverCryptOptions & ModuleCreationOptions): Promise<CoverCryptABE>;
   readonly mode: KemModeValue;
   readonly parameterSet: 768;
+  addDimension(options: DimensionOptions): AuthorityKeys;
+  addAttribute(options: AttributeOptions): AuthorityKeys;
 }
 export class PqCpAbe extends ConcreteCPABE {
   constructor(native: NativeModule, options?: PqCpAbeOptions);
@@ -155,6 +179,7 @@ export class MlDsa {
   static create(options?: { parameterSet?: MlDsaParameterValue } & ModuleCreationOptions): Promise<MlDsa>;
   readonly parameterSet: MlDsaParameterValue;
   generateKeypair(): KeyPair;
+  getSizes(): MlDsaSizes;
   sign(options: { message: Uint8Array; secretKey: Uint8Array }): Uint8Array;
   verify(options: { message: Uint8Array; signature: Uint8Array; publicKey: Uint8Array }): boolean;
 }
@@ -163,6 +188,7 @@ export class MlKem {
   static create(options?: { parameterSet?: MlKemParameterValue } & ModuleCreationOptions): Promise<MlKem>;
   readonly parameterSet: MlKemParameterValue;
   generateKeypair(): KeyPair;
+  getSizes(): MlKemSizes;
   encapsulate(options: { publicKey: Uint8Array }): KemEncapsulation;
   decapsulate(options: { secretKey: Uint8Array; ciphertext: Uint8Array }): Uint8Array;
 }

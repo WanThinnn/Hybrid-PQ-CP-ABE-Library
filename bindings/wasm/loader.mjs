@@ -8,6 +8,7 @@ export * from './primitives/index.mjs';
 export default createHybridCPABE;
 
 /** Modern factory; default export retains the raw-module contract. */
-export async function createHybridCpAbe(options = {}) {
+export async function createPqCpAbe(options = {}) {
   return wrapModule(await createHybridCPABE(options));
 }
+export const createHybridCpAbe = createPqCpAbe;
