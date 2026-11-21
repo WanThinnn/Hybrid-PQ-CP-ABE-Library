@@ -250,9 +250,27 @@
   font-weight: 650;
 }
 
+.pq-section-nav-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--md-primary-fg-color);
+}
+
+@media screen and (min-width: 76.25em) {
+  .pq-section-nav-icon {
+    display: none;
+  }
+}
+
 @media screen and (max-width: 44.984375em) {
   .md-typeset .pq-hero {
     border-radius: 14px;
+  }
+
+  .md-typeset .pq-hero p {
+    text-align: justify;
+    text-justify: inter-word;
   }
 
   .md-typeset .pq-download-grid {
