@@ -1,0 +1,46 @@
+{% extends "default/module.html.jinja2" %}
+
+{% set object_names = (
+    "PqCpAbe", "CoverCryptABE", "AC17CPABE", "TKN20CPABE",
+    "AesGcm", "MlDsa", "MlKem", "BaseCPABE"
+) %}
+{% set sdk_members = namespace(objects=[]) %}
+{% for name in object_names if name in module.members %}
+    {% set sdk_members.objects = sdk_members.objects + [module.members[name]] %}
+{% endfor %}
+{% set ordered_members = sdk_members.objects
+    + (module.flattened_own_members | rejectattr("name", "in", object_names) | list) %}
+
+{% macro is_public(doc) %}
+    {% if doc.modulename == "pq_cp_abe" and "." not in doc.qualname %}
+        {% if doc.name in module.obj.__all__ and (
+            doc.kind == "class" or doc.taken_from[0] == "pq_cp_abe.api.functional"
+            or doc.name == "get_version"
+        ) %}
+            {{ default_is_public(doc) }}
+        {% endif %}
+    {% elif doc.taken_from[0].startswith("pq_cp_abe.") and
+        doc.taken_from[1] != "BaseCPABE.generate_secret_key" %}
+        {{ default_is_public(doc) }}
+    {% endif %}
+{% endmacro %}
+
+{% block nav_members %}
+    <h2>API Documentation</h2>
+    {{ nav_members(ordered_members) }}
+{% endblock %}
+
+{% block module_contents %}
+    {% for doc in ordered_members if is_public(doc) | trim %}
+        <section id="{{ doc.qualname or doc.name }}">
+            {{ member(doc) }}
+            {% if doc.kind == "class" %}
+                {% for method in doc.members.values() if method.kind != "class" and is_public(method) | trim %}
+                    <div id="{{ method.qualname }}" class="classattr">
+                        {{ member(method) }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </section>
+    {% endfor %}
+{% endblock %}
