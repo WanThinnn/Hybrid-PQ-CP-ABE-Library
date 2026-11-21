@@ -32,6 +32,16 @@
   display: none !important;
 }
 
+/* The persistent product title shares a flex row with the version badge,
+   palette and search controls. Let it shrink instead of widening the page. */
+.md-header__title {
+  min-width: 0;
+}
+
+.md-header__topic .md-ellipsis {
+  min-width: 0;
+}
+
 .pq-version-badge {
   display: inline-flex;
   align-items: center;
