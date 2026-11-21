@@ -68,17 +68,56 @@ int main(void)
 }
 ```
 
-On Linux, point `SDK` to the extracted native SDK. The same commands work
-from a source checkout after `make shared` when `SDK` points to that checkout.
+### Compile and run on Linux
+
+`SDK` is a shell variable holding the **full path to the SDK folder you extracted**.
+Choose the folder that contains both `include/` and `lib/`. For example, after
+extracting the Linux archive into your Downloads folder, the layout is:
+
+```text
+/home/alex/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2/
+├── include/
+│   └── hybrid_pq_cp_abe/
+│       └── hybrid-pq-cp-abe.h
+└── lib/
+    └── libhybrid-pq-cp-abe.so
+```
+
+For this example, set the variable as follows. `$HOME` expands to your home
+directory, such as `/home/alex`. Adjust the folder name and version to match
+the archive you actually extracted:
 
 ```sh
-SDK=/absolute/path/to/sdk
-cc -std=c11 -Wall -Wextra -I"$SDK/include" demo.c \
-  -L"$SDK/lib" -lhybrid-pq-cp-abe -o demo
+SDK="$HOME/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2"
+```
+
+Create a separate folder for the example, then save the C code above as
+`demo.c` inside it:
+
+```sh
+mkdir -p "$HOME/pq-cp-abe-demo"
+cd "$HOME/pq-cp-abe-demo"
+```
+
+Run the following commands **from that folder, in the same terminal** where you
+set `SDK`. The compiler uses `$SDK/include` for headers and `$SDK/lib` for the
+native library; `demo.c` is read from your current working directory.
+
+```sh
+gcc -std=c11 -Wall -Wextra -I"$SDK/include" demo.c -L"$SDK/lib" -lhybrid-pq-cp-abe -o demo
 printf '%s\n' 'hello from the native SDK' > message.txt
 LD_LIBRARY_PATH="$SDK/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ./demo
 cmp message.txt recovered.txt
 ```
+
+The example creates its keys, `message.txt`, `message.enc` and `recovered.txt`
+in the working folder. `LD_LIBRARY_PATH` lets the program find the SDK's shared
+library at runtime. If `cmp` prints nothing and exits successfully, the recovered
+file matches the original byte for byte.
+
+If you built from repository source with `make shared`, set `SDK` to the full
+path of that checkout instead, for example `SDK="$HOME/projects/Hybrid-PQ-CP-ABE-Library"`.
+The checkout must contain the built shared library under `lib/`.
 
 On Windows with MSVC, link `libhybrid-pq-cp-abe_dll.lib` and place
 `libhybrid-pq-cp-abe.dll` and `libcpabe_tkn20.dll` beside the executable.

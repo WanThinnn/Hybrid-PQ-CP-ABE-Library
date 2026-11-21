@@ -32,3 +32,94 @@ Extract the archive and use its `include/` directory for headers and `lib/` dire
     These direct links target the release, `v6.0.2`. When a new release is published, the asset URLs must be updated because the version is part of each archive filename.
 
 If a suitable prebuilt archive is not available for your OS or architecture, follow the [build-from-source guide](../native/build.md).
+
+
+## Example
+
+This example creates an AC17 authority, issues a key for `admin`, and
+encrypts a file under that policy using AES-192. Run it in a fresh working
+directory. Setup writes `authority_pk.key` and `authority_msk.key`.
+
+Save as `demo.c`.
+
+```c
+#include <stdio.h>
+#include "hybrid_pq_cp_abe/hybrid-pq-cp-abe.h"
+
+static int succeeded(int status, const char *operation)
+{
+    if (status == HCPABE_SUCCESS)
+        return 1;
+    fprintf(stderr, "%s failed (%d): %s\n", operation, status, getErrorMessage(status));
+    return 0;
+}
+
+int main(void)
+{
+    const CPABEScheme scheme = CPABE_SCHEME_AC17;
+    if (!succeeded(setup_with_scheme("authority", scheme), "setup") ||
+        !succeeded(generateSecretKey_with_scheme("authority_msk.key", "admin",
+                                                 "user.key", scheme), "keygen") ||
+        !succeeded(hybrid_cpabe_encrypt_with_params("authority_pk.key", "message.txt",
+                                                    "admin", "message.enc", scheme, 192), "encrypt") ||
+        !succeeded(hybrid_cpabe_decrypt("user.key", "message.enc", "recovered.txt"), "decrypt"))
+        return 1;
+
+    return 0;
+}
+```
+
+### Compile and run on Linux
+
+`SDK` is a shell variable holding the **full path to the SDK folder you extracted**.
+Choose the folder that contains both `include/` and `lib/`. For example, after
+extracting the Linux archive into your Downloads folder, the layout is:
+
+```text
+/home/alex/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2/
+├── include/
+│   └── hybrid_pq_cp_abe/
+│       └── hybrid-pq-cp-abe.h
+└── lib/
+    └── libhybrid-pq-cp-abe.so
+```
+
+For this example, set the variable as follows. `$HOME` expands to your home
+directory, such as `/home/alex`. Adjust the folder name and version to match
+the archive you actually extracted:
+
+```sh
+SDK="$HOME/Downloads/libhybrid-pq-cp-abe_linux_x86_64_v6.0.2"
+```
+
+Create a separate folder for the example, then save the C code above as
+`demo.c` inside it:
+
+```sh
+mkdir -p "$HOME/pq-cp-abe-demo"
+cd "$HOME/pq-cp-abe-demo"
+```
+
+Run the following commands **from that folder, in the same terminal** where you
+set `SDK`. The compiler uses `$SDK/include` for headers and `$SDK/lib` for the
+native library; `demo.c` is read from your current working directory.
+
+```sh
+gcc -std=c11 -Wall -Wextra -I"$SDK/include" demo.c -L"$SDK/lib" -lhybrid-pq-cp-abe -o demo
+printf '%s\n' 'hello from the native SDK' > message.txt
+LD_LIBRARY_PATH="$SDK/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ./demo
+cmp message.txt recovered.txt
+```
+
+The example creates its keys, `message.txt`, `message.enc` and `recovered.txt`
+in the working folder. `LD_LIBRARY_PATH` lets the program find the SDK's shared
+library at runtime. If `cmp` prints nothing and exits successfully, the recovered
+file matches the original byte for byte.
+
+If you built from repository source with `make shared`, set `SDK` to the full
+path of that checkout instead, for example `SDK="$HOME/projects/Hybrid-PQ-CP-ABE-Library"`.
+The checkout must contain the built shared library under `lib/`.
+
+On Windows with MSVC, link `libhybrid-pq-cp-abe_dll.lib` and place
+`libhybrid-pq-cp-abe.dll` and `libcpabe_tkn20.dll` beside the executable.
+Use SDK headers and libraries from the same release.
