@@ -147,6 +147,7 @@ See [build/README.md](../../build/README.md) for the output layout. Keep logs un
 - `make executable`: Build only the CLI executable.
 - `make test -j8`: Incrementally build and run the tests.
 - `make tests -j8`: Alias for `make test -j8`.
+- `make install`: Install the CLI, public headers, and native static/shared libraries to the system. On Windows, the default prefix is `%LOCALAPPDATA%\Programs\pq-cp-abe` with `bin/`, `include/`, and `lib/` subdirectories.
 - `make vault -j8`: Build the Vault plugin on Linux against the current shared core.
 - `make test-vault -j8`: Build/test on Linux, then run HTTP tests with only the Vault service in Docker.
 - `make clean-vault`: Remove only the Linux Vault plugin output under `build/artifacts/linux/vault/`.

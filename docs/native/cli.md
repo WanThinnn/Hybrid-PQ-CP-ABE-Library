@@ -17,10 +17,24 @@ build toolchain.
 - Linux and macOS install to `/usr/local/bin` by default. For a user-local install,
   run `make install PREFIX="$HOME/.local"` and add `$HOME/.local/bin` to `PATH`.
   Use `DESTDIR` to stage a package without installing into the live system.
-- Windows installs to `%LOCALAPPDATA%\Programs\pq-cp-abe\bin` by default and
-  adds the directory to User PATH. Run `make install PREFIX="C:/path/to/prefix"`
-  to choose another prefix, or `make install UPDATE_PATH=0` to stage files without
-  changing User PATH. Open a new terminal after updating User PATH.
+- Windows installs to `%LOCALAPPDATA%\Programs\pq-cp-abe` by default, with the
+  CLI and runtime DLLs in `bin/`, public headers in `include/`, and native
+  libraries in `lib/`. It adds `bin/` to User PATH. Run
+  `make install PREFIX="C:/path/to/prefix"` to choose another prefix, or
+  `make install UPDATE_PATH=0` to stage files without changing User PATH. Open
+  a new terminal after updating User PATH.
+
+On Windows, use the installed SDK paths when compiling with MSVC:
+
+```bat
+cl /I"%LOCALAPPDATA%\Programs\pq-cp-abe\include" /c app.cpp
+cl app.obj /link /LIBPATH:"%LOCALAPPDATA%\Programs\pq-cp-abe\lib" ^
+  libhybrid-pq-cp-abe.lib libcpabe_tkn20.lib bcrypt.lib advapi32.lib ntdll.lib userenv.lib ws2_32.lib
+```
+
+The static library includes the project and bundled native dependencies;
+`libcpabe_tkn20.lib` links its runtime DLL. The shared-library import library is
+`libhybrid-pq-cp-abe_dll.lib`; its DLL is installed in `bin/`.
 
 ```sh
 Usage: pq-cp-abe <command> [options] [arguments]

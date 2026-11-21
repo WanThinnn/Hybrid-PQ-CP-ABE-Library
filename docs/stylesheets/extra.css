@@ -19,6 +19,44 @@
   backdrop-filter: blur(12px);
 }
 
+/* Keep the product name in the header at all times. Zensical normally swaps
+   the first topic (site name) for the current page title while scrolling; on
+   this site, page titles belong in the navigation tabs/breadcrumbs instead. */
+.md-header__topic:first-child {
+  position: static !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.md-header__topic[data-md-component="header-topic"] {
+  display: none !important;
+}
+
+.pq-version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex: 0 0 auto;
+  margin-left: 0.45rem;
+  padding: 0.22rem 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 8%, transparent);
+  color: var(--md-primary-fg-color);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.pq-version-badge:hover {
+  background: color-mix(in srgb, var(--md-primary-fg-color) 14%, transparent);
+}
+
+.pq-version-badge > span:first-child {
+  font-size: 0.48rem;
+}
+
 /* Brand mark: compact cryptography lock with an emerald tile. */
 .md-header .md-logo img,
 .md-header .md-logo svg {
@@ -125,6 +163,32 @@
   font-size: 0.9rem;
 }
 
+.md-typeset .pq-download-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.9rem 0 1rem;
+}
+
+.md-typeset .pq-download-grid > p {
+  margin: 0;
+}
+
+.md-typeset .pq-download-grid .md-button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.md-typeset .pq-download-button {
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.md-typeset .pq-download-button[data-recommended="true"] {
+  box-shadow: 0 0 0 0.1rem color-mix(in srgb, var(--md-primary-fg-color) 18%, transparent);
+}
+
 .md-typeset .grid.cards > ul > li,
 .md-typeset .grid.cards > ol > li {
   border: 1px solid var(--pq-card-border);
@@ -189,6 +253,10 @@
 @media screen and (max-width: 44.984375em) {
   .md-typeset .pq-hero {
     border-radius: 14px;
+  }
+
+  .md-typeset .pq-download-grid {
+    grid-template-columns: 1fr;
   }
 
   .md-typeset .pq-actions > p {

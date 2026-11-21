@@ -244,7 +244,7 @@ help:
 	@echo "  make static          Build only the static library"
 	@echo "  make shared          Build only the shared library"
 	@echo "  make executable      Build only the CLI"
-	@echo "  make install         Install the pq-cp-abe CLI (override with PREFIX=...)"
+	@echo "  make install         Install the CLI, public headers, and native libraries (PREFIX=...)"
 	@echo "  make benchmark-bridge Build the benchmark-only primitive bridge"
 	@echo "  make test -j8        Build incrementally and run tests"
 	@echo "  make tests -j8       Alias for make test -j8"
@@ -388,8 +388,8 @@ $(SHARED_LIB): $(SHARED_OBJS) $(WIN_STATIC_DEPS) $(TKN20_IMPORT_LIB) $(TKN20_DLL
 
 executable: $(EXEC) $(PUBLISHED_TKN20_DLL)
 
-install: $(EXEC) $(TKN20_DLL)
-	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-cli.ps1 -Executable "$(EXEC)" -Runtime "$(TKN20_DLL)" $(if $(strip $(PREFIX)),-Prefix "$(PREFIX)") $(if $(filter 0,$(UPDATE_PATH)),-SkipPathUpdate)
+install: $(EXEC) static shared $(TKN20_DLL) $(TKN20_IMPORT_LIB)
+	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-cli.ps1 -Executable "$(EXEC)" -Runtime "$(TKN20_DLL)" -IncludeDirectory "$(INC_DIR)" -StaticLibrary "$(LIB_DIR)/libhybrid-pq-cp-abe.lib" -SharedLibrary "$(LIB_DIR)/libhybrid-pq-cp-abe.dll" -SharedImportLibrary "$(LIB_DIR)/libhybrid-pq-cp-abe_dll.lib" -RuntimeImportLibrary "$(TKN20_IMPORT_LIB)" $(if $(strip $(PREFIX)),-Prefix "$(PREFIX)") $(if $(filter 0,$(UPDATE_PATH)),-SkipPathUpdate)
 
 benchmark-bridge:
 	@powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-benchmark-bridge.ps1
@@ -476,9 +476,12 @@ executable: $(EXEC)
 PREFIX ?= /usr/local
 bindir ?= $(PREFIX)/bin
 
-install: $(EXEC)
-	install -d "$(DESTDIR)$(bindir)"
+install: $(EXEC) static shared
+	install -d "$(DESTDIR)$(bindir)" "$(DESTDIR)$(PREFIX)/include/hybrid_pq_cp_abe" "$(DESTDIR)$(PREFIX)/lib"
 	install -m 755 "$(EXEC)" "$(DESTDIR)$(bindir)/pq-cp-abe"
+	install -m 644 $(wildcard $(INC_DIR)/hybrid_pq_cp_abe/*.h) "$(DESTDIR)$(PREFIX)/include/hybrid_pq_cp_abe/"
+	install -m 644 "$(STATIC_LIB)" "$(DESTDIR)$(PREFIX)/lib/"
+	install -m 755 "$(SHARED_LIB)" "$(DESTDIR)$(PREFIX)/lib/"
 
 benchmark-bridge: $(BENCHMARK_BRIDGE)
 
