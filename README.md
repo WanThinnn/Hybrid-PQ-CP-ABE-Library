@@ -67,6 +67,10 @@ On Windows, run `bin\pq-cp-abe.exe version`. The archive includes headers and
 libraries for C/C++ integration. See the [CLI examples](docs/native/cli.md) and
 [build guide](docs/native/build.md) for source builds and toolchain setup.
 
+Native source builds default to C++17. To choose another supported standard,
+pass `CXX_STANDARD=c++20` to `make` and `make test`; see the
+[build example below](#native-sdk-and-cli-1).
+
 The prebuilt Linux x86_64 SDK and Python wheel require glibc 2.34 or newer and
 libstdc++ with `GLIBCXX_3.4.29`. Check your glibc with `getconf GNU_LIBC_VERSION`.
 
@@ -125,6 +129,20 @@ make -j8
 make test -j8
 make install
 ```
+
+The native build defaults to C++17 on Linux, macOS, and Windows. To use C++20,
+override `CXX_STANDARD` for each invocation:
+
+```sh
+make clean
+make -j8 CXX_STANDARD=c++20
+make test -j8 CXX_STANDARD=c++20
+make install CXX_STANDARD=c++20
+```
+
+Run `make clean` when changing standards so existing objects are rebuilt. Staged
+dependencies can be reused. `CXX_STANDARD` preserves the other default compiler
+flags; the C header check automatically filters out C++ standard flags.
 
 On Linux and macOS, the default install prefix is `/usr/local`, so use
 `sudo make install` when installing system-wide, or set a user-writable

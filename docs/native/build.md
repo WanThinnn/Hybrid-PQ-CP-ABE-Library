@@ -28,7 +28,7 @@ not require submodule initialization.
     ```
 
 Required toolchains include CMake, Rust/Cargo, GNU Make, and a native C/C++
-compiler. Use the Go version declared in [the TKN20 module](../../bindings/tkn20/go.mod)
+compiler with C++17 support (the default native build standard). Use the Go version declared in [the TKN20 module](../../bindings/tkn20/go.mod)
 and check [the Vault module](../../plugins/vault/vault-plugin-abe/go.mod) when
 building the plugin. Windows also requires Visual Studio 2022/MSVC and
 MinGW-w64 `gcc` for Go CGO/TKN20.
@@ -133,6 +133,34 @@ The native C++ library, Crypto++, and liboqs use the dynamic MSVC runtime (`/MD`
 After `make`, the build prints the exact include, dependency-library, native-library, shared-library, runtime-DLL, and CLI output paths. `include/` and `lib/` at the repository root are project-only: `include/hybrid_pq_cp_abe/` contains the public Hybrid-CP-ABE API, while `lib/` contains the project static and shared libraries side by side. All third-party headers/libraries stay exclusively under `build/deps/<platform>/`.
 
 Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make clean-deps` to remove the complete dependency output for the current platform.
+
+### Choose the C++ standard
+
+The native Makefile defaults to `CXX_STANDARD ?= c++17`. Override it on the
+command line or through the environment to select a standard supported by your
+compiler. For example, to build and test with C++20 on Linux, macOS, or Windows:
+
+```sh
+make clean
+make -j8 CXX_STANDARD=c++20
+make test -j8 CXX_STANDARD=c++20
+```
+
+Pass the same value to each build and test invocation. Run `make clean` when
+changing standards because Make does not track compiler flag changes; existing
+objects would otherwise be reused. This only requires rebuilding the native core,
+so you can keep the staged dependencies.
+
+`CXX_STANDARD` supplies `-std=c++20` to GCC/Clang or `/std:c++20` to MSVC in
+the example above. It controls the native core, CLI, and C++ tests; dependency
+and WebAssembly builds use their own settings. Prefer this variable when changing
+only the standard: setting `CXXFLAGS` on the Make command line replaces the
+complete default flag list, including include paths and optimization flags.
+
+The C header compatibility check in `make test` compiles `crypto_params.c` as C
+and filters C++ standard flags from that command. Choosing C++17, C++20, or
+another C++ standard therefore does not pass an incompatible C++ flag to the C
+compiler mode.
 
 See [build/README.md](../../build/README.md) for the output layout. Keep logs under
 `build/logs/`, local reports under `build/reports/`, and temporary fixtures under

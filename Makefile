@@ -9,6 +9,8 @@
 
 BUILD_ROOT = build
 VERSION_HEADER = include/hybrid_pq_cp_abe/version.h
+# Override with e.g. make CXX_STANDARD=c++20.
+CXX_STANDARD ?= c++17
 
 ifeq ($(OS),Windows_NT)
     PLATFORM = windows
@@ -122,7 +124,7 @@ endif
 ifeq ($(COMPILER),msvc)
     CXX_BASE = cl.exe
     CXX = $(CXX_WRAPPER) $(CXX_BASE)
-    CXXFLAGS = /nologo /MD /GS /O2 /Z7 /EHsc /utf-8 /I$(INC_DIR) /I$(DEPS_INC_DIR) /I$(OQS_INC_DIR) /I$(TKN20_INC_DIR)
+    CXXFLAGS = /nologo /MD /GS /O2 /Z7 /EHsc /utf-8 /std:$(CXX_STANDARD) /I$(INC_DIR) /I$(DEPS_INC_DIR) /I$(OQS_INC_DIR) /I$(TKN20_INC_DIR)
     DLL_DEFINE = /DBUILD_DLL
 
     STATIC_OBJ_DIR = $(OBJ_DIR)/static
@@ -166,7 +168,7 @@ else
     endif
 
     CXX = $(CXX_WRAPPER) $(CXX_BASE)
-    CXXFLAGS = -O2 -g -Wall -I$(INC_DIR) -I$(DEPS_INC_DIR) -I$(OQS_INC_DIR) -I$(TKN20_INC_DIR) -fPIC -MMD -MP
+    CXXFLAGS = -O2 -g -Wall -std=$(CXX_STANDARD) -I$(INC_DIR) -I$(DEPS_INC_DIR) -I$(OQS_INC_DIR) -I$(TKN20_INC_DIR) -fPIC -MMD -MP
 
     CORE_OBJ_DIR = $(OBJ_DIR)/core
     MAIN_OBJ_DIR = $(OBJ_DIR)/main
@@ -407,7 +409,7 @@ clean:
 	@echo Done! Core build outputs cleared.
 
 $(BUILD_DIR)/crypto-params-header.obj: tests/cpp/header_checks/crypto_params.c $(PROJECT_HEADERS) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) /TC /c /Fo"$(subst /,\,$@)" "$<"
+	$(CXX) $(filter-out /std:c++%,$(CXXFLAGS)) /TC /c /Fo"$(subst /,\,$@)" "$<"
 
 $(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(TKN20_IMPORT_LIB) $(TKN20_DLL) $(BUILD_DIR)/crypto-params-header.obj | $(BUILD_DIR) $(MAIN_OBJ_DIR)
 	$(CXX) $(CXXFLAGS) /Fo"$(subst /,\,$(MAIN_OBJ_DIR))\\" /Fe:"$(subst /,\,$@)" $(PARAMS_TEST_SRC) $(LDFLAGS) "$(subst /,\,$(STATIC_LIB))" "$(subst /,\,$(TKN20_IMPORT_LIB))" $(WIN_SYSTEM_LIBS)
@@ -508,7 +510,7 @@ clean:
 
 $(BUILD_DIR)/crypto-params-header.o: tests/cpp/header_checks/crypto_params.c $(PROJECT_HEADERS)
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -x c -c "$<" -o "$@"
+	$(CXX) $(filter-out -std=c++% -std=gnu++%,$(CXXFLAGS)) -x c -c "$<" -o "$@"
 
 $(PARAMS_TEST): $(PARAMS_TEST_SRC) $(PROJECT_HEADERS) $(STATIC_LIB) $(BUILD_DIR)/crypto-params-header.o
 	@mkdir -p $(BUILD_DIR)
