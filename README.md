@@ -98,26 +98,45 @@ chmod +x configure
 
 ### Windows
 
-On a fresh Windows machine, PowerShell is already available; Bash is not
-required for the native toolchain check. Run from the repository root:
+**Install the Microsoft C++ build tools first.** Download **Build Tools for
+Visual Studio** or Visual Studio from
+[Microsoft](https://visualstudio.microsoft.com/downloads/) and select
+**Desktop development with C++**, including MSVC x64/x86 tools and a Windows SDK.
 
-```powershell
-$text = Get-Content .\configure -Raw
-$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1])
+Open **x64 Native Tools Command Prompt** for your Visual Studio version from
+the Start menu. **Use this one cmd session for setup, activation and build.**
+From the repository root:
 
-& $setup                  # Check native toolchain only
-& $setup -Install         # Install missing native build tools
+**Check only** (no installation or activation script generation):
 
-cmd /k build\tools\activate.cmd
+```cmd
+powershell.exe -NoProfile -Command ^
+    "$text = Get-Content .\configure -Raw;" ^
+    "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+    "& $setup"
 ```
 
-To check the WebAssembly toolchain through MSYS2:
+**Install missing tools and generate activation** (first-time setup):
 
-```powershell
-& $setup -Wasm
+```cmd
+powershell.exe -NoProfile -Command ^
+    "$text = Get-Content .\configure -Raw;" ^
+    "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+    "& $setup -Install"
 ```
 
-Use `-Wasm -Install` if the supported MSYS2 host tools also need to be installed.
+**Activate**, then continue with the build commands below in this same cmd:
+
+```cmd
+call build\tools\activate.cmd
+```
+
+Copy each multiline command including its `^` continuations. PowerShell runs as
+a child process and returns to the same cmd. Run activation in each new build
+session. See the [Windows setup steps](docs/native/build.md#windows) for details.
+
+For WebAssembly setup through MSYS2, see the
+[WebAssembly build guide](bindings/wasm/README.md).
 
 ### Native SDK and CLI
 

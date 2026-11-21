@@ -13,9 +13,66 @@ Run the commands below from the repository root.
   [native build guide](../../docs/native/build.md).
 - A virtual environment is recommended for the Python tools and installation.
 
-On Windows, build the native library from an activated **x64 Native Tools Command
-Prompt for VS 2022**, with the other tools on `PATH`. Follow the native guide's
-Windows setup rather than running the compiler from an unconfigured terminal.
+## Prepare one build terminal
+
+### **Linux / macOS**
+
+Use the same Unix shell for setup, activation, the native build and Python
+commands. **Check only:**
+
+```sh
+./configure
+```
+
+**Install missing tools and activate:**
+
+```sh
+./configure --install
+. ./build/tools/activate.sh
+```
+
+### **Windows**
+
+**Start in x64 Native Tools Command Prompt and keep that one cmd session for
+setup, activation, the native build and Python commands.** If the tools are not
+installed, download Visual Studio or Build Tools from
+[Microsoft](https://visualstudio.microsoft.com/downloads/) and select
+**Desktop development with C++**, including MSVC x64/x86 tools and a Windows SDK.
+Open the x64 Native Tools shortcut from the Start menu and enter the repository
+root (`cd /d D:\path\to\Hybrid-PQ-CP-ABE`).
+
+**Check only** (no installation or script generation):
+
+```cmd
+powershell.exe -NoProfile -Command ^
+    "$text = Get-Content .\configure -Raw;" ^
+    "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+    "& $setup"
+```
+
+**Install missing tools and generate activation** (first-time setup):
+
+```cmd
+powershell.exe -NoProfile -Command ^
+    "$text = Get-Content .\configure -Raw;" ^
+    "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+    "& $setup -Install"
+```
+
+**Activate in the same cmd**, after setup succeeds:
+
+```cmd
+call build\tools\activate.cmd
+```
+
+The `^` characters continue each setup command across lines in cmd. PowerShell
+runs as a child process and returns to this cmd. Activation adds MSYS2/Make,
+Go and Rust while preserving the MSVC linker priority. Run it in each new build
+session. See the [native Windows setup](../../docs/native/build.md#windows).
+
+If using a Python virtual environment, activate it in this same terminal before
+running the Python commands below (`call .venv\Scripts\activate.bat` on cmd,
+or `. .venv/bin/activate` on Unix).
 
 ## Build the native runtime
 

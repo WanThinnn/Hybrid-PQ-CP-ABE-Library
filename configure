@@ -321,7 +321,7 @@ if ($Wasm) {
     return
 }
 function Refresh-Path {
-    $env:Path = "$Msys\usr\bin;$Msys\mingw64\bin;$env:USERPROFILE\.cargo\bin;$env:ProgramFiles\Go\bin;" +
+    $env:Path = "$env:SystemRoot\System32;$env:SystemRoot;$Msys\usr\bin;$Msys\mingw64\bin;$env:USERPROFILE\.cargo\bin;$env:ProgramFiles\Go\bin;" +
         [Environment]::GetEnvironmentVariable('Path','Machine') + ';' +
         [Environment]::GetEnvironmentVariable('Path','User') + ';' + $env:Path
 }
@@ -401,13 +401,14 @@ if ($Install) {
     $Tools = Join-Path $Root 'build\tools'
     [void][IO.Directory]::CreateDirectory($Tools)
     $Lines = @('@echo off',
-        ('set "PATH=' + $Msys + '\usr\bin;' + $Msys + '\mingw64\bin;%USERPROFILE%\.cargo\bin;%ProgramFiles%\Go\bin;%PATH%"'),
+        ('set "PATH=%SystemRoot%\System32;%SystemRoot%;%PATH%;' + $Msys + '\usr\bin;' + $Msys + '\mingw64\bin;%USERPROFILE%\.cargo\bin;%ProgramFiles%\Go\bin"'),
         ('call "' + $Vs + '\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64'),
         'if errorlevel 1 exit /b 1')
     [IO.File]::WriteAllLines((Join-Path $Tools 'activate.cmd'), $Lines, [Text.Encoding]::ASCII)
-    Write-Host 'Next: cmd /k build\tools\activate.cmd'
+    Write-Host 'Next (x64 cmd): call build\tools\activate.cmd'
 } else {
-    Write-Host "Use an x64 Native Tools prompt; add $Msys\usr\bin and $Msys\mingw64\bin to PATH."
+    Write-Host 'Check only: activation script was not generated. Rerun the Windows configure command with -Install to generate it.'
+    Write-Host "Alternatively, use an x64 Native Tools prompt; add $Msys\usr\bin and $Msys\mingw64\bin to PATH."
 }
 Write-Host 'Ready: make deps -j8 && make -j8 && make test -j8'
 # END WINDOWS CONFIGURE

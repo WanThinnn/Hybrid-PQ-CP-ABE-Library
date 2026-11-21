@@ -27,25 +27,56 @@ make wasm-test -j8
 ```
 
 ### Windows x64 with MSYS2
+**Start in x64 Native Tools Command Prompt and keep that one cmd session for
+setup, activation, build and tests.** Install Visual Studio or Build Tools from
+[Microsoft](https://visualstudio.microsoft.com/downloads/) with
+**Desktop development with C++**, MSVC x64/x86 tools and a Windows SDK. Rust
+needs the MSVC host tools even though the output is WebAssembly.
 
-Install Visual Studio C++ Build Tools with the Windows SDK for the Rust host.
-Install Go, Emscripten SDK 7.0.0 or newer, and Rust via rustup. In the MSYS2
-MINGW64 terminal, use the Windows Emscripten installation and put Windows Go
-and Cargo on `PATH`. Replace the sample Emscripten path with your installation
-directory.
+Follow the [native Windows setup](../../docs/native/build.md#windows) in this
+same cmd to check or install Make/MSYS2, Go and Rust, then generate
+`build\tools\activate.cmd`. Install **Emscripten SDK 7.0.0 or newer** using the
+[official SDK instructions](https://emscripten.org/docs/getting_started/downloads.html).
+Replace the repository and Emscripten paths below with your local paths.
 
-```sh
-export PATH="$(cygpath -u "$USERPROFILE")/.cargo/bin:/c/Program Files/Go/bin:$PATH"
-source /c/path/to/emsdk/emsdk_env.sh
+**Activate the build tools and Emscripten in this cmd:**
+
+```cmd
+cd /d D:\path\to\Hybrid-PQ-CP-ABE
+call build\tools\activate.cmd
+call C:\path\to\emsdk\emsdk_env.bat
+set "MSYSTEM=MINGW64"
 rustup toolchain install nightly-x86_64-pc-windows-msvc --component rust-src
-sh ./configure --wasm --install  # Use --wasm alone when MSYS2 tools are installed
-make wasm -j8
-make wasm-test -j8
 ```
 
-The Windows dependency build uses Ninja for liboqs. `--install` can provision
-GNU Make, CMake, Ninja, and Python in MSYS2. The SDK, Go, and Rust are set up
-separately. Run the Make commands in the same MSYS2 terminal.
+**Check only** (does not install missing WASM tools):
+
+```cmd
+C:\msys64\usr\bin\bash.exe -c "sh ./configure --wasm"
+```
+
+**Install missing MSYS2 WASM tools, then check:**
+
+```cmd
+C:\msys64\usr\bin\bash.exe -c "sh ./configure --wasm --install"
+```
+
+`--install` can provision GNU Make, CMake, Ninja and Python in MSYS2. Emscripten,
+Go and Rust must already be available from the activation steps above. Adjust
+`C:\msys64` if MSYS2 is installed elsewhere.
+
+**Build and test in the same cmd:**
+
+```cmd
+C:\msys64\usr\bin\bash.exe -c "make wasm -j8"
+C:\msys64\usr\bin\bash.exe -c "make wasm-test -j8"
+```
+
+These commands run Bash as a child process and return to the same x64 cmd;
+you do not need to open another terminal or enter an interactive MSYS2 shell.
+Bash is required by the WASM Makefile and dependency scripts. It inherits the
+activated MSVC, Go, Rust and Emscripten environment. Repeat activation when
+opening a new build session. The Windows liboqs build uses Ninja.
 
 ### Build targets and outputs
 

@@ -32,7 +32,7 @@ cd Hybrid-PQ-CP-ABE
 Required toolchains include CMake, Rust/Cargo, GNU Make, and a native C/C++
 compiler with C++17 support (the default native build standard). Use the Go version declared in [the TKN20 module](../../bindings/tkn20/go.mod)
 and check [the Vault module](../../plugins/vault/vault-plugin-abe/go.mod) when
-building the plugin. Windows also requires Visual Studio 2022/MSVC and
+building the plugin. Windows also requires the MSVC x64 build tools and
 MinGW-w64 `gcc` for Go CGO/TKN20.
 
 The root `VERSION` file is the version source of truth. Make generates the public
@@ -74,28 +74,75 @@ Activation adds local tools to this shell's PATH.
 
 #### **Windows**
 
-On a fresh Windows machine, PowerShell is already available; Bash is not
-required. Run the following in **PowerShell**, from the repository root, to
-execute the Windows section embedded in the same file:
+**Prerequisite: install the Microsoft C++ build tools and use an x64 Native
+Tools Command Prompt for all native `make` commands.**
 
-```powershell
-$text = Get-Content .\configure -Raw
-$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1])
-& $setup                 # Check only
-& $setup -Install        # Install missing tools
-& $setup -Wasm           # Check Windows WASM tools through MSYS2 when Emscripten is on PATH
-cmd /k build\tools\activate.cmd
-```
+1. Download **Build Tools for Visual Studio** or Visual Studio from the
+    [official Microsoft downloads page](https://visualstudio.microsoft.com/downloads/).
+    In Visual Studio Installer, select **Desktop development with C++**, including
+    the **MSVC x64/x86 build tools** and a **Windows SDK**. If these components
+    are already installed, keep your existing installation. See
+    [Microsoft's command-line setup guide](https://learn.microsoft.com/en-us/cpp/build/building-on-the-command-line)
+    for details.
 
-**Continue in the activated Command Prompt (cmd) session** after the last command. `cmd /k` starts cmd, runs `build\tools\activate.cmd` to set up the build
-environment, and keeps that session open. Run `make deps`, `make`, and `make test` there.
+2. Open the **Start menu**, search for **x64 Native Tools Command Prompt**,
+    and open the shortcut for your installed Visual Studio version
+    (for example, **x64 Native Tools Command Prompt for VS 2022** or **VS 2026**).
+    **Use this one cmd session for setup, activation, build and tests.**
 
-The Windows installer uses WinGet for Visual Studio C++ Build Tools, MSYS2, Go
-and rustup, then MSYS2's package manager for Make/CMake/MinGW. If WinGet is
-missing, install Microsoft's App Installer from <https://aka.ms/getwinget> first.
-**Use the activated x64 command prompt for subsequent `make` commands**; it keeps
-MSVC's linker ahead of the unrelated MSYS `link.exe`. No `make prepare` or
-library-specific Make targets are needed.
+3. From that **x64 cmd**, enter your repository directory:
+
+    ```cmd
+    cd /d D:\path\to\Hybrid-PQ-CP-ABE
+    ```
+
+    **Check only** — report missing tools without installing or generating an
+    activation script:
+
+    ```cmd
+    powershell.exe -NoProfile -Command ^
+        "$text = Get-Content .\configure -Raw;" ^
+        "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+        "& $setup"
+    ```
+
+    **Install missing tools and generate activation** — use this for first-time
+    setup, even if the check reports that all tools are already installed:
+
+    ```cmd
+    powershell.exe -NoProfile -Command ^
+        "$text = Get-Content .\configure -Raw;" ^
+        "$setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[1]);" ^
+        "& $setup -Install"
+    ```
+
+    Both commands run PowerShell as a child process and return to the same cmd.
+    The `^` characters continue the command across lines in cmd; copy the whole
+    block. The install command uses WinGet and MSYS2's package manager for
+    MSYS2/Make/CMake/MinGW, Go and Rust. If WinGet is missing, install
+    [Microsoft App Installer](https://aka.ms/getwinget) first.
+
+    **Activate after successful setup**, in the same cmd:
+
+    ```cmd
+    call build\tools\activate.cmd
+    ```
+
+    Run activation in each new build session. It adds Windows system utilities,
+    MSYS2/Make, Go and Rust to `PATH` and prepares MSVC x64. The MSYS2 location
+    comes from configure (`MSYS2_ROOT`, or `C:\msys64` by default).
+
+    To verify linker priority:
+
+    ```cmd
+    where.exe cl.exe
+    where.exe link.exe
+    ```
+
+    **The first `link.exe` result must be the MSVC linker under your Visual Studio
+    installation.** Activation preserves existing MSVC tool paths ahead of MSYS2.
+
+**Continue with steps 3–5 below in this same activated x64 cmd session.**
 
 **WebAssembly (both platforms):** On Linux, WSL, macOS, or Windows MSYS2, use
 `sh ./configure --wasm` after activating Emscripten to check the WebAssembly
@@ -139,7 +186,8 @@ The core consumes headers and libraries directly from `build/deps/<platform>/`. 
 make test -j8
 ```
 
-On Windows, run these commands from an **x64 Native Tools Command Prompt for VS 2022**. Windows uses the MSVC x64 ABI; `librabe-ffi` is forced to `x86_64-pc-windows-msvc`, while TKN20 uses Go/MinGW only behind a C ABI DLL plus an MSVC import `.lib`.
+On Windows, run these commands in the **x64 Native Tools Command Prompt**
+prepared in step 2. Windows uses the MSVC x64 ABI; `librabe-ffi` is forced to `x86_64-pc-windows-msvc`, while TKN20 uses Go/MinGW only behind a C ABI DLL plus an MSVC import `.lib`.
 
 The native C++ library, Crypto++, and liboqs use the dynamic MSVC runtime (`/MD`). Crypto++ still links as a static `.lib`. The dependency builder removes byte-identical duplicate archive members from the Rust static library while preserving its symbols and COFF linker indexes.
 
