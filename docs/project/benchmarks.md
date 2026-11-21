@@ -3,7 +3,7 @@
 ### Published Benchmark Snapshot
 
 A reproducible v6.0.0 benchmark snapshot is published under
-[`benchmark/published/2026-11-01_i5-12450HX_standard/`](../benchmark/published/2026-11-01_i5-12450HX_standard/).
+[`benchmark/published/2026-11-01_i5-12450HX_standard/`](../../benchmark/published/2026-11-01_i5-12450HX_standard/).
 
 Benchmark environment:
 
@@ -71,12 +71,12 @@ results and variability.
 
 The published snapshot includes:
 
-- [`report.md`](../benchmark/published/2026-11-01_i5-12450HX_standard/report.md) — methodology, environment, results, and interpretation notes.
-- [`summary.csv`](../benchmark/published/2026-11-01_i5-12450HX_standard/summary.csv) — median, mean, p95, p99, standard deviation, and coefficient of variation.
-- [`raw_samples.csv`](../benchmark/published/2026-11-01_i5-12450HX_standard/raw_samples.csv) — every recorded timing sample.
-- [`benchmark_results.json`](../benchmark/published/2026-11-01_i5-12450HX_standard/benchmark_results.json) — machine-readable results and benchmark metadata.
-- [`charts/`](../benchmark/published/2026-11-01_i5-12450HX_standard/charts/) — generated benchmark figures.
-- [`benchmark/`](../benchmark/) — scripts and instructions required to reproduce the tests.
+- [`report.md`](../../benchmark/published/2026-11-01_i5-12450HX_standard/report.md) — methodology, environment, results, and interpretation notes.
+- [`summary.csv`](../../benchmark/published/2026-11-01_i5-12450HX_standard/summary.csv) — median, mean, p95, p99, standard deviation, and coefficient of variation.
+- [`raw_samples.csv`](../../benchmark/published/2026-11-01_i5-12450HX_standard/raw_samples.csv) — every recorded timing sample.
+- [`benchmark_results.json`](../../benchmark/published/2026-11-01_i5-12450HX_standard/benchmark_results.json) — machine-readable results and benchmark metadata.
+- [`charts/`](../../benchmark/published/2026-11-01_i5-12450HX_standard/charts/) — generated benchmark figures.
+- [`benchmark/`](../../benchmark/) — scripts and instructions required to reproduce the tests.
 
 > [!IMPORTANT]
 > **Benchmark comparison scope:** native AC17/TKN20 use the in-memory Buffer

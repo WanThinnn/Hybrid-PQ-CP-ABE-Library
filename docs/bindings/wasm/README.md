@@ -6,7 +6,7 @@ The `@wanthinnn/pq-cp-abe` npm package executes the project's cryptographic code
 
 - [API reference](api.md) — objects, functional methods, enums, primitives, return values, errors.
 - [CLI and build guide](cli.md) — host files, signed workflows, source builds and publishing.
-- [Architecture and schemes](../../architecture.md) · [Native parameters and wire format](../../native_parameters.md).
+- [Architecture and schemes](../../architecture/README.md) · [Native parameters and wire format](../../native/parameters.md).
 - [WASM toolchain instructions](../../../bindings/wasm/README.md).
 
 ## Installation
@@ -92,4 +92,4 @@ AC17/TKN20 are **classical ABE**; optional ML-DSA does not make their key encaps
 - `CoverCryptABE.addDimension` and `addAttribute` produce a new public/master key pair. Save both; extending an authority does not automatically revoke existing user rights.
 - Avoid AES-GCM nonce reuse. Standalone ML-KEM decapsulation is not sender authentication.
 - WASM isolates linear memory but is not a secure key vault against malicious code executing in the same application.
-- Explicit `aesKeyBits` / `mlDsaParameterSet` select the newer V3 hybrid ciphertext format; consult [parameters](../../native_parameters.md) for compatibility with older releases.
+- Explicit `aesKeyBits` / `mlDsaParameterSet` select the newer V3 hybrid ciphertext format; consult [parameters](../../native/parameters.md) for compatibility with older releases.

@@ -7,7 +7,7 @@
 - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
 - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2019/966) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
 - [Open Quantum Safe Library](https://github.com/open-quantum-safe/liboqs) (Open Quantum Safe - used for optional ML-DSA-87 signatures)
-- [HashiCorp Vault Secrets Engine](../plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
+- [HashiCorp Vault Secrets Engine](../../plugins/vault/README.md) (optional Go plugin for Enterprise Cryptography-as-a-Service)
 - [Cosmian CoverCrypt](https://eprint.iacr.org/2025/544) via [Cosmian CoverCrypt](https://github.com/Cosmian/cover_crypt) (native ABE integration with Classic, PostQuantum and Hybridized modes; see `vendor/cover_crypt/`)
 
 > [!NOTE]
@@ -15,7 +15,7 @@
 > **Dependency source of truth:** third-party source is vendored under `vendor/`. Built dependency headers and libraries are normalized under `build/deps/<platform>/`; the top level of that directory contains only `include/` and `lib/` after a successful dependency build.
 
 For maintainer-only upstream Git histories and update commands, see
-[vendor/README.md](../vendor/README.md). Source stays vendored; ordinary clones do
+[vendor/README.md](../../vendor/README.md). Source stays vendored; ordinary clones do
 not require submodule initialization.
 
 1. Clone the repository:
@@ -25,8 +25,8 @@ not require submodule initialization.
     ```
 
 Required toolchains include CMake, Rust/Cargo, GNU Make, and a native C/C++
-compiler. Use the Go version declared in [the TKN20 module](../bindings/tkn20/go.mod)
-and check [the Vault module](../plugins/vault/vault-plugin-abe/go.mod) when
+compiler. Use the Go version declared in [the TKN20 module](../../bindings/tkn20/go.mod)
+and check [the Vault module](../../plugins/vault/vault-plugin-abe/go.mod) when
 building the plugin. Windows also requires Visual Studio 2022/MSVC and
 MinGW-w64 `gcc` for Go CGO/TKN20.
 
@@ -54,7 +54,7 @@ chmod +x configure
 On Linux, WSL, macOS, or Windows MSYS2, use `sh ./configure --wasm` after
 activating Emscripten to check the WebAssembly toolchain. Combine it with
 `--install` to install the standard host tools. See the
-[WebAssembly guide](../bindings/wasm/README.md) for platform setup.
+[WebAssembly guide](../../bindings/wasm/README.md) for platform setup.
 
 For a custom Linux/macOS toolchain with an explicitly controlled `PATH`, use
 `HCPABE_CONFIGURE_DISCOVER_PATHS=0 ./configure`. This disables automatic search
@@ -131,7 +131,7 @@ After `make`, the build prints the exact include, dependency-library, native-lib
 
 Normal core builds are incremental. Use `make clean` only to remove the project core/object output. Use `make clean-deps` to remove the complete dependency output for the current platform.
 
-See [build/README.md](../build/README.md) for the output layout. Keep logs under
+See [build/README.md](../../build/README.md) for the output layout. Keep logs under
 `build/logs/`, local reports under `build/reports/`, and temporary fixtures under
 `build/tmp/`. Reusable diagnostic scripts live in `scripts/diagnostics/`.
 

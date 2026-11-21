@@ -101,8 +101,8 @@ variants. Decryption detects parameters.
 Python uses `aes_key_bits` and `ml_dsa_parameter_set`. JavaScript uses
 `aesKeyBits` and `mlDsaParameterSet`. These options work on the functional
 and object APIs. An explicit encryption parameter selects V3. Calls without
-either parameter use the legacy format. [Python SDK](../bindings/python/README.md#object-api) ·
-[JavaScript SDK](../bindings/npm/README.md#object-api)
+either parameter use the legacy format. [Python SDK](../../bindings/python/README.md#object-api) ·
+[JavaScript SDK](../../bindings/npm/README.md#object-api)
 
 One native library contains the standalone ML-KEM and ML-DSA variants.
 CoverCrypt uses ML-KEM-768 for its post-quantum encapsulation component.

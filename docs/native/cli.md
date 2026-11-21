@@ -40,7 +40,7 @@ pq-cp-abe decrypt "test_case/cpabe_sk.key" "test_case/ciphertext.txt" "test_case
 
 CoverCrypt uses ML-KEM-768 for key encapsulation in its `hybridized` (default)
 and `post_quantum` modes. The optional ML-DSA signature flow works with CoverCrypt,
-AC17, and TKN20. [Architecture and scheme guide](architecture.md#native-pqc-with-covercrypt)
+AC17, and TKN20. [Architecture and scheme guide](../architecture/README.md#native-pqc-with-covercrypt)
 
 - `setup --with-signing-keys` creates an ML-DSA key pair alongside the ABE keys.
   The signing and verification files are named `ml-dsa_sk.key` and `ml-dsa_pk.key`

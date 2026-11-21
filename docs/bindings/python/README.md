@@ -7,7 +7,7 @@ The `pq-cp-abe` Python package exposes the project's native C ABI using `ctypes`
 - [API reference](api.md) — object/functional methods, parameters, return types, exceptions and standalone cryptographic primitives.
 - [Python CLI and file operations](cli.md) — named flags, signed workflows, CoverCrypt configuration and file naming.
 - [Automatic API documentation](api-generation.md) — generate class/function docs from type annotations and docstrings.
-- [Native format and parameters](../../native_parameters.md) · [Architecture and access policies](../../architecture.md) · [Building from source](../../build.md).
+- [Native format and parameters](../../native/parameters.md) · [Architecture and access policies](../../architecture/README.md) · [Building from source](../../native/build.md).
 
 ## Install
 
@@ -97,12 +97,12 @@ Keys and policies are scheme-specific. Decryption derives the scheme from the ci
 | ML-KEM inside CoverCrypt | 768 | Fixed at 768 |
 | Standalone `MlKem` | 512 / 768 / 1024 | 768 |
 
-Passing explicit `aes_key_bits` or `ml_dsa_parameter_set` in encryption selects the newer V3 ciphertext format. Omitted parameters preserve the legacy-compatible encryption path; read [native parameter documentation](../../native_parameters.md) before exchanging ciphertext with older runtimes.
+Passing explicit `aes_key_bits` or `ml_dsa_parameter_set` in encryption selects the newer V3 ciphertext format. Omitted parameters preserve the legacy-compatible encryption path; read [native parameter documentation](../../native/parameters.md) before exchanging ciphertext with older runtimes.
 
 ## Security and key handling
 
 - Store the master secret key and ML-DSA signing key securely; distribute the public and verification keys through an authenticated channel.
 - Combined ABE `AuthoritySigningKeys.signing_key` and `verification_key` are **Base64-encoded bytes** in the native setup format. Standalone `MlDsa.generate_keypair()` returns **raw** ML-DSA key bytes. Do not mix formats.
 - Authority growth via `CoverCryptABE.add_dimension` / `add_attribute` returns an updated **public key and master secret key**. Persist both; old issued rights are not revoked automatically.
-- In-memory `keygen` is stateless with respect to persistent authority metadata. Consult [architecture notes](../../architecture.md) about CoverCrypt issuance/tracing and concurrent file updates.
+- In-memory `keygen` is stateless with respect to persistent authority metadata. Consult [architecture notes](../../architecture/README.md) about CoverCrypt issuance/tracing and concurrent file updates.
 - Exceptions in the modern Python API include `AbeError`, `PolicyMismatchError` and `SignatureInvalidError`. Do not expose failed-decryption output.

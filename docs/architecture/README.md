@@ -18,7 +18,7 @@
 
 For a complete WebAssembly build on Linux (AC17, TKN20, CoverCrypt, AES-GCM and
 ML-DSA-87), run `make wasm -j8` and `make wasm-test -j8` after installing the
-toolchains in [bindings/wasm/README.md](../bindings/wasm/README.md). The standalone
+toolchains in [bindings/wasm/README.md](../../bindings/wasm/README.md). The standalone
 `Makefile.wasm` builds the static archive and browser/Node.js package separately
 from native DLL/SO outputs.
 
@@ -67,7 +67,7 @@ corresponding `<name>::present` attribute. For native dimensions/hierarchies,
 use qualified policies such as `Department::FIN && Security::TOP`. CoverCrypt
 does not translate the TKN20 `NOT` syntax; unsupported policies fail explicitly.
 
-For a quick CLI smoke test, use the checked-in [scripts/covercrypt-demo.json](../scripts/covercrypt-demo.json)
+For a quick CLI smoke test, use the checked-in [scripts/covercrypt-demo.json](../../scripts/covercrypt-demo.json)
 with `Department::{IT,HR}` and `Level::{USER,ADMIN}`. Run `pq-cp-abe --help` for CMD,
 PowerShell and Linux/macOS environment commands and a setup/keygen/encrypt/decrypt
 example. The demo contains only attribute definitions, not keys. Setup requires

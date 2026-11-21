@@ -1,6 +1,6 @@
 # Language bindings
 
-The repository provides two primary developer SDKs. The native library and command-line tool have their own [build guide](../build.md) and [CLI reference](../cli.md).
+The repository provides two primary developer SDKs. The native library and command-line tool have their own [build guide](../native/build.md) and [CLI reference](../native/cli.md).
 
 | SDK | Runtime | Start here | API reference |
 | --- | --- | --- | --- |
@@ -9,6 +9,6 @@ The repository provides two primary developer SDKs. The native library and comma
 
 - Python package: [`pq-cp-abe` on PyPI](https://pypi.org/project/pq-cp-abe/).
 - JavaScript package: [`@wanthinnn/pq-cp-abe` on npm](https://www.npmjs.com/package/@wanthinnn/pq-cp-abe).
-- [Architecture and cryptographic modes](../architecture.md) · [Parameters and wire format](../native_parameters.md).
+- [Architecture and cryptographic modes](../architecture/README.md) · [Parameters and wire format](../native/parameters.md).
 
 **Security boundary:** AC17 and TKN20 are classical ABE schemes. CoverCrypt supports ML-KEM-768 in `HYBRIDIZED` and `POST_QUANTUM` modes. Optional ML-DSA signing is independent and does not turn classical ABE into quantum-resistant ABE.

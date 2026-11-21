@@ -126,7 +126,7 @@ The functional `api` offers `aesGcmGenerateKey/Encrypt/Decrypt`, `mlDsaGenerateK
 - AES sizes: 128/192/256; ML-DSA sets: 44/65/87. Explicit parameters select V3; omitted options preserve the legacy hybrid encryption path.
 - Plain `decrypt` is not signature verification. Use `decryptAndVerify` and a **trusted** verification key for authenticated plaintext.
 
-See the [native parameter and V3 format guide](../../native_parameters.md) and [project architecture](../../architecture.md).
+See the [native parameter and V3 format guide](../../native/parameters.md) and [project architecture](../../architecture/README.md).
 
 ## Compatibility imports
 

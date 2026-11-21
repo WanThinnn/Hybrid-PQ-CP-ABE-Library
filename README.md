@@ -35,12 +35,12 @@ Extract it and run the CLI from the package root:
 ```
 
 When building from source, run `make install` to make `pq-cp-abe` available
-from your shell. See the [CLI installation guide](docs/cli.md) for the default
+from your shell. See the [CLI installation guide](docs/native/cli.md) for the default
 location on each platform and how to set `PREFIX`.
 
 On Windows, run `bin\pq-cp-abe.exe version`. The archive includes headers and
-libraries for C/C++ integration. See the [CLI examples](docs/cli.md) and
-[build guide](docs/build.md) for source builds and toolchain setup.
+libraries for C/C++ integration. See the [CLI examples](docs/native/cli.md) and
+[build guide](docs/native/build.md) for source builds and toolchain setup.
 
 The prebuilt Linux x86_64 SDK and Python wheel require glibc 2.34 or newer and
 libstdc++ with `GLIBCXX_3.4.29`. Check your glibc with `getconf GNU_LIBC_VERSION`.
@@ -80,7 +80,7 @@ make test -j8
 make install
 ```
 
-See the [native build guide](docs/build.md) for toolchain setup on Windows,
+See the [native build guide](docs/native/build.md) for toolchain setup on Windows,
 Linux, and macOS.
 
 For WebAssembly, set up Emscripten on Linux, macOS, or Windows MSYS2, then run:
@@ -118,15 +118,15 @@ mode.
   <img src="benchmark/published/2026-11-01_i5-12450HX_standard/charts/03_pqc_overhead.png" alt="ML-DSA-87 Sign-then-Encrypt overhead by scheme" width="900"/>
 </p>
 
-See the [benchmark results and methodology](docs/benchmarks.md) for detailed
+See the [benchmark results and methodology](docs/project/benchmarks.md) for detailed
 measurements and raw samples.
 
 ## Documentation
 
-- [Architecture, CoverCrypt configuration and authority updates](docs/architecture.md)
-- [Native build, toolchains and repository layout](docs/build.md)
+- [Architecture, CoverCrypt configuration and authority updates](docs/architecture/README.md)
+- [Native build, toolchains and repository layout](docs/native/build.md)
 - [HashiCorp Vault plugin](plugins/vault/README.md)
-- [Release maintenance](docs/releases.md)
+- [Release maintenance](docs/project/releases.md)
 
 ## License
 

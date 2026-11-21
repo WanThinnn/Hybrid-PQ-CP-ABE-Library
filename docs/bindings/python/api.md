@@ -64,7 +64,7 @@ For classical schemes, instantiate `AC17CPABE()`, `TKN20CPABE()`, or `PqCpAbe(sc
 | `add_attribute(master_secret_key, dimension, attribute, *, after=None)` | Add one attribute and return updated `AuthorityKeys` |
 | `mode` / `parameter_set` | Read configured KEM mode; this build's CoverCrypt KEM parameter set is ML-KEM-768 |
 
-The attribute method uses the native environment mode for the newly added attribute; see [architecture notes](../../architecture.md). Persist **both** updated authority keys. Growth is not equivalent to revocation.
+The attribute method uses the native environment mode for the newly added attribute; see [architecture notes](../../architecture/README.md). Persist **both** updated authority keys. Growth is not equivalent to revocation.
 
 ### Result types
 
@@ -148,5 +148,5 @@ Functional equivalents: `aes_gcm_generate_key/encrypt/decrypt`, `ml_dsa_generate
 - Modern native failures raise `AbeError(code, operation)`; `PolicyMismatchError` and `SignatureInvalidError` specialize native error codes -3 and -9.
 - Bad Python arguments can raise `TypeError` or `ValueError`; an unsupported modern native export can raise `NotImplementedError` when loading older binaries.
 - A standalone `MlDsa.verify` returns `False` for an invalid signature rather than returning plaintext.
-- Explicit AES/signing parameters change the hybrid wire format to V3; decryption detects ciphertext parameters automatically. See [native parameters](../../native_parameters.md).
+- Explicit AES/signing parameters change the hybrid wire format to V3; decryption detects ciphertext parameters automatically. See [native parameters](../../native/parameters.md).
 - Legacy `call_*` names remain available. They retain historical return-code/data semantics and are not interchangeable with the typed modern errors.

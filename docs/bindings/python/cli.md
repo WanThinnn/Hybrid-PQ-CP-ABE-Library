@@ -61,7 +61,7 @@ When setup uses `--with-signing-keys`, the new signature files use the `ml-dsa` 
 
 If you do not want to invoke the CLI, the [functional API](api.md#functional-operations) exposes `setup_files`, `setup_files_with_signing`, `generate_secret_key_file`, `encrypt_file` and `decrypt_file`. These operate on **native host paths** and raise typed Python errors.
 
-CoverCrypt's file-based key issuing persists authority/tracing metadata; coordinate concurrent writes to the same master key. For raw C ABI commands and installation of the standalone native executable, see the [repository CLI guide](../../cli.md).
+CoverCrypt's file-based key issuing persists authority/tracing metadata; coordinate concurrent writes to the same master key. For raw C ABI commands and installation of the standalone native executable, see the [repository CLI guide](../../native/cli.md).
 
 ## Platform notes
 

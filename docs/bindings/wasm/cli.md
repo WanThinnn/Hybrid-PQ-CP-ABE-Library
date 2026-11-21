@@ -77,7 +77,7 @@ See the [WASM build instructions](../../../bindings/wasm/README.md) for Emscript
 
 ### Packaging
 
-The production publishing pipeline is described in [release maintenance](../../releases.md). The npm packaging helper downloads/validates the versioned WASM release ZIP, verifies its SHA-256 manifest, stages the npm package, installs the tarball in a temporary test project, then runs SDK and CLI tests.
+The production publishing pipeline is described in [release maintenance](../../project/releases.md). The npm packaging helper downloads/validates the versioned WASM release ZIP, verifies its SHA-256 manifest, stages the npm package, installs the tarball in a temporary test project, then runs SDK and CLI tests.
 
 Relevant files:
 
@@ -90,4 +90,4 @@ Relevant files:
 
 `api.setupFiles`, `api.encryptFile` and `api.decryptFile` from JavaScript operate on the **Emscripten virtual filesystem**. Transfer data with `api.native.FS.writeFile` / `readFile`. The Node CLI explicitly bridges filesystem data to/from real host paths.
 
-For JS modules and types see the [WASM API reference](api.md); for the native executable see [the native CLI guide](../../cli.md).
+For JS modules and types see the [WASM API reference](api.md); for the native executable see [the native CLI guide](../../native/cli.md).

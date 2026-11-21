@@ -17,7 +17,7 @@ if [ "$HELP" = 1 ]; then
     printf '%s\n' 'Usage: ./configure [--install] [--wasm]' \
         'Default: check the native toolchain. --install: install missing host build tools.' \
         '--wasm: check WebAssembly tools on Linux/WSL, macOS, or Windows MSYS2.' \
-        'Windows without Bash: see the PowerShell invocation in docs/build.md.'
+        'Windows without Bash: see the PowerShell invocation in docs/native/build.md.'
     exit 0
 fi
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

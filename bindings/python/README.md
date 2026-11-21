@@ -81,7 +81,7 @@ python -m pq_cp_abe --test
 ```
 
 The full CLI workflow covers setup, user key generation, signed encryption,
-and verification. [CoverCrypt CLI example](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/cli.md#covercrypt-with-ml-dsa-signatures)
+and verification. [CoverCrypt CLI example](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/native/cli.md#covercrypt-with-ml-dsa-signatures)
 
 Platform wheels bundle the native library. For staging, building, and
 verifying wheels, see the [Python wheel workflow](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/.github/workflows/publish-pypi.yml).
