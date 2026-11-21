@@ -85,4 +85,5 @@ jobs:
           fi
           tag=latest
           if [[ "$PACKAGE_VERSION" == *-* ]]; then tag=next; fi
-          npm publish "${tarballs[0]}" --access public --tag "$tag"
+          tarball="$(realpath "${tarballs[0]}")"
+          npm publish "$tarball" --access public --tag "$tag"
