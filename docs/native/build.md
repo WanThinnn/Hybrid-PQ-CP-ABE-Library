@@ -7,6 +7,7 @@ icon: lucide/hammer
 ## Building (Multi-OS)
 !!! important
     This library integrates the following cryptographic primitives and dependencies:
+
     - [CryptoPP Library](https://github.com/weidai11/cryptopp)
     - [CP-ABE AC17 Scheme](https://eprint.iacr.org/2017/807) (via [Rabe-ffi](https://github.com/WanThinnn/librabe-ffi.git))
     - [CP-ABE TKN20 Scheme](https://eprint.iacr.org/2019/966) (via [Cloudflare CIRCL](https://github.com/cloudflare/circl/tree/main/abe))
@@ -46,7 +47,10 @@ downloading anything. Missing tools produce a nonzero exit status. Use
 `--install` explicitly to install missing tools; OS installers may request
 administrator access or interactive completion.
 
-Linux/macOS (no Make or Python needed to start the check):
+#### **Linux / macOS**
+
+Run these commands in a **Unix shell** from the repository root. No Make or
+Python installation is needed to start the check:
 
 ```sh
 chmod +x configure
@@ -54,11 +58,6 @@ chmod +x configure
 ./configure --install
 . ./build/tools/activate.sh
 ```
-
-On Linux, WSL, macOS, or Windows MSYS2, use `sh ./configure --wasm` after
-activating Emscripten to check the WebAssembly toolchain. Combine it with
-`--install` to install the standard host tools. See the
-[WebAssembly guide](../../bindings/wasm/README.md) for platform setup.
 
 For a custom Linux/macOS toolchain with an explicitly controlled `PATH`, use
 `HCPABE_CONFIGURE_DISCOVER_PATHS=0 ./configure`. This disables automatic search
@@ -70,11 +69,14 @@ Linux installation supports apt, dnf, pacman and zypper. Go is downloaded from
 the official Go release metadata with SHA256 verification when needed. macOS
 uses Apple Command Line Tools and Homebrew; finish any Apple installer dialog
 and rerun `configure --install` if prompted. Rust uses the official rustup
-installer. Activation adds local tools to this shell's PATH.
+installer. **Run subsequent `make` commands in the same activated shell.**
+Activation adds local tools to this shell's PATH.
+
+#### **Windows**
 
 On a fresh Windows machine, PowerShell is already available; Bash is not
-required. Run from the repository root to execute the Windows section embedded
-in the same file:
+required. Run the following in **PowerShell**, from the repository root, to
+execute the Windows section embedded in the same file:
 
 ```powershell
 $text = Get-Content .\configure -Raw
@@ -85,12 +87,20 @@ $setup = [scriptblock]::Create(($text -split '(?m)^# WINDOWS CONFIGURE\r?$', 2)[
 cmd /k build\tools\activate.cmd
 ```
 
+**Continue in the activated Command Prompt (cmd) session** after the last command. `cmd /k` starts cmd, runs `build\tools\activate.cmd` to set up the build
+environment, and keeps that session open. Run `make deps`, `make`, and `make test` there.
+
 The Windows installer uses WinGet for Visual Studio C++ Build Tools, MSYS2, Go
 and rustup, then MSYS2's package manager for Make/CMake/MinGW. If WinGet is
 missing, install Microsoft's App Installer from <https://aka.ms/getwinget> first.
-Use the activated x64 command prompt for subsequent `make` commands; it keeps
+**Use the activated x64 command prompt for subsequent `make` commands**; it keeps
 MSVC's linker ahead of the unrelated MSYS `link.exe`. No `make prepare` or
 library-specific Make targets are needed.
+
+**WebAssembly (both platforms):** On Linux, WSL, macOS, or Windows MSYS2, use
+`sh ./configure --wasm` after activating Emscripten to check the WebAssembly
+toolchain. Combine it with `--install` to install the standard host tools. See
+the [WebAssembly guide](../../bindings/wasm/README.md) for platform setup.
 
 ### 3. Build native dependencies
 
@@ -169,7 +179,8 @@ See [build/README.md](../../build/README.md) for the output layout. Keep logs un
 `build/logs/`, local reports under `build/reports/`, and temporary fixtures under
 `build/tmp/`. Reusable diagnostic scripts live in `scripts/diagnostics/`.
 
-**Available Make Commands:**
+### Available Make Commands
+
 - `make deps -j8`: Build/check the five native dependencies and print their final include/library layout.
 - `make -j8`: Build the native C++ core directly from the existing dependency output. It only auto-builds dependencies when the ready marker is missing (fresh clone or after `make clean-deps`).
 - `make clean-deps`: Remove `build/deps/<platform>/`.
