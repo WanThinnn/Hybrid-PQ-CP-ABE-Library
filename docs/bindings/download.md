@@ -8,6 +8,8 @@ icon: lucide/download
 
 For most users, downloading a prebuilt SDK is faster than building the native library from source.
 
+## Choose your platform
+
 Choose the package for your platform. These links point directly to the archive, so the download starts without opening the GitHub Releases page.
 
 <div class="pq-download-grid" markdown>
@@ -21,6 +23,8 @@ Choose the package for your platform. These links point directly to the archive,
 [:lucide-download: **macOS Intel**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download/v6.0.2/libhybrid-pq-cp-abe_macos12_x86_64_v6.0.2.zip){ .md-button .pq-download-button data-platform="macos" data-arch="x86_64" }
 
 </div>
+
+## Use the SDK
 
 Extract the archive and use its `include/` directory for headers and `lib/` directory for linking. Keep the headers and native libraries from the **same release**.
 
