@@ -16,7 +16,7 @@ done
 if [ "$HELP" = 1 ]; then
     printf '%s\n' 'Usage: ./configure [--install] [--wasm]' \
         'Default: check the native toolchain. --install: install missing host build tools.' \
-        '--wasm: check WebAssembly tools on Linux/WSL, macOS, or Windows MSYS2.' \
+        '--wasm: check WebAssembly tools; --wasm --install also installs Emscripten and Rust nightly.' \
         'Windows without Bash: see the PowerShell invocation in docs/native/build.md.'
     exit 0
 fi
@@ -135,7 +135,7 @@ check_wasm() {
         fi
     fi
     if [ "$missing" = 1 ]; then
-        echo 'Set up the missing tools and rerun ./configure --wasm. See bindings/wasm/README.md.'
+        echo 'Run ./configure --wasm --install to install missing tools, then activate build/tools/activate-wasm.sh (MSYS2/Unix) or activate-wasm.cmd (cmd).'
         return 1
     fi
     echo 'Ready: make wasm -j8 && make wasm-test -j8'
@@ -161,7 +161,17 @@ if [ "$INSTALL" = 1 ] && [ "$WASM_WINDOWS" = 1 ]; then
     for pair in cmake:cmake ninja:ninja python3:python; do
         if ! have "${pair%%:*}"; then packages="$packages $prefix-${pair#*:}"; fi
     done
+    if ! have git; then packages="$packages git"; fi
     if [ -n "$packages" ]; then pacman -S --needed --noconfirm $packages; fi
+    if ! have rustup || ! go_ok; then
+        HCPABE_CONFIGURE_FILE=$(cygpath -w "$ROOT/configure")
+        HCPABE_CONFIGURE_INSTALL=1
+        export HCPABE_CONFIGURE_FILE HCPABE_CONFIGURE_INSTALL
+        powershell.exe -NoProfile -Command \
+            '$c=Get-Content -LiteralPath $env:HCPABE_CONFIGURE_FILE -Raw; & ([scriptblock]::Create(($c -split "(?m)^# WINDOWS CONFIGURE\r?$",2)[1]))'
+        PATH="$(cygpath -u "$USERPROFILE")/.cargo/bin:$(cygpath -u "${PROGRAMFILES:-${ProgramFiles:-C:/Program Files}}")/Go/bin:$PATH"
+        export PATH
+    fi
 elif [ "$INSTALL" = 1 ]; then
     mkdir -p "$ROOT/build/tmp/configure" "$ROOT/build/tools"
     if [ "$OS" = Darwin ]; then
@@ -263,6 +273,69 @@ PY
 fi
 
 if [ "$WASM" = 1 ]; then
+    if [ "$INSTALL" = 1 ]; then
+        mkdir -p "$ROOT/build/tools"
+        rust_toolchain=nightly
+        if [ "$WASM_WINDOWS" = 1 ]; then rust_toolchain=nightly-x86_64-pc-windows-msvc; fi
+        if ! rustup run "$rust_toolchain" rustc --version >/dev/null 2>&1 ||
+            ! rustup run "$rust_toolchain" cargo --version >/dev/null 2>&1 ||
+            ! rustup component list --installed --toolchain "$rust_toolchain" 2>/dev/null | grep -q '^rust-src'; then
+            rustup toolchain install "$rust_toolchain" --profile minimal --component rust-src
+        fi
+
+        # Reuse an activated SDK when possible; otherwise install a local SDK.
+        emsdk_dir=${EMSDK:-}
+        if [ "$WASM_WINDOWS" = 1 ] && [ -n "$emsdk_dir" ]; then
+            emsdk_dir=$(cygpath -u "$emsdk_dir")
+        fi
+        emsdk_ready=1
+        for tool in emcc em++ emar emranlib emcmake; do
+            have "$tool" || emsdk_ready=0
+        done
+        if [ "$WASM_WINDOWS" = 1 ]; then have emcc.exe || emsdk_ready=0; fi
+        version=$(emcc --version 2>/dev/null) || version=''
+        version_at_least "$version" 7.0.0 || emsdk_ready=0
+        if [ "$emsdk_ready" = 0 ]; then
+            if [ -z "$emsdk_dir" ]; then emsdk_dir="$ROOT/build/tools/emsdk"; fi
+            if [ ! -f "$emsdk_dir/emsdk" ]; then
+                git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$emsdk_dir"
+            fi
+            "$emsdk_dir/emsdk" install 7.0.0
+            "$emsdk_dir/emsdk" activate 7.0.0
+            emsdk_env=$(EMSDK_BASH=1 "$emsdk_dir/emsdk" construct_env)
+            eval "$emsdk_env"
+        elif [ -z "$emsdk_dir" ]; then
+            emsdk_dir=$(CDPATH= cd -- "$(dirname -- "$(command -v emcc)")/../.." && pwd)
+        fi
+
+        # A child configure process cannot update its caller's environment.
+        python3 - "$ROOT" "$emsdk_dir" "$WASM_WINDOWS" <<'PY'
+import pathlib, shlex, subprocess, sys
+root, sdk, windows = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3] == '1'
+paths = [str(root / 'build/tools/go/bin'), str(pathlib.Path.home() / '.cargo/bin')]
+if windows:
+    import os
+    paths += [subprocess.check_output(['cygpath', '-u', os.environ['USERPROFILE']], text=True).strip() + '/.cargo/bin',
+              subprocess.check_output(['cygpath', '-u', os.environ['PROGRAMFILES']], text=True).strip() + '/Go/bin']
+activation = 'export PATH=' + ':'.join(map(shlex.quote, paths)) + ':"$PATH"\n'
+activation += 'eval "$(EMSDK_BASH=1 ' + shlex.quote(sdk + '/emsdk') + ' construct_env)"\n'
+with (root / 'build/tools/activate-wasm.sh').open('w', newline='\n') as output:
+    output.write(activation)
+if windows:
+    native_sdk = subprocess.check_output(['cygpath', '-w', sdk], text=True).strip()
+    native_msys = subprocess.check_output(['cygpath', '-w', '/'], text=True).strip().rstrip('\\')
+    lines = ['@echo off',
+             'set "PATH=%SystemRoot%\\System32;%SystemRoot%;%PATH%;' + native_msys + '\\usr\\bin;' +
+             native_msys + '\\mingw64\\bin;%USERPROFILE%\\.cargo\\bin;%ProgramFiles%\\Go\\bin"',
+             'if exist "%~dp0activate.cmd" call "%~dp0activate.cmd"',
+             'if errorlevel 1 exit /b 1', 'set "MSYSTEM=MINGW64"',
+             'call "' + native_sdk + '\\emsdk_env.bat"']
+    with (root / 'build/tools/activate-wasm.cmd').open('w', newline='\r\n') as output:
+        output.write('\n'.join(lines) + '\n')
+PY
+        echo 'Next (MSYS2/Unix): . ./build/tools/activate-wasm.sh'
+        if [ "$WASM_WINDOWS" = 1 ]; then echo 'Next (x64 cmd): call build\tools\activate-wasm.cmd'; fi
+    fi
     check_wasm
     exit 0
 fi

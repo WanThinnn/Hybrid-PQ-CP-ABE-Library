@@ -81,6 +81,13 @@ downloading anything. Missing tools produce a nonzero exit status. Use
 `--install` explicitly to install missing tools; OS installers may request
 administrator access or interactive completion.
 
+**Check-only does not create activation scripts.** If the check passes and the
+current terminal already has the tools on `PATH`, continue directly to the build
+steps. Do not source/call a missing activation file. If tools are missing, or
+configure finds them but your terminal cannot run them, use the install command
+to generate activation, then activate in this same terminal. Installation only
+adds tools that are missing or too old.
+
 ### Linux / macOS
 
 No Make or Python installation is required just to start the toolchain check:
@@ -90,8 +97,12 @@ chmod +x configure
 
 # Check only
 ./configure
+```
 
-# Or install missing tools
+If the check passes in your configured shell, skip to the build commands below.
+Otherwise, install missing tools and generate activation:
+
+```sh
 ./configure --install
 . ./build/tools/activate.sh
 ```
@@ -116,7 +127,9 @@ powershell.exe -NoProfile -Command ^
     "& $setup"
 ```
 
-**Install missing tools and generate activation** (first-time setup):
+**If the check passes and tools are already on this x64 cmd's `PATH`, skip to
+the build commands below.** If setup or activation is needed, install missing
+tools and generate the script:
 
 ```cmd
 powershell.exe -NoProfile -Command ^
@@ -125,15 +138,16 @@ powershell.exe -NoProfile -Command ^
     "& $setup -Install"
 ```
 
-**Activate**, then continue with the build commands below in this same cmd:
+**After successful install/script generation, activate**, then continue building
+in this same cmd:
 
 ```cmd
 call build\tools\activate.cmd
 ```
 
 Copy each multiline command including its `^` continuations. PowerShell runs as
-a child process and returns to the same cmd. Run activation in each new build
-session. See the [Windows setup steps](docs/native/build.md#windows) for details.
+a child process and returns to the same cmd. If using generated activation,
+run it in each new build session. See the [Windows setup steps](docs/native/build.md#windows) for details.
 
 For WebAssembly setup through MSYS2, see the
 [WebAssembly build guide](bindings/wasm/README.md).
@@ -172,10 +186,17 @@ on Windows, Linux, and macOS.
 
 ### WebAssembly
 
-Activate Emscripten first, then run on Linux, macOS, WSL, or Windows MSYS2:
+On Linux, macOS, WSL, or an MSYS2 MINGW64 shell, check first:
 
 ```sh
-sh ./configure --wasm
+sh ./configure --wasm                       # Check only
+```
+
+**If all tools are `[OK]`, build directly.** Check-only does not generate
+activation scripts. If tools are missing, follow the platform-specific
+[install and activation steps](bindings/wasm/README.md) first.
+
+```sh
 make wasm -j8
 make wasm-test -j8
 ```

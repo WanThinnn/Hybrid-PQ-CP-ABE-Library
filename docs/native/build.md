@@ -40,12 +40,19 @@ The root `VERSION` file is the version source of truth. Make generates the publi
 and CLI. Changing `VERSION` triggers an incremental rebuild; deployed binaries
 do not need to find a `VERSION` file at runtime.
 
-### 2. Configure a new machine
+### 2. Configure for your machine
 
 The single `configure` file checks the host toolchain without installing or
 downloading anything. Missing tools produce a nonzero exit status. Use
 `--install` explicitly to install missing tools; OS installers may request
 administrator access or interactive completion.
+
+**Check-only does not create activation scripts.** If the check passes and the
+current terminal already has the tools on `PATH`, continue directly to the build
+steps. Do not source/call a missing activation file. If tools are missing, or
+configure finds them but your terminal cannot run them, use the install command
+to generate activation, then activate in this same terminal. Installation only
+adds tools that are missing or too old.
 
 #### **Linux / macOS**
 
@@ -55,6 +62,12 @@ Python installation is needed to start the check:
 ```sh
 chmod +x configure
 ./configure
+```
+
+**If the check passes and your shell can run the tools, continue to step 3.**
+Otherwise, install missing tools and generate activation:
+
+```sh
 ./configure --install
 . ./build/tools/activate.sh
 ```
@@ -69,7 +82,7 @@ Linux installation supports apt, dnf, pacman and zypper. Go is downloaded from
 the official Go release metadata with SHA256 verification when needed. macOS
 uses Apple Command Line Tools and Homebrew; finish any Apple installer dialog
 and rerun `configure --install` if prompted. Rust uses the official rustup
-installer. **Run subsequent `make` commands in the same activated shell.**
+installer. **After installation, run subsequent `make` commands in the same activated shell.**
 Activation adds local tools to this shell's PATH.
 
 #### **Windows**
@@ -106,8 +119,13 @@ Tools Command Prompt for all native `make` commands.**
         "& $setup"
     ```
 
-    **Install missing tools and generate activation** — use this for first-time
-    setup, even if the check reports that all tools are already installed:
+    **If the check passes and tools are already on this cmd session's `PATH`,
+    continue to step 3 without activation.** A missing `activate.cmd` is expected
+    after check-only. Configure can discover tools in its child process that are
+    not yet on the parent cmd's `PATH`; in that case, generate activation below.
+
+    **Install missing tools and generate activation** — use this when setup or
+    activation is needed:
 
     ```cmd
     powershell.exe -NoProfile -Command ^
@@ -122,13 +140,13 @@ Tools Command Prompt for all native `make` commands.**
     MSYS2/Make/CMake/MinGW, Go and Rust. If WinGet is missing, install
     [Microsoft App Installer](https://aka.ms/getwinget) first.
 
-    **Activate after successful setup**, in the same cmd:
+    **Only after successful install/script generation, activate** in the same cmd:
 
     ```cmd
     call build\tools\activate.cmd
     ```
 
-    Run activation in each new build session. It adds Windows system utilities,
+    If using generated activation, run it in each new build session. It adds Windows system utilities,
     MSYS2/Make, Go and Rust to `PATH` and prepares MSVC x64. The MSYS2 location
     comes from configure (`MSYS2_ROOT`, or `C:\msys64` by default).
 
@@ -142,12 +160,15 @@ Tools Command Prompt for all native `make` commands.**
     **The first `link.exe` result must be the MSVC linker under your Visual Studio
     installation.** Activation preserves existing MSVC tool paths ahead of MSYS2.
 
-**Continue with steps 3–5 below in this same activated x64 cmd session.**
+**Continue with steps 3–5 in the same x64 cmd session, using its existing
+environment or the activation generated above.**
 
-**WebAssembly (both platforms):** On Linux, WSL, macOS, or Windows MSYS2, use
-`sh ./configure --wasm` after activating Emscripten to check the WebAssembly
-toolchain. Combine it with `--install` to install the standard host tools. See
-the [WebAssembly guide](../../bindings/wasm/README.md) for platform setup.
+**WebAssembly (both platforms):** Use `sh ./configure --wasm` to check, or
+`sh ./configure --wasm --install` to install missing WASM tools, including
+Emscripten and Rust nightly. If the check passes in an already configured shell,
+build directly. After install, activate the generated `activate-wasm.sh`
+(Unix/MSYS2) or `activate-wasm.cmd` (cmd) before building. See the
+[WebAssembly guide](../../bindings/wasm/README.md) for the full command sequence.
 
 ### 3. Build native dependencies
 

@@ -2,7 +2,9 @@
 import os
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -17,6 +19,114 @@ if os.name == "nt":
 
 @unittest.skipUnless(SHELL, "POSIX shell required for configure shell tests")
 class ConfigureTests(unittest.TestCase):
+    def test_wasm_install_provisions_sdk_and_rust_without_network(self):
+        with tempfile.TemporaryDirectory(prefix="wasm configure ") as directory:
+            path = Path(directory)
+            (path / "configure").write_bytes((ROOT / "configure").read_bytes())
+            module = path / "bindings/tkn20"
+            module.mkdir(parents=True)
+            (module / "go.mod").write_bytes((ROOT / "bindings/tkn20/go.mod").read_bytes())
+            commands = path / "bin"
+            commands.mkdir()
+            def posix(file):
+                if os.name == "nt":
+                    return subprocess.check_output([SHELL, "-c", 'cygpath -u "$1"',
+                                                    "test", str(file)], text=True).strip()
+                return str(file)
+            fixture = posix(path)
+            sdk = path / "sdk-template"
+            sdk.mkdir()
+            (sdk / "emsdk").write_text('''#!/bin/sh
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+case "$1" in
+  install)
+    echo "emsdk $*" >> "$CONFIGURE_TEST_TRACE"
+    mkdir -p "$dir/bin"
+    for tool in emcc em++ emar emranlib emcmake emcc.exe; do
+      cp "$CONFIGURE_TEST_HOME/emtool" "$dir/bin/$tool"
+    done ;;
+  activate) echo "emsdk $*" >> "$CONFIGURE_TEST_TRACE" ;;
+  construct_env) printf 'export PATH="%s/bin:$PATH"\\nexport EMSDK="%s"\\n' "$dir" "$dir" ;;
+esac
+''', newline="\n")
+            (sdk / "emsdk").chmod(0o755)
+            (path / "emtool").write_text('#!/bin/sh\necho "Emscripten 7.0.0"\n', newline="\n")
+            (path / "emtool").chmod(0o755)
+            stub = '''#!/bin/sh
+name=${0##*/}
+case "$name" in
+  uname) if [ "${1:-}" = -m ]; then echo x86_64; else echo "${CONFIGURE_TEST_OS:-MINGW64_NT-10.0}"; fi ;;
+  go) echo 'go version go1.26.0 windows/amd64' ;;
+  make) echo 'GNU Make 4.4' ;;
+  node) echo v24.0.0 ;;
+  rustup)
+    case "$1" in
+      run) test -f "$CONFIGURE_TEST_HOME/rust-ready" ;;
+      component) if [ -f "$CONFIGURE_TEST_HOME/rust-ready" ]; then echo rust-src; fi ;;
+      toolchain) echo "rustup $*" >> "$CONFIGURE_TEST_TRACE"; touch "$CONFIGURE_TEST_HOME/rust-ready" ;;
+    esac ;;
+  git)
+    echo "git $*" >> "$CONFIGURE_TEST_TRACE"
+    for target; do :; done
+    cp -R "$CONFIGURE_TEST_HOME/sdk-template" "$target" ;;
+  powershell.exe) exit 0 ;;
+  pacman) echo "pacman $*" >> "$CONFIGURE_TEST_TRACE" ;;
+  *) echo test-tool ;;
+esac
+'''
+            for name in ("uname", "go", "make", "node", "rustup", "git", "powershell.exe",
+                         "pacman", "cmake", "ninja", "gcc", "g++", "gcc-ar", "curl",
+                         "cargo", "rustc", "xcode-select", "brew"):
+                (commands / name).write_text(stub, newline="\n")
+                (commands / name).chmod(0o755)
+            # Delegate Python and cygpath to real tools; all installers are stubs.
+            (commands / "python3").write_text('#!/bin/sh\nexec ' + shlex.quote(posix(sys.executable)) + ' "$@"\n', newline="\n")
+            (commands / "python3").chmod(0o755)
+            env = dict(os.environ, CONFIGURE_TEST_PATH=fixture + "/bin:/usr/bin:/bin",
+                       CONFIGURE_TEST_HOME=fixture, CONFIGURE_TEST_FILE=str(path / "configure"),
+                       CONFIGURE_TEST_TRACE=fixture + "/installed", EMSDK="", MSYSTEM="MINGW64",
+                       HCPABE_CONFIGURE_DISCOVER_PATHS="0")
+            if os.name != "nt":
+                (commands / "cygpath").write_text('#!/bin/sh\nprintf "%s\\n" "$2"\n', newline="\n")
+                (commands / "cygpath").chmod(0o755)
+                env.update(USERPROFILE=fixture, PROGRAMFILES=fixture)
+            result = self.run_configure("--wasm", env=env)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("[MISSING] emcc", result.stdout)
+            self.assertFalse((path / "installed").exists())
+            result = self.run_configure("--wasm", "--install", env=env)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            trace = (path / "installed").read_text()
+            self.assertIn("emsdk install 7.0.0", trace)
+            self.assertIn("emsdk activate 7.0.0", trace)
+            self.assertIn("rustup toolchain install nightly-x86_64-pc-windows-msvc", trace)
+            self.assertIn("Ready: make wasm", result.stdout)
+            self.assertTrue((path / "build/tools/activate-wasm.sh").is_file())
+            self.assertTrue((path / "build/tools/activate-wasm.cmd").is_file())
+            self.assertNotIn(b"\r", (path / "build/tools/activate-wasm.sh").read_bytes())
+            # A compatible active SDK must be reused without cloning/installing again.
+            reuse_env = dict(env, EMSDK=fixture + "/build/tools/emsdk",
+                             CONFIGURE_TEST_PATH=fixture + "/build/tools/emsdk/bin:" + env["CONFIGURE_TEST_PATH"])
+            result = self.run_configure("--wasm", "--install", env=reuse_env)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(trace, (path / "installed").read_text())
+            result = subprocess.run([SHELL, "-c",
+                                     'export PATH="$CONFIGURE_TEST_PATH"; . "$CONFIGURE_TEST_HOME/build/tools/activate-wasm.sh"; emcc --version'],
+                                    env=env, capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Emscripten 7.0.0", result.stdout)
+            for system in ("Linux", "Darwin"):
+                with self.subTest(system=system):
+                    (path / "installed").unlink()
+                    (path / "rust-ready").unlink()
+                    shutil.rmtree(path / "build/tools/emsdk")
+                    result = self.run_configure("--wasm", "--install",
+                                                env=dict(env, CONFIGURE_TEST_OS=system))
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    trace = (path / "installed").read_text()
+                    self.assertIn("emsdk install 7.0.0", trace)
+                    self.assertIn("rustup toolchain install nightly --profile minimal --component rust-src", trace)
+
     def run_configure(self, *arguments, env=None):
         command = [SHELL, str(ROOT / "configure"), *arguments]
         if env and "CONFIGURE_TEST_PATH" in env:

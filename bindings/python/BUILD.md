@@ -15,6 +15,13 @@ Run the commands below from the repository root.
 
 ## Prepare one build terminal
 
+**Check-only does not create activation scripts.** If the check passes and the
+current terminal already has the tools on `PATH`, continue directly to the build
+steps. Do not source/call a missing activation file. If tools are missing, or
+configure finds them but your terminal cannot run them, use the install command
+to generate activation, then activate in this same terminal. Installation only
+adds tools that are missing or too old.
+
 ### **Linux / macOS**
 
 Use the same Unix shell for setup, activation, the native build and Python
@@ -24,7 +31,8 @@ commands. **Check only:**
 ./configure
 ```
 
-**Install missing tools and activate:**
+**If the check passes in this configured shell, skip to Build the native runtime.**
+If setup is needed, install missing tools and generate activation:
 
 ```sh
 ./configure --install
@@ -50,7 +58,10 @@ powershell.exe -NoProfile -Command ^
     "& $setup"
 ```
 
-**Install missing tools and generate activation** (first-time setup):
+**If the check passes and tools are already available in this x64 cmd, skip
+to Build the native runtime.** Check-only does not generate `activate.cmd`.
+If tools are missing or only discovered inside the configure child process,
+use the following command to install missing tools and generate activation:
 
 ```cmd
 powershell.exe -NoProfile -Command ^
@@ -59,7 +70,7 @@ powershell.exe -NoProfile -Command ^
     "& $setup -Install"
 ```
 
-**Activate in the same cmd**, after setup succeeds:
+**Activate in the same cmd only after successful install/script generation:**
 
 ```cmd
 call build\tools\activate.cmd
@@ -67,8 +78,8 @@ call build\tools\activate.cmd
 
 The `^` characters continue each setup command across lines in cmd. PowerShell
 runs as a child process and returns to this cmd. Activation adds MSYS2/Make,
-Go and Rust while preserving the MSVC linker priority. Run it in each new build
-session. See the [native Windows setup](../../docs/native/build.md#windows).
+Go and Rust while preserving the MSVC linker priority. If using this generated
+script, run it in each new build session. See the [native Windows setup](../../docs/native/build.md#windows).
 
 If using a Python virtual environment, activate it in this same terminal before
 running the Python commands below (`call .venv\Scripts\activate.bat` on cmd,
