@@ -1,0 +1,182 @@
+/* PQ-CP-ABE documentation polish.
+   Keep overrides intentionally small so Zensical upgrades remain easy. */
+
+:root {
+  --pq-card-radius: 14px;
+  --pq-card-border: color-mix(in srgb, var(--md-default-fg-color) 12%, transparent);
+  --pq-soft-surface: color-mix(in srgb, var(--md-primary-fg-color) 6%, transparent);
+  --pq-icon-surface: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 225;
+  --pq-card-border: color-mix(in srgb, var(--md-default-fg-color) 18%, transparent);
+  --pq-soft-surface: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
+  --pq-icon-surface: color-mix(in srgb, var(--md-primary-fg-color) 16%, transparent);
+}
+
+.md-header {
+  backdrop-filter: blur(12px);
+}
+
+/* Home already exposes the top-level navigation tabs. Remove the otherwise
+   redundant left navigation rail only on the landing page so its content can
+   use the full documentation width. */
+@media screen and (min-width: 76.25em) {
+  .md-main__inner:has(.pq-hero) > .md-sidebar--primary {
+    display: none;
+  }
+
+  .md-main__inner:has(.pq-hero) > .md-content {
+    margin-left: 0;
+  }
+}
+
+.md-typeset h1 {
+  font-weight: 720;
+  letter-spacing: -0.025em;
+}
+
+.md-typeset h2 {
+  font-weight: 680;
+  letter-spacing: -0.012em;
+}
+
+.md-typeset code {
+  border-radius: 0.32rem;
+}
+
+.md-typeset pre > code {
+  border-radius: 0;
+}
+
+.md-typeset .pq-hero {
+  margin: 0.35rem 0 1.35rem;
+  padding: clamp(1rem, 2vw, 1.45rem);
+  border: 1px solid var(--pq-card-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--md-accent-fg-color) 14%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--pq-soft-surface), transparent 62%);
+}
+
+.md-typeset .pq-hero h1 {
+  margin: 0 0 0.35rem;
+  max-width: 15ch;
+  font-size: clamp(1.8rem, 3.6vw, 2.55rem);
+  line-height: 1.03;
+}
+
+.md-typeset .pq-hero p {
+  max-width: 43rem;
+  margin: 0.38rem 0 0;
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.md-typeset .pq-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  margin-bottom: 0.5rem;
+  color: var(--md-primary-fg-color);
+  font-size: 0.66rem;
+  font-weight: 750;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.md-typeset .pq-eyebrow .twemoji,
+.md-typeset .pq-eyebrow svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.md-typeset .pq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.md-typeset .pq-actions .md-button {
+  padding: 0.48rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid.cards > ol > li {
+  border: 1px solid var(--pq-card-border);
+  border-radius: var(--pq-card-radius);
+  box-shadow: none;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ol > li:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--md-primary-fg-color) 36%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--md-default-fg-color) 8%, transparent);
+}
+
+.md-typeset .grid.cards .twemoji,
+.md-typeset .grid.cards svg {
+  color: var(--md-primary-fg-color);
+}
+
+.md-typeset .pq-card-icon {
+  display: inline-grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  margin-right: 0.35rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: var(--pq-icon-surface);
+  color: var(--md-primary-fg-color);
+  vertical-align: middle;
+}
+
+.md-typeset .pq-card-icon .twemoji,
+.md-typeset .pq-card-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.md-typeset .pq-security-note {
+  margin-top: 1.8rem;
+  padding: 0.9rem 1rem;
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.45rem;
+  background: var(--pq-soft-surface);
+}
+
+.md-typeset table:not([class]) {
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 0.65rem;
+  box-shadow: none;
+}
+
+.md-nav__link--active {
+  font-weight: 650;
+}
+
+@media screen and (max-width: 44.984375em) {
+  .md-typeset .pq-hero {
+    border-radius: 14px;
+  }
+
+  .md-typeset .pq-actions {
+    display: grid;
+  }
+
+  .md-typeset .pq-actions .md-button {
+    width: 100%;
+    text-align: center;
+  }
+}

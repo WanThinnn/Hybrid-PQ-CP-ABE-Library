@@ -1,19 +1,104 @@
+<div class="pq-hero" markdown>
+
+<span class="pq-eyebrow">:lucide-shield-check: Post-quantum access control SDK</span>
+
 # PQ-CP-ABE Documentation
 
-Encrypt data under an attribute policy from an application, a command line,
-or a Vault mount. Set up an authority, issue a user key, then encrypt using
-a policy that describes which attributes may decrypt the ciphertext.
+Encrypt data under expressive attribute policies from **Python**, **JavaScript / WebAssembly**, native **C/C++**, the command line, or a **HashiCorp Vault** integration.
 
-| Start here | Use it when |
-| --- | --- |
-| [Python SDK](bindings/python/README.md) | You want Python classes, functions, or the pip CLI. |
-| [JavaScript and WebAssembly SDK](bindings/wasm/README.md) | You want to use Node.js, TypeScript, or a browser. |
-| [Native C and C++ API](native/api.md) | Your application links the native library directly. |
-| [Native CLI](native/cli.md) | You want to encrypt and decrypt files from a terminal. |
-| [HashiCorp Vault](integrations/vault.md) | Vault manages your authority and key issuance. |
+CoverCrypt adds ML-KEM based post-quantum key encapsulation, while optional ML-DSA signatures provide message authenticity.
 
-AC17 and TKN20 use classical ABE. CoverCrypt supports ML-KEM-768 for
-post-quantum key encapsulation. ML-DSA adds an optional signature layer.
-[Schemes and access policies](architecture/README.md) · [Parameters and ciphertext format](native/parameters.md)
+<div class="pq-actions" markdown>
 
-[Build from source](native/build.md) · [Benchmarks](project/benchmarks.md) · [Releases](project/releases.md)
+[Get started with Python](bindings/python/README.md){ .md-button .md-button--primary }
+[Use JavaScript / WASM](bindings/wasm/README.md){ .md-button }
+[View on GitHub](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library){ .md-button }
+
+</div>
+
+</div>
+
+## Choose your SDK
+
+<div class="grid cards" markdown>
+
+-   <span class="pq-card-icon">:lucide-file-code-2:</span> **Python SDK**
+
+    ---
+
+    Native Python bindings with typed classes, functional APIs, file operations, and CLI support.
+
+    [:lucide-arrow-right: Python guide](bindings/python/README.md)
+
+-   <span class="pq-card-icon">:lucide-box:</span> **JavaScript / WebAssembly**
+
+    ---
+
+    Run the SDK in Node.js or browsers through WebAssembly with TypeScript declarations.
+
+    [:lucide-arrow-right: WASM guide](bindings/wasm/README.md)
+
+-   <span class="pq-card-icon">:lucide-braces:</span> **Native C / C++**
+
+    ---
+
+    Link directly against the native library and use the public ABI without a language binding.
+
+    [:lucide-arrow-right: Native API](native/api.md)
+
+-   <span class="pq-card-icon">:lucide-terminal:</span> **Command line**
+
+    ---
+
+    Set up authorities, issue user keys, encrypt, sign, decrypt, and verify from a terminal.
+
+    [:lucide-arrow-right: CLI reference](native/cli.md)
+
+-   <span class="pq-card-icon">:lucide-key-round:</span> **HashiCorp Vault**
+
+    ---
+
+    Use the Vault secrets engine to centralize authority operations and controlled key issuance.
+
+    [:lucide-arrow-right: Vault integration](integrations/vault.md)
+
+-   <span class="pq-card-icon">:lucide-network:</span> **Architecture**
+
+    ---
+
+    Understand AC17, TKN20, CoverCrypt, access policies, hybrid encryption, and PQC modes.
+
+    [:lucide-arrow-right: Architecture](architecture/README.md)
+
+</div>
+
+## Cryptographic building blocks
+
+<div class="grid cards" markdown>
+
+- :lucide-lock-keyhole:{ .lg .middle } **CP-ABE + AES-GCM**  
+  Attribute-based key protection with authenticated bulk encryption.
+
+- :lucide-shield:{ .lg .middle } **ML-KEM**  
+  Post-quantum key encapsulation inside supported CoverCrypt modes.
+
+- :lucide-badge-check:{ .lg .middle } **ML-DSA**  
+  Optional post-quantum signatures for authenticated encrypt/decrypt flows.
+
+- :lucide-fingerprint:{ .lg .middle } **SHA3-256**  
+  Cryptographic hashing for data integrity verification and secure fingerprinting.
+  
+</div>
+
+<div class="pq-security-note" markdown>
+
+:lucide-info: **Security model:** AC17 and TKN20 remain classical ABE schemes. ML-DSA signatures do not make their key encapsulation post-quantum. CoverCrypt provides the post-quantum confidentiality path when configured with the applicable ML-KEM mode.
+
+</div>
+
+## Reference
+
+[Parameters and ciphertext format](native/parameters.md) ·
+[Build from source](native/build.md) ·
+[Benchmarks](project/benchmarks.md) ·
+[Release notes](project/releases.md)
