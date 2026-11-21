@@ -72,7 +72,7 @@ async function detectDownloadPlatform() {
 }
 
 const PQ_CP_ABE_RELEASE_API =
-  "https://api.github.com/repos/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest";
+  "https://api.github.com/repos/WanThinnn/Hybrid-PQ-CP-ABE/releases/latest";
 
 let latestReleasePromise;
 

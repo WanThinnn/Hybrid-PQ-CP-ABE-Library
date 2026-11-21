@@ -23,8 +23,8 @@ not require submodule initialization.
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git
-    cd Hybrid-PQ-CP-ABE-Library
+    git clone https://github.com/WanThinnn/Hybrid-PQ-CP-ABE.git
+    cd Hybrid-PQ-CP-ABE
     ```
 
 Required toolchains include CMake, Rust/Cargo, GNU Make, and a native C/C++

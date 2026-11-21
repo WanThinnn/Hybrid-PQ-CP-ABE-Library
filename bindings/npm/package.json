@@ -38,15 +38,15 @@
 
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library.git",
+    "url": "git+https://github.com/WanThinnn/Hybrid-PQ-CP-ABE.git",
     "directory": "bindings/npm"
   },
 
   "bugs": {
-    "url": "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/issues"
+    "url": "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/issues"
   },
 
-  "homepage": "https://wanthinnn.github.io/pq-cp-abe/bindings/wasm/",
+  "homepage": "https://wanthinnn.github.io/pq-cp-abe/",
 
   "keywords": [
     "post-quantum",

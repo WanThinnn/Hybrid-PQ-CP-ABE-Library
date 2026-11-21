@@ -18,7 +18,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = Path(__file__).resolve().parent / "pq_cp_abe" / "_libs"
-RELEASE_BASE = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/download"
+RELEASE_BASE = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases/download"
 TARGETS = {("windows", "x86_64"), ("linux", "x86_64"),
            ("macos", "x86_64"), ("macos", "arm64")}
 EXT = {"windows": "dll", "linux": "so", "macos": "dylib"}

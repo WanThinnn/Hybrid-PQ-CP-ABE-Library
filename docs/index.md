@@ -18,7 +18,7 @@ CoverCrypt adds ML-KEM based post-quantum key encapsulation, while optional ML-D
 
 [Get started with Python](bindings/python/README.md){ .md-button .md-button--primary }
 [Use JavaScript / WASM](bindings/wasm/README.md){ .md-button }
-[View on GitHub](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library){ .md-button }
+[View on GitHub](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE){ .md-button }
 
 </div>
 

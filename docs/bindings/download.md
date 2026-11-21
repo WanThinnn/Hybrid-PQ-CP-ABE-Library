@@ -14,13 +14,13 @@ Choose the package for your platform. These links point directly to the archive,
 
 <div class="pq-download-grid" markdown>
 
-[:lucide-download: **Windows x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="windows" data-arch="x86_64" }
+[:lucide-download: **Windows x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases/latest){ .md-button .pq-download-button data-platform="windows" data-arch="x86_64" }
 
-[:lucide-download: **Linux x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="linux" data-arch="x86_64" }
+[:lucide-download: **Linux x86-64**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases/latest){ .md-button .pq-download-button data-platform="linux" data-arch="x86_64" }
 
-[:lucide-download: **macOS 12+ · Apple Silicon**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="arm64" }
+[:lucide-download: **macOS 12+ · Apple Silicon**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="arm64" }
 
-[:lucide-download: **macOS 12+ · Intel**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="x86_64" }
+[:lucide-download: **macOS 12+ · Intel**](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases/latest){ .md-button .pq-download-button data-platform="macos" data-arch="x86_64" }
 
 </div>
 
@@ -117,7 +117,7 @@ library at runtime. If `cmp` prints nothing and exits successfully, the recovere
 file matches the original byte for byte.
 
 If you built from repository source with `make shared`, set `SDK` to the full
-path of that checkout instead, for example `SDK="$HOME/projects/Hybrid-PQ-CP-ABE-Library"`.
+path of that checkout instead, for example `SDK="$HOME/projects/Hybrid-PQ-CP-ABE"`.
 The checkout must contain the built shared library under `lib/`.
 
 On Windows with MSVC, link `libhybrid-pq-cp-abe_dll.lib` and place

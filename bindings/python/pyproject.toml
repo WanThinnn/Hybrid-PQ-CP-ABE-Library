@@ -56,11 +56,11 @@ classifiers = [
 pq-cp-abe = "pq_cp_abe.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library"
+Homepage = "https://wanthinnn.github.io/pq-cp-abe/"
 Documentation = "https://wanthinnn.github.io/pq-cp-abe/bindings/python/"
-Repository = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library"
-Issues = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/issues"
-Releases = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases"
+Repository = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE"
+Issues = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/issues"
+Releases = "https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases"
 
 [tool.setuptools]
 include-package-data = false

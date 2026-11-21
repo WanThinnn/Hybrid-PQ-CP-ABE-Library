@@ -100,7 +100,7 @@ if not VERSION:
 setup(
     version=VERSION,
     author="Elio aka WanThinnn",
-    url="https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library",
+    url="https://github.com/WanThinnn/Hybrid-PQ-CP-ABE",
     distclass=PlatformDistribution,
     cmdclass={"build_py": CleanBuildPy, "bdist_wheel": PlatformWheel},
 )

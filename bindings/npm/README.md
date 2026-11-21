@@ -6,7 +6,7 @@ WebAssembly-based Ciphertext-Policy Attribute-Based Encryption SDK with post-qua
 npm install @wanthinnn/pq-cp-abe
 ~~~
 
-**Documentation:** [WASM SDK guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/bindings/wasm/README.md) · [API reference](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/bindings/wasm/api.md) · [CLI and build](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/bindings/wasm/cli.md).
+**Documentation:** [WASM SDK guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/docs/bindings/wasm/README.md) · [API reference](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/docs/bindings/wasm/api.md) · [CLI and build](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/docs/bindings/wasm/cli.md).
 
 ## Quick start
 
@@ -23,7 +23,7 @@ const abe = await PqCpAbe.create({
 console.log(abe.api.getVersion());
 ~~~
 
-`PqCpAbe` defaults to CoverCrypt. Its object API provides `setup()`, `keygen()`, `encrypt()` and `decrypt()`, plus `setupWithSigning()`, `encryptAndSign()` and `decryptAndVerify()` for optional ML-DSA signing. Pass `scheme` to select AC17 or TKN20. See the [API guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/bindings/wasm/api.md) for complete methods and examples.
+`PqCpAbe` defaults to CoverCrypt. Its object API provides `setup()`, `keygen()`, `encrypt()` and `decrypt()`, plus `setupWithSigning()`, `encryptAndSign()` and `decryptAndVerify()` for optional ML-DSA signing. Pass `scheme` to select AC17 or TKN20. See the [API guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/docs/bindings/wasm/api.md) for complete methods and examples.
 
 ## SDK surface
 
@@ -44,6 +44,6 @@ npx @wanthinnn/pq-cp-abe --help
 npx @wanthinnn/pq-cp-abe --test
 ~~~
 
-The CLI uses **host file paths**. JavaScript file APIs use the **WASM virtual filesystem** instead; see the [CLI and build guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/docs/bindings/wasm/cli.md).
+The CLI uses **host file paths**. JavaScript file APIs use the **WASM virtual filesystem** instead; see the [CLI and build guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/docs/bindings/wasm/cli.md).
 
-For native build and architecture details, see [WASM toolchain](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/bindings/wasm/README.md) and the [release workflow](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/blob/main/.github/workflows/publish-npm.yml).
+For native build and architecture details, see [WASM toolchain](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/bindings/wasm/README.md) and the [release workflow](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/blob/main/.github/workflows/publish-npm.yml).

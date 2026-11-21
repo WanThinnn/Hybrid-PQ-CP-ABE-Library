@@ -2,7 +2,7 @@
 
 Initialize `PqCpAbe` or a scheme class with its asynchronous `.create()` method.
 Use `instance.api` for functional methods, including file operations in WASM.
-The default Emscripten factory is available for compatibility. [JavaScript SDK guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm#functional-javascript-and-typescript-api)
+The default Emscripten factory is available for compatibility. [JavaScript SDK guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/tree/main/bindings/npm#functional-javascript-and-typescript-api)
 
 The build includes AC17, TKN20, CoverCrypt, parameterized AES-GCM, ML-DSA and
 standalone ML-KEM, and the CLI entry point.
@@ -66,7 +66,7 @@ and object APIs, and the 6.1 CLI.
 
 Run `node bindings/wasm/cli.mjs --help` for file-based commands including setup,
 key generation, encryption, and decryption. The
-[npm CLI examples](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm#post-quantum-abe-from-the-cli)
+[npm CLI examples](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/tree/main/bindings/npm#post-quantum-abe-from-the-cli)
 also work from the repository when you replace `npx @wanthinnn/pq-cp-abe` with
 `node /path/to/repo/bindings/wasm/cli.mjs`.
 
@@ -107,7 +107,7 @@ Each build copies its deployment package to `lib/wasm`:
 
 Deploy the JavaScript modules and WASM files together, keeping the `lib/wasm`
 subdirectories from the build. The static archive serves C/C++ linking.
-Import `loader.mjs` from Node.js or a browser served over HTTP(S). [npm package guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/tree/main/bindings/npm)
+Import `loader.mjs` from Node.js or a browser served over HTTP(S). [npm package guide](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/tree/main/bindings/npm)
 
 ```js
 import { PqCpAbe, Scheme } from './lib/wasm/loader.mjs';

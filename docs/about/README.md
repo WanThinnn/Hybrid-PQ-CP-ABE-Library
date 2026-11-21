@@ -26,7 +26,7 @@ scope so readers can assess the measurements.
 
 [Explore the architecture](../architecture/README.md) ·
 [View benchmarks](../architecture/benchmarks.md) ·
-[Browse the source](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library)
+[Browse the source](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE)
 
 Learn about [the author](author.md) and the security projects behind
 this work.
@@ -34,5 +34,5 @@ this work.
 ## Releases
 
 See [Releases](../project/releases.md) for the existing release and packaging
-workflow, or [GitHub Releases](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE-Library/releases)
+workflow, or [GitHub Releases](https://github.com/WanThinnn/Hybrid-PQ-CP-ABE/releases)
 for published SDK assets.
